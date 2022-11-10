@@ -7,7 +7,7 @@ This gitHub action creates a new Neon branch.
 
 Here is an example of how to use it:
 
-yml```
+```yml
 name: Create Neon Branch with GitHub Actions Demo
 run-name: Create a Neon Branch 🚀
 on: [push]
