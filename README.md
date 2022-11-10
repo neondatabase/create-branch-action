@@ -2,7 +2,8 @@
   <img width="250px" src="https://user-images.githubusercontent.com/13738772/196940265-9671ea80-5d19-4bb0-ae96-8c1611472991.svg" />
 <p align="center">
 
-# Create a Neon Branch 🚀
+
+## Create a Neon Branch 🚀
 This gitHub action creates a new Neon branch.
 
 Here is an example of how to use it:
@@ -21,7 +22,7 @@ jobs:
     secrets:
       api_key: {{ secrets.NEON_API_KEY }}
 ```
-# How to set up the NEON_API_KEY
+## How to set up the NEON_API_KEY
 Navigate to you the Account page on your Neon console. In the Developer Settings, Generate a new API key if you don't have one already. 
 It's important not to share the API key or expose it in your actions or code. This is why you need to add the API key to a new GitHub secret.  
 
