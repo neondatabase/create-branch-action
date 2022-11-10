@@ -19,9 +19,9 @@ jobs:
       project_id: rapid-haze-373089
       parent_id: br-long-forest-224191
       branch_name: from_action_reusable
-    secrets:
       api_key: {{ secrets.NEON_API_KEY }}
 ```
+  
 ## How to set up the NEON_API_KEY
 Navigate to you the Account page on your Neon console. In the Developer Settings, Generate a new API key if you don't have one already. 
 It's important not to share the API key or expose it in your actions or code. This is why you need to add the API key to a new GitHub secret.  
