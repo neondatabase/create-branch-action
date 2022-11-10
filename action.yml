@@ -1,0 +1,16 @@
+name: Neon Create Branch
+author: Neon
+description: Creates a new Neon Postgres branch based a parent branch.
+
+inputs:
+  project_id:
+    required: true
+    type: string
+  parent_branch_id:
+    required: true
+    type: string
+  branch_name:
+    required: false
+    type: string
+  api_key:
+    required: true
