@@ -35,6 +35,8 @@ runs:
           }
         }'`
         echo $OUTPUT > output.json
+      
+      shell: bash
 
     - name: Upload branch metadata file
       uses: actions/upload-artifact@v3
