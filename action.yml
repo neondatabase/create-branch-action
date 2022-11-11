@@ -21,8 +21,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # - name: Create branch
-    - run: |
+    - name: Create branch
+      run: |
         OUTPUT=`curl -X 'POST' \
           'https://console.neon.tech/api/v2/projects/${{inputs.project_id}}/branches' \
           -H 'accept: application/json' \
@@ -38,8 +38,8 @@ runs:
       
       shell: bash
 
-    # - name: Upload branch metadata file
-    - uses: actions/upload-artifact@v3
+    - name: Upload branch metadata file
+      uses: actions/upload-artifact@v3
       with:
         name: create-branch-output
         path: output.json
