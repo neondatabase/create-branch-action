@@ -1,9 +1,6 @@
 name: Neon Create Branch
 author: Neon
 description: Creates a new Neon Postgres branch based a parent branch.
-branding:
-    icon: "align-justify"
-    color: "orange"
 
 inputs:
   project_id:
