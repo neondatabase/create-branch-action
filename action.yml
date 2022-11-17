@@ -35,10 +35,10 @@ runs:
         "name": "${{inputs.branch_name}}"
       }
       }'`
-      echo $OUTPUT > output.json
+    #   echo $OUTPUT > output.json
 
-    - name: Upload branch metadata file
-      uses: actions/upload-artifact@v3
-      with:
-      name: create-branch-output
-      path: output.json
+    # - name: Upload branch metadata file
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #   name: create-branch-output
+    #   path: output.json
