@@ -1,6 +1,6 @@
-name: Neon Database Create Branch Action
-author: Neon Database
-description: Creates a new Neon Postgres branch based a parent branch.
+name: "Neon Database Create Branch Action"
+author: "Neon Database"
+description: "Creates a new Neon Postgres branch based a parent branch."
 branding:
   icon: "box"
   color: "green"
