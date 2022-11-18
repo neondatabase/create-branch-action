@@ -14,7 +14,7 @@ run-name: Create a Neon Branch 🚀
 on: [push]
 jobs:
   Create-Neon-Branch:
-    uses: neondatabase/create-branch-action.yml@main
+    uses: neondatabase/create-branch-action@main
     with:
       project_id: rapid-haze-373089
       parent_id: br-long-forest-224191
