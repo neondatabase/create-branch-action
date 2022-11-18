@@ -43,8 +43,8 @@ runs:
     - uses: notiz-dev/github-action-json-property@release
       id: format_script
       with: 
-          path: 'output.json'
-          prop_path: 'branch.id'
+        path: 'output.json'
+        prop_path: 'branch.id'
     - run: echo ${{steps.format_script.outputs.prop}} >> $GITHUB_OUTPUT
       shell: bash
       id: output-branch-id
