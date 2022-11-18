@@ -22,20 +22,20 @@ runs:
   using: "composite"
   steps:
     - name: Create branch
-    shell: bash
-    run: |
-      OUTPUT=`curl -X 'POST' \
-      'https://console.neon.tech/api/v2/projects/${{inputs.project_id}}/branches' \
-      -H 'accept: application/json' \
-      -H 'Authorization: Bearer ${{ inputs.api_key }}' \
-      -H 'Content-Type: application/json' \
-      -d '{
-      "branch": {
-        "parent_id": "${{inputs.parent_branch_id}}",
-        "name": "${{inputs.branch_name}}"
-      }
-      }'`
-      echo $OUTPUT > output.json
+      shell: bash
+      run: |
+        OUTPUT=`curl -X 'POST' \
+        'https://console.neon.tech/api/v2/projects/${{inputs.project_id}}/branches' \
+        -H 'accept: application/json' \
+        -H 'Authorization: Bearer ${{ inputs.api_key }}' \
+        -H 'Content-Type: application/json' \
+        -d '{
+        "branch": {
+          "parent_id": "${{inputs.parent_branch_id}}",
+          "name": "${{inputs.branch_name}}"
+        }
+        }'`
+        echo $OUTPUT > output.json
 
     - name: Upload branch metadata file
       uses: actions/upload-artifact@v3
