@@ -22,6 +22,9 @@ outputs:
   branch_id:
     description: "Newly created branch Id"
     value: ${{ steps.output-branch-id.outputs.branch_id }}
+  project_id:
+    description: "Project Id"
+    value: ${{ steps.output-project-id.outputs.project_id }}
 
 runs:
   using: "composite"
@@ -41,10 +44,18 @@ runs:
         }'`
         echo $OUTPUT > output.json
     - uses: notiz-dev/github-action-json-property@release
-      id: format_script
+      id: get_branch_id
       with: 
         path: 'output.json'
         prop_path: 'branch.id'
-    - run: echo "branch_id=${{steps.format_script.outputs.prop}}" >> $GITHUB_OUTPUT
+    - run: echo "branch_id=${{steps.get_branch_id.outputs.prop}}" >> $GITHUB_OUTPUT
       shell: bash
       id: output-branch-id
+    - uses: notiz-dev/github-action-json-property@release
+      id: get_project_id
+      with: 
+        path: 'output.json'
+        prop_path: 'branch.project_id'
+    - run: echo "project_id=${{steps.get_project_id.outputs.prop}}" >> $GITHUB_OUTPUT
+      shell: bash
+      id: output-project-id
