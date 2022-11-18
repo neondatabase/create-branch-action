@@ -45,6 +45,6 @@ runs:
       with: 
         path: 'output.json'
         prop_path: 'branch.id'
-    - run: echo ${{steps.format_script.outputs.prop}} >> $GITHUB_OUTPUT
+    - run: echo "branch_id=${{steps.format_script.outputs.prop}}" >> $GITHUB_OUTPUT
       shell: bash
       id: output-branch-id
