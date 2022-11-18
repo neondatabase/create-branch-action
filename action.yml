@@ -17,12 +17,16 @@ inputs:
     type: string
   api_key:
     required: true
+    
+outputs:
+  branch_id:
+    description: "Newly created branch Id"
+    value: ${{ steps.output-branch-id.outputs.branch_id }}
 
 runs:
   using: "composite"
   steps:
-    - name: Create branch
-      shell: bash
+    - shell: bash
       run: |
         OUTPUT=`curl -X 'POST' \
         'https://console.neon.tech/api/v2/projects/${{inputs.project_id}}/branches' \
@@ -36,9 +40,11 @@ runs:
         }
         }'`
         echo $OUTPUT > output.json
-
-    - name: Upload branch metadata file
-      uses: actions/upload-artifact@v3
-      with:
-        name: create-branch-output
-        path: output.json
+    - uses: notiz-dev/github-action-json-property@release
+      id: format_script
+      with: 
+          path: 'output.json'
+          prop_path: 'branch.id'
+    - run: echo ${{steps.format_script.outputs.prop}} >> $GITHUB_OUTPUT
+      shell: bash
+      id: output-branch-id
