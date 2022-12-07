@@ -17,6 +17,10 @@ inputs:
     type: string
   api_key:
     required: true
+  username:
+    required: true
+  passowrd:
+    required: true
     
 outputs:
   branch_id:
