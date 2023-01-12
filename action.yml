@@ -27,7 +27,14 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - shell: bash
+    - name: Create new Neon branch
+      env:
+        PROJECT_ID: ${{ inputs.project_id }}
+        API_KEY: ${{ inputs.api_key }}
+        BRANCH_NAME: ${{ inputs.branch_name }}
+        PGUSERNAME: ${{ inputs.username }}
+        PGPASSWORD: ${{ inputs.password }}
+      shell: bash
       id: create-branch
       run: |
         branch=$(curl \
@@ -48,9 +55,3 @@ runs:
           
         host=$(echo $branch | jq --raw-output '.endpoints[0].host')
         echo "db_url=postgres://${{ PGUSERNAME }}:${{ PGPASSWORD }}@${host}" >> $GITHUB_OUTPUT
-      env:
-        PROJECT_ID: ${{ inputs.project_id }}
-        API_KEY: ${{ inputs.api_key }}
-        BRANCH_NAME: ${{ inputs.branch_name }}
-        PGUSERNAME: ${{ inputs.username }}
-        PGPASSWORD: ${{ inputs.password }}
