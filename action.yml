@@ -54,4 +54,5 @@ runs:
           }")
           
         host=$(echo $branch | jq --raw-output '.endpoints[0].host')
+        echo "host=${host}" >> $GITHUB_OUTPUT
         echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${host}" >> $GITHUB_OUTPUT
