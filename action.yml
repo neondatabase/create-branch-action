@@ -16,7 +16,7 @@ inputs:
     required: true
   username:
     required: true
-  passowrd:
+  password:
     required: true
     
 outputs:
