@@ -37,7 +37,7 @@ runs:
       shell: bash
       id: create-branch
       run: |
-        branch=$(curl \
+        branch=$(curl --silent \
           "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches" \
           --header "Accept: application/json" \
           --header "Content-Type: application/json" \
