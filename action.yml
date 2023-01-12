@@ -9,9 +9,6 @@ inputs:
   project_id:
     required: true
     type: string
-  parent_branch_id:
-    required: true
-    type: string
   branch_name:
     required: false
     type: string
