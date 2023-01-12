@@ -38,13 +38,13 @@ runs:
       id: create-branch
       run: |
         branch=$(curl \
-          "https://console.neon.tech/api/v2/projects/${{PROJECT_ID}}/branches" \
+          "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches" \
           --header "Accept: application/json" \
           --header "Content-Type: application/json" \
           --header "Authorization: Bearer ${API_KEY}" \
           --data "{
             \"branch\": {
-              \"name\": \"${{BRANCH_NAME}}\"
+              \"name\": \"${BRANCH_NAME}\"
             },
             \"endpoints\": [
               {
@@ -54,4 +54,4 @@ runs:
           }")
           
         host=$(echo $branch | jq --raw-output '.endpoints[0].host')
-        echo "db_url=postgres://${{ PGUSERNAME }}:${{ PGPASSWORD }}@${host}" >> $GITHUB_OUTPUT
+        echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${host}" >> $GITHUB_OUTPUT
