@@ -26,6 +26,9 @@ outputs:
   host:
     description: "New branch host"
     value: ${{ steps.create-branch.outputs.host }}
+  branch_id:
+    description: "New branch id"
+    value: ${{ steps.create-branch.outputs.branch_id }}
 
 runs:
   using: "composite"
@@ -57,5 +60,7 @@ runs:
           }")
           
         host=$(echo $branch | jq --raw-output '.endpoints[0].host')
+        branch_id=$(echo $branch | jq --raw-output '.endpoints[0].branch_id')
         echo "host=${host}" >> $GITHUB_OUTPUT
+        echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
         echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${host}" >> $GITHUB_OUTPUT
