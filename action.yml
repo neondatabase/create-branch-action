@@ -9,9 +9,6 @@ inputs:
   project_id:
     required: true
     type: string
-  parent_branch_id:
-    required: true
-    type: string
   branch_name:
     required: false
     type: string
@@ -19,47 +16,51 @@ inputs:
     required: true
   username:
     required: true
-  passowrd:
+  password:
     required: true
     
 outputs:
+  db_url:
+    description: "New branch DATABASE_URL"
+    value: ${{ steps.create-branch.outputs.db_url }}
+  host:
+    description: "New branch host"
+    value: ${{ steps.create-branch.outputs.host }}
   branch_id:
-    description: "Newly created branch Id"
-    value: ${{ steps.output-branch-id.outputs.branch_id }}
-  project_id:
-    description: "Project Id"
-    value: ${{ steps.output-project-id.outputs.project_id }}
+    description: "New branch id"
+    value: ${{ steps.create-branch.outputs.branch_id }}
 
 runs:
   using: "composite"
   steps:
-    - shell: bash
+    - name: Create new Neon branch
+      env:
+        PROJECT_ID: ${{ inputs.project_id }}
+        API_KEY: ${{ inputs.api_key }}
+        BRANCH_NAME: ${{ inputs.branch_name }}
+        PGUSERNAME: ${{ inputs.username }}
+        PGPASSWORD: ${{ inputs.password }}
+      shell: bash
+      id: create-branch
       run: |
-        OUTPUT=`curl -X 'POST' \
-        'https://console.neon.tech/api/v2/projects/${{inputs.project_id}}/branches' \
-        -H 'accept: application/json' \
-        -H 'Authorization: Bearer ${{ inputs.api_key }}' \
-        -H 'Content-Type: application/json' \
-        -d '{
-        "branch": {
-          "parent_id": "${{inputs.parent_branch_id}}",
-          "name": "${{inputs.branch_name}}"
-        }
-        }'`
-        echo $OUTPUT > output.json
-    - uses: notiz-dev/github-action-json-property@release
-      id: get_branch_id
-      with: 
-        path: 'output.json'
-        prop_path: 'branch.id'
-    - run: echo "branch_id=${{steps.get_branch_id.outputs.prop}}" >> $GITHUB_OUTPUT
-      shell: bash
-      id: output-branch-id
-    - uses: notiz-dev/github-action-json-property@release
-      id: get_project_id
-      with: 
-        path: 'output.json'
-        prop_path: 'branch.project_id'
-    - run: echo "project_id=${{steps.get_project_id.outputs.prop}}" >> $GITHUB_OUTPUT
-      shell: bash
-      id: output-project-id
+        branch=$(curl --silent \
+          "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches" \
+          --header "Accept: application/json" \
+          --header "Content-Type: application/json" \
+          --header "Authorization: Bearer ${API_KEY}" \
+          --data "{
+            \"branch\": {
+              \"name\": \"${BRANCH_NAME}\"
+            },
+            \"endpoints\": [
+              {
+                \"type\": \"read_write\"
+              }
+            ]
+          }")
+          
+        host=$(echo $branch | jq --raw-output '.endpoints[0].host')
+        branch_id=$(echo $branch | jq --raw-output '.endpoints[0].branch_id')
+        echo "host=${host}" >> $GITHUB_OUTPUT
+        echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
+        echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${host}" >> $GITHUB_OUTPUT
