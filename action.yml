@@ -23,6 +23,9 @@ outputs:
   db_url:
     description: 'New branch DATABASE_URL'
     value: ${{ steps.create-branch.outputs.db_url }}
+  db_url_with_pooler:
+    description: 'New branch DATABASE_URL'
+    value: ${{ steps.create-branch.outputs.db_url_with_pooler }}
   host:
     description: 'New branch host'
     value: ${{ steps.create-branch.outputs.host }}
