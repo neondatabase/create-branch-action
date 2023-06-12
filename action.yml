@@ -1,9 +1,9 @@
-name: "Neon Database Create Branch Action"
-author: "Neon Database"
-description: "Creates a new Neon Postgres branch based a parent branch."
+name: 'Neon Database Create Branch Action'
+author: 'Neon Database'
+description: 'Creates a new Neon Postgres branch based a parent branch. If the branch already exists it will return the branch details'
 branding:
-  icon: "box"
-  color: "green"
+  icon: 'box'
+  color: 'green'
 
 inputs:
   project_id:
@@ -18,20 +18,23 @@ inputs:
     required: true
   password:
     required: true
-    
+
 outputs:
   db_url:
-    description: "New branch DATABASE_URL"
+    description: 'New branch DATABASE_URL'
     value: ${{ steps.create-branch.outputs.db_url }}
+  db_url_with_pooler:
+    description: 'New branch DATABASE_URL'
+    value: ${{ steps.create-branch.outputs.db_url_with_pooler }}
   host:
-    description: "New branch host"
+    description: 'New branch host'
     value: ${{ steps.create-branch.outputs.host }}
   branch_id:
-    description: "New branch id"
+    description: 'New branch id'
     value: ${{ steps.create-branch.outputs.branch_id }}
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Create new Neon branch
       env:
@@ -58,9 +61,52 @@ runs:
               }
             ]
           }")
-          
-        host=$(echo $branch | jq --raw-output '.endpoints[0].host')
-        branch_id=$(echo $branch | jq --raw-output '.endpoints[0].branch_id')
+
+        if [[ $branch == *"already exists"* ]]; then
+
+        # Get the branch id by its name. We list all branches and filter by name
+        branch_id=$(curl --silent \
+            "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Bearer ${API_KEY}" \
+            | jq -r .branches \
+            | jq -c '.[] | select(.name | contains("'${BRANCH_NAME}'")) .id' \
+            | jq -r \
+            ) \
+
+
+        # Get the list of endpoints for the branch by its id. 
+        endpoints=$(curl --silent \
+            "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches/${branch_id}/endpoints" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Bearer ${API_KEY}" \
+            ) \
+
+        endpoint_id=$(echo $endpoints | jq --raw-output '.endpoints[0].host' | cut -d'.' -f1)
+        region=$(echo $endpoints | jq --raw-output '.endpoints[0].host' | cut -d'.' -f2)
+        cloud_provider=$(echo $endpoints | jq --raw-output '.endpoints[0].host' | cut -d'.' -f3)
+        host=$(echo $endpoints | jq --raw-output '.endpoints[0].host')
+        branch_id=$(echo $endpoints | jq --raw-output '.endpoints[0].branch_id')
+
         echo "host=${host}" >> $GITHUB_OUTPUT
+        echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
         echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-        echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${host}" >> $GITHUB_OUTPUT
+        echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
+        echo "db_url_with_pooler=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}-pooler.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
+
+
+        else
+          endpoint_id=$(echo $branch | jq --raw-output '.endpoints[0].host' | cut -d'.' -f1)
+          region=$(echo $branch | jq --raw-output '.endpoints[0].host' | cut -d'.' -f2)
+          cloud_provider=$(echo $branch | jq --raw-output '.endpoints[0].host' | cut -d'.' -f3)
+          host=$(echo $branch | jq --raw-output '.endpoints[0].host')
+          branch_id=$(echo $branch | jq --raw-output '.endpoints[0].branch_id')
+
+          echo "host=${host}" >> $GITHUB_OUTPUT
+          echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
+          echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
+          echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
+          echo "db_url_with_pooler=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}-pooler.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
+        fi
