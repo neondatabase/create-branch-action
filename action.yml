@@ -16,6 +16,9 @@ inputs:
     required: true
   username:
     required: true
+  database:
+    type: string
+    default: neondb
 
 outputs:
   db_url:
@@ -70,8 +73,8 @@ runs:
         echo "host=${host}" >> $GITHUB_OUTPUT
         echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
         echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-        echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }})" >> $GITHUB_OUTPUT
-        echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --pooled)" >> $GITHUB_OUTPUT
+        echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }})" >> $GITHUB_OUTPUT
+        echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled)" >> $GITHUB_OUTPUT
 
         else
           endpoint_id=$(echo $branch | jq --raw-output '.endpoints[0].id')
@@ -81,6 +84,6 @@ runs:
           echo "host=${host}" >> $GITHUB_OUTPUT
           echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }})" >> $GITHUB_OUTPUT
-          echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --pooled)" >> $GITHUB_OUTPUT
+          echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }})" >> $GITHUB_OUTPUT
+          echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled)" >> $GITHUB_OUTPUT
         fi
