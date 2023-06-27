@@ -42,7 +42,7 @@ runs:
       shell: bash
     - name: Create new Neon branch
       id: create-branch
-      shell: bash -e {0}
+      shell: bash {0}
       run: |
         branch=$(yarn -s neonctl branches create \
           --api-key ${{ inputs.api_key }} \
