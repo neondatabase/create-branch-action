@@ -64,10 +64,10 @@ runs:
           --branch.id $branch_id \
           -o json)
 
-        endpoint_id=$(echo $endpoints | jq --raw-output '.endpoints[0].id')
-        proxy_host=$(echo $endpoints | jq --raw-output '.endpoints[0].proxy_host')
-        branch_id=$(echo $endpoints | jq --raw-output '.endpoints[0].branch_id')
-        host=$(echo $endpoints | jq --raw-output '.endpoints[0].host')
+        endpoint_id=$(echo $endpoints | jq --raw-output '.[0].id')
+        proxy_host=$(echo $endpoints | jq --raw-output '.[0].proxy_host')
+        branch_id=$(echo $endpoints | jq --raw-output '.[0].branch_id')
+        host=$(echo $endpoints | jq --raw-output '.[0].host')
 
         echo "host=${host}" >> $GITHUB_OUTPUT
         echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
@@ -76,9 +76,13 @@ runs:
         echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled)" >> $GITHUB_OUTPUT
 
         else
-          endpoint_id=$(echo $branch | jq --raw-output '.endpoints[0].id')
-          host=$(echo $branch | jq --raw-output '.endpoints[0].host')
           branch_id=$(echo $branch | jq --raw-output '.id')
+          endpoints=$(yarn -s neonctl endpoints list \
+            --project.id ${{ inputs.project_id }} \
+            --branch.id $branch_id \
+            -o json)
+          endpoint_id=$(echo $branch | jq --raw-output '.[0].id')
+          host=$(echo $branch | jq --raw-output '.[0].host')
 
           echo "host=${host}" >> $GITHUB_OUTPUT
           echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
@@ -87,18 +91,3 @@ runs:
           echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled)" >> $GITHUB_OUTPUT
         fi
 
-    - uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: Output log
-        path: out.log
-    - uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: Branch error
-        path: branch_err
-    - uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: Branch out
-        path: branch_out
