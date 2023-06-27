@@ -51,6 +51,7 @@ runs:
           --branch.name ${{ inputs.branch_name }} \
           --endpoint.type read_write -o json 2> branch_err || true)
 
+        cat branch_err >> out.log
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
         # Get the branch id by its name. We list all branches and filter by name
@@ -60,7 +61,6 @@ runs:
 
         # Get the list of endpoints for the branch by its id.
         endpoints=$(yarn -s neonctl endpoints list \
-          --api-key ${{ inputs.api_key }} \
           --project.id ${{ inputs.project_id }} \
           --branch.id $branch_id \
           -o json)
