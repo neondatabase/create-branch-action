@@ -34,8 +34,9 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: setup-node@v3
+    - uses: actions/setup-node@v3
     - run: yarn add neonctl
+      shell: bash
     - name: Create new Neon branch
       shell: bash
       id: create-branch
