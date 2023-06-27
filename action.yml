@@ -65,6 +65,8 @@ runs:
           --branch.id $branch_id \
           -o json)
 
+        echo "branch=${branch_id} endpoints=${endpoints}" > out.log
+
         endpoint_id=$(echo $endpoints | jq --raw-output '.endpoints[0].id')
         proxy_host=$(echo $endpoints | jq --raw-output '.endpoints[0].proxy_host')
         branch_id=$(echo $endpoints | jq --raw-output '.endpoints[0].branch_id')
@@ -87,3 +89,8 @@ runs:
           echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }})" >> $GITHUB_OUTPUT
           echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled)" >> $GITHUB_OUTPUT
         fi
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Output log
+        path: out.log
