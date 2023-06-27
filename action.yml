@@ -88,14 +88,17 @@ runs:
         fi
 
     - uses: actions/upload-artifact@v3
+      if: always()
       with:
         name: Output log
         path: out.log
     - uses: actions/upload-artifact@v3
+      if: always()
       with:
         name: Branch error
         path: branch_err
     - uses: actions/upload-artifact@v3
+      if: always()
       with:
         name: Branch out
         path: branch_out
