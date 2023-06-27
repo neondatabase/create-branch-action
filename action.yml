@@ -55,7 +55,6 @@ runs:
 
         # Get the branch id by its name. We list all branches and filter by name
         branch_id=$(yarn -s neonctl branches list --project.id ${{ inputs.project_id }} -o json \
-            | jq -r .branches \
             | jq -c '.[] | select(.name | contains("'${BRANCH_NAME}'")) .id' \
             | jq -r)
 
