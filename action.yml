@@ -44,16 +44,14 @@ runs:
       env:
         NEON_API_KEY: ${{ inputs.api_key }}
       id: create-branch
-      shell: bash {0}
+      shell: bash
       run: |
         branch=$(yarn -s neonctl branches create \
           --project.id ${{ inputs.project_id }} \
           --branch.name ${{ inputs.branch_name }} \
-          --endpoint.type read_write -o json)
+          --endpoint.type read_write -o json) 2> branch_err
 
-        echo $branch > out.log
-
-        if [[ $branch == *"already exists"* ]]; then
+        if [[ $(cat branch_err) == *"already exists"* ]]; then
 
         # Get the branch id by its name. We list all branches and filter by name
         branch_id=$(yarn -s neonctl branches list --project.id ${{ inputs.project_id }} -o json \
@@ -94,3 +92,8 @@ runs:
       with:
         name: Output log
         path: out.log
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Branch error
+        path: branch_err
+
