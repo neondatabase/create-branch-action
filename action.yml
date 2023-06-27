@@ -49,9 +49,8 @@ runs:
         branch=$(yarn -s neonctl branches create \
           --project.id ${{ inputs.project_id }} \
           --branch.name ${{ inputs.branch_name }} \
-          --endpoint.type read_write -o json 2> branch_err || true)
+          --endpoint.type read_write -o json 2> branch_err > branch_out || true)
 
-        cat branch_err >> out.log
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
         # Get the branch id by its name. We list all branches and filter by name
@@ -96,4 +95,7 @@ runs:
       with:
         name: Branch error
         path: branch_err
-
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Branch out
+        path: branch_out
