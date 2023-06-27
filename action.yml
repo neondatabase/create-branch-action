@@ -51,6 +51,8 @@ runs:
           --branch.name ${{ inputs.branch_name }} \
           --endpoint.type read_write -o json)
 
+        echo $branch > out.log
+
         if [[ $branch == *"already exists"* ]]; then
 
         # Get the branch id by its name. We list all branches and filter by name
@@ -64,8 +66,6 @@ runs:
           --project.id ${{ inputs.project_id }} \
           --branch.id $branch_id \
           -o json)
-
-        echo "branch=${branch_id} endpoints=${endpoints}" > out.log
 
         endpoint_id=$(echo $endpoints | jq --raw-output '.endpoints[0].id')
         proxy_host=$(echo $endpoints | jq --raw-output '.endpoints[0].proxy_host')
