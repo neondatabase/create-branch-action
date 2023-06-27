@@ -41,11 +41,12 @@ runs:
     - run: yarn add neonctl
       shell: bash
     - name: Create new Neon branch
+      env:
+        NEON_API_KEY: ${{ inputs.api_key }}
       id: create-branch
       shell: bash {0}
       run: |
         branch=$(yarn -s neonctl branches create \
-          --api-key ${{ inputs.api_key }} \
           --project.id ${{ inputs.project_id }} \
           --branch.name ${{ inputs.branch_name }} \
           --endpoint.type read_write -o json)
@@ -53,7 +54,7 @@ runs:
         if [[ $branch == *"already exists"* ]]; then
 
         # Get the branch id by its name. We list all branches and filter by name
-        branch_id=$(yarn -s neonctl branches list --api-key ${{ inputs.api_key }} --project.id ${{ inputs.project_id }} -o json \
+        branch_id=$(yarn -s neonctl branches list --project.id ${{ inputs.project_id }} -o json \
             | jq -r .branches \
             | jq -c '.[] | select(.name | contains("'${BRANCH_NAME}'")) .id' \
             | jq -r)
