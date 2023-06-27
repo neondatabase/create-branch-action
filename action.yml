@@ -58,7 +58,7 @@ runs:
             | jq -c '.[] | select(.name | contains("'${BRANCH_NAME}'")) .id' \
             | jq -r)
 
-        echo "branch_id=${branch_id}"
+        >&2 echo "branch_id=${branch_id}"
 
         # Get the list of endpoints for the branch by its id.
         endpoints=$(yarn -s neonctl endpoints list \
@@ -67,7 +67,7 @@ runs:
           --branch.id $branch_id \
           -o json)
 
-        echo "endpoints=${endpoints}"
+        >&2 echo "endpoints=${endpoints}"
 
         endpoint_id=$(echo $endpoints | jq --raw-output '.endpoints[0].id')
         proxy_host=$(echo $endpoints | jq --raw-output '.endpoints[0].proxy_host')
