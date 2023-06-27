@@ -49,7 +49,7 @@ runs:
         branch=$(yarn -s neonctl branches create \
           --project.id ${{ inputs.project_id }} \
           --branch.name ${{ inputs.branch_name }} \
-          --endpoint.type read_write -o json || true) 2> branch_err
+          --endpoint.type read_write -o json 2> branch_err || true)
 
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
