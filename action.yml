@@ -55,9 +55,8 @@ runs:
 
         # Get the branch id by its name. We list all branches and filter by name
         branch_id=$(yarn -s neonctl branches list --project.id ${{ inputs.project_id }} -o json \
-            | jq -c '.[] | select(.name | contains("'${BRANCH_NAME}'")) .id' \
+            | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
             | jq -r)
-
 
         # Get the list of endpoints for the branch by its id.
         endpoints=$(yarn -s neonctl endpoints list \
@@ -65,8 +64,6 @@ runs:
           --project.id ${{ inputs.project_id }} \
           --branch.id $branch_id \
           -o json)
-
-        (>&2 echo "endpoints=${endpoints}"; >&2 echo "branch_id=${branch_id}"; exit 1)
 
         endpoint_id=$(echo $endpoints | jq --raw-output '.endpoints[0].id')
         proxy_host=$(echo $endpoints | jq --raw-output '.endpoints[0].proxy_host')
