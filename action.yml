@@ -49,10 +49,11 @@ runs:
       id: create-branch
       shell: bash
       run: |
-        branch=$(yarn -s neonctl branches create \
+        yarn -s neonctl branches create \
           --project.id ${{ inputs.project_id }} \
           --branch.name ${{ inputs.branch_name }} \
-          --endpoint.type read_write -o json 2> branch_err > branch_out || true)
+          --endpoint.type read_write -o json \
+          2> branch_err > branch_out || true
 
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
@@ -80,7 +81,7 @@ runs:
         echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
 
         else
-          branch_id=$(echo $branch | jq --raw-output '.id')
+          branch_id=$(cat branch_out | jq --raw-output '.id')
           endpoints=$(yarn -s neonctl endpoints list \
             --project.id ${{ inputs.project_id }} \
             --branch.id $branch_id \
@@ -88,7 +89,7 @@ runs:
           endpoint_id=$(echo $endpoints | jq --raw-output '.[0].id')
           host=$(echo $endpoints | jq --raw-output '.[0].host')
 
-          echo "branch doesnt exist, branch id: ${branch_id}" >> debug.log
+          echo "branch doesn't exist, branch id: ${branch_id}" >> debug.log
 
           echo "host=${host}" >> $GITHUB_OUTPUT
           echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
