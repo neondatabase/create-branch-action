@@ -61,6 +61,8 @@ runs:
             | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
             | jq -r)
 
+        echo "branch exists, branch id: ${branch_id}" >> debug.log
+
         # Get the list of endpoints for the branch by its id.
         endpoints=$(yarn -s neonctl endpoints list \
           --project.id ${{ inputs.project_id }} \
@@ -86,10 +88,17 @@ runs:
           endpoint_id=$(echo $endpoints | jq --raw-output '.[0].id')
           host=$(echo $endpoints | jq --raw-output '.[0].host')
 
+          echo "branch doesnt exist, branch id: ${branch_id}" >> debug.log
+
           echo "host=${host}" >> $GITHUB_OUTPUT
           echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
           echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
           echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
         fi
+    - uses: actions/upload-artifact@v3
+      with:
+        name: debuglog
+        path: debug.log
+
 
