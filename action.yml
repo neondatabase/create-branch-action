@@ -55,6 +55,9 @@ runs:
           --endpoint.type read_write -o json \
           2> branch_err > branch_out || true
 
+        echo "branch create result:\n" >> debug.log
+        cat branch_out >> debug.log
+
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
         # Get the branch id by its name. We list all branches and filter by name
@@ -98,8 +101,9 @@ runs:
           echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
         fi
     - uses: actions/upload-artifact@v3
+      if: always()
       with:
-        name: debuglog
+        name: Create branch log
         path: debug.log
 
 
