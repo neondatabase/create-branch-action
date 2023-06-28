@@ -84,8 +84,8 @@ runs:
             --project.id ${{ inputs.project_id }} \
             --branch.id $branch_id \
             -o json)
-          endpoint_id=$(echo $branch | jq --raw-output '.[0].id')
-          host=$(echo $branch | jq --raw-output '.[0].host')
+          endpoint_id=$(echo $endpoints | jq --raw-output '.[0].id')
+          host=$(echo $endpoints | jq --raw-output '.[0].host')
 
           echo "host=${host}" >> $GITHUB_OUTPUT
           echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
