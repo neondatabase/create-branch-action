@@ -84,13 +84,9 @@ runs:
         echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
 
         else
-          branch_id=$(cat branch_out | jq --raw-output '.id')
-          endpoints=$(yarn -s neonctl endpoints list \
-            --project.id ${{ inputs.project_id }} \
-            --branch.id $branch_id \
-            -o json)
-          endpoint_id=$(echo $endpoints | jq --raw-output '.[0].id')
-          host=$(echo $endpoints | jq --raw-output '.[0].host')
+          branch_id=$(cat branch_out | jq --raw-output '.branch.id')
+          endpoint_id=$(cat branch_out | jq --raw-output '.endpoints[0].id')
+          host=$(echo $endpoints | jq --raw-output '.endpoints[0].host')
 
           echo "branch doesn't exist, branch id: ${branch_id}" >> debug.log
 
