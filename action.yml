@@ -19,6 +19,9 @@ inputs:
   database:
     type: string
     default: neondb
+  prisma:
+    type: boolean
+    default: false
 
 outputs:
   db_url:
@@ -72,8 +75,8 @@ runs:
         echo "host=${host}" >> $GITHUB_OUTPUT
         echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
         echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-        echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }})" >> $GITHUB_OUTPUT
-        echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled)" >> $GITHUB_OUTPUT
+        echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+        echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
 
         else
           branch_id=$(echo $branch | jq --raw-output '.id')
@@ -87,7 +90,7 @@ runs:
           echo "host=${host}" >> $GITHUB_OUTPUT
           echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }})" >> $GITHUB_OUTPUT
-          echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled)" >> $GITHUB_OUTPUT
+          echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+          echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
         fi
 
