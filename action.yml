@@ -16,8 +16,12 @@ inputs:
     required: true
   username:
     required: true
-  password:
-    required: true
+  database:
+    type: string
+    default: neondb
+  prisma:
+    type: boolean
+    default: false
 
 outputs:
   db_url:
@@ -36,77 +40,66 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - uses: actions/setup-node@v3
+    - run: yarn add neonctl
+      shell: bash
     - name: Create new Neon branch
       env:
-        PROJECT_ID: ${{ inputs.project_id }}
-        API_KEY: ${{ inputs.api_key }}
-        BRANCH_NAME: ${{ inputs.branch_name }}
-        PGUSERNAME: ${{ inputs.username }}
-        PGPASSWORD: ${{ inputs.password }}
-      shell: bash
+        NEON_API_KEY: ${{ inputs.api_key }}
       id: create-branch
+      shell: bash
       run: |
-        branch=$(curl --silent \
-          "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches" \
-          --header "Accept: application/json" \
-          --header "Content-Type: application/json" \
-          --header "Authorization: Bearer ${API_KEY}" \
-          --data "{
-            \"branch\": {
-              \"name\": \"${BRANCH_NAME}\"
-            },
-            \"endpoints\": [
-              {
-                \"type\": \"read_write\"
-              }
-            ]
-          }")
+        yarn -s neonctl branches create \
+          --project.id ${{ inputs.project_id }} \
+          --branch.name ${{ inputs.branch_name }} \
+          --endpoint.type read_write -o json \
+          2> branch_err > branch_out || true
 
-        if [[ $branch == *"already exists"* ]]; then
+        echo "branch create result:\n" >> debug.log
+        cat branch_out >> debug.log
+
+        if [[ $(cat branch_err) == *"already exists"* ]]; then
 
         # Get the branch id by its name. We list all branches and filter by name
-        branch_id=$(curl --silent \
-            "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches" \
-            --header "Accept: application/json" \
-            --header "Content-Type: application/json" \
-            --header "Authorization: Bearer ${API_KEY}" \
-            | jq -r .branches \
-            | jq -c '.[] | select(.name | contains("'${BRANCH_NAME}'")) .id' \
-            | jq -r \
-            ) \
+        branch_id=$(yarn -s neonctl branches list --project.id ${{ inputs.project_id }} -o json \
+            | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
+            | jq -r)
 
+        echo "branch exists, branch id: ${branch_id}" >> debug.log
 
-        # Get the list of endpoints for the branch by its id. 
-        endpoints=$(curl --silent \
-            "https://console.neon.tech/api/v2/projects/${PROJECT_ID}/branches/${branch_id}/endpoints" \
-            --header "Accept: application/json" \
-            --header "Content-Type: application/json" \
-            --header "Authorization: Bearer ${API_KEY}" \
-            ) \
+        # Get the list of endpoints for the branch by its id.
+        endpoints=$(yarn -s neonctl endpoints list \
+          --project.id ${{ inputs.project_id }} \
+          --branch.id $branch_id \
+          -o json)
 
-        endpoint_id=$(echo $endpoints | jq --raw-output '.endpoints[0].host' | cut -d'.' -f1)
-        region=$(echo $endpoints | jq --raw-output '.endpoints[0].host' | cut -d'.' -f2)
-        cloud_provider=$(echo $endpoints | jq --raw-output '.endpoints[0].host' | cut -d'.' -f3)
-        host=$(echo $endpoints | jq --raw-output '.endpoints[0].host')
-        branch_id=$(echo $endpoints | jq --raw-output '.endpoints[0].branch_id')
+        endpoint_id=$(echo $endpoints | jq --raw-output '.[0].id')
+        proxy_host=$(echo $endpoints | jq --raw-output '.[0].proxy_host')
+        host=$(echo $endpoints | jq --raw-output '.[0].host')
 
         echo "host=${host}" >> $GITHUB_OUTPUT
         echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
         echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-        echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
-        echo "db_url_with_pooler=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}-pooler.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
-
+        echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+        echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
 
         else
-          endpoint_id=$(echo $branch | jq --raw-output '.endpoints[0].host' | cut -d'.' -f1)
-          region=$(echo $branch | jq --raw-output '.endpoints[0].host' | cut -d'.' -f2)
-          cloud_provider=$(echo $branch | jq --raw-output '.endpoints[0].host' | cut -d'.' -f3)
-          host=$(echo $branch | jq --raw-output '.endpoints[0].host')
-          branch_id=$(echo $branch | jq --raw-output '.endpoints[0].branch_id')
+          branch_id=$(cat branch_out | jq --raw-output '.branch.id')
+          endpoint_id=$(cat branch_out | jq --raw-output '.endpoints[0].id')
+          host=$(echo $endpoints | jq --raw-output '.endpoints[0].host')
+
+          echo "branch doesn't exist, branch id: ${branch_id}" >> debug.log
 
           echo "host=${host}" >> $GITHUB_OUTPUT
           echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          echo "db_url=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
-          echo "db_url_with_pooler=postgres://${PGUSERNAME}:${PGPASSWORD}@${endpoint_id}-pooler.${region}.${cloud_provider}.neon.tech" >> $GITHUB_OUTPUT
+          echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+          echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
         fi
+    - uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: Create branch log
+        path: debug.log
+
+
