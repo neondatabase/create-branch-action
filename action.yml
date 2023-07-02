@@ -41,7 +41,7 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/setup-node@v3
-    - run: yarn add neonctl
+    - run: yarn add global neonctl
       shell: bash
     - name: Create new Neon branch
       env:
