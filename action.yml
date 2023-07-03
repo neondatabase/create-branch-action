@@ -41,7 +41,7 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/setup-node@v3
-    - run: yarn add neonctl
+    - run: yarn add global neonctl@v1.13.0
       shell: bash
     - name: Create new Neon branch
       env:
@@ -67,34 +67,18 @@ runs:
 
         echo "branch exists, branch id: ${branch_id}" >> debug.log
 
-        # Get the list of endpoints for the branch by its id.
-        endpoints=$(yarn -s neonctl endpoints list \
-          --project.id ${{ inputs.project_id }} \
-          --branch.id $branch_id \
-          -o json)
-
-        endpoint_id=$(echo $endpoints | jq --raw-output '.[0].id')
-        proxy_host=$(echo $endpoints | jq --raw-output '.[0].proxy_host')
-        host=$(echo $endpoints | jq --raw-output '.[0].host')
-
-        echo "host=${host}" >> $GITHUB_OUTPUT
-        echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
         echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-        echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
-        echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+        echo "db_url=$(yarn -s neonctl cs ${branch_id} --project.id ${{ inputs.project_id }} --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+        echo "db_url_with_pooler=$(yarn -s neonctl cs ${branch_id} --project.id ${{ inputs.project_id }} --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
 
         else
           branch_id=$(cat branch_out | jq --raw-output '.branch.id')
-          endpoint_id=$(cat branch_out | jq --raw-output '.endpoints[0].id')
-          host=$(echo $endpoints | jq --raw-output '.endpoints[0].host')
 
           echo "branch doesn't exist, branch id: ${branch_id}" >> debug.log
 
-          echo "host=${host}" >> $GITHUB_OUTPUT
-          echo "endpoint_id=${endpoint_id}" >> $GITHUB_OUTPUT
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          echo "db_url=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
-          echo "db_url_with_pooler=$(yarn -s neonctl cs --project.id ${{ inputs.project_id }} --endpoint.id $endpoint_id --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+          echo "db_url=$(yarn -s neonctl cs ${branch_id} --project.id ${{ inputs.project_id }} --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+          echo "db_url_with_pooler=$(yarn -s neonctl cs ${branch_id} --project.id ${{ inputs.project_id }} --role.name ${{ inputs.username }} --database.name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
         fi
     - uses: actions/upload-artifact@v3
       if: always()
