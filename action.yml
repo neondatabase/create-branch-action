@@ -52,6 +52,7 @@ runs:
         yarn -s neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name ${{ inputs.branch_name }} \
+          --output json \
           2> branch_err > branch_out || true
 
         echo "branch create result:\n" >> debug.log
