@@ -12,18 +12,16 @@ Here is an example of how to use it:
 name: Create Neon Branch with GitHub Actions Demo
 run-name: Create a Neon Branch 🚀
 jobs:
-  create-branch:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: neondatabase/create-branch-action@main
-        with:
-          project_id: rapid-haze-373089
-          parent_branch_id: br-long-forest-224191
-          branch_name: from_action_reusable
-          api_key: ${{ secrets.NEON_API_KEY }}
-        id: create-branch
-      - run: echo project_id ${{ steps.create-branch.outputs.project_id}}
-      - run: echo branch_id ${{ steps.create-branch.outputs.branch_id}}
+  Create-Neon-Branch:
+    uses: neondatabase/create-branch-action@beta
+    with:
+      project_id: rapid-haze-373089
+      parent_id: br-long-forest-224191
+      branch_name: from_action_reusable
+      api_key: {{ secrets.NEON_API_KEY }}
+    id: create-branch
+  - run: echo project_id ${{ steps.create-branch.outputs.project_id}}
+  - run: echo branch_id ${{ steps.create-branch.outputs.branch_id}}
 ```
 
 ## Outputs
