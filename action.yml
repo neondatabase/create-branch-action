@@ -1,15 +1,12 @@
-name: "Neon Database Create Branch Action"
-author: "Neon Database"
-description: "Creates a new Neon Postgres branch based a parent branch."
+name: 'Neon Database Create Branch Action'
+author: 'Neon Database'
+description: 'Creates a new Neon Postgres branch based a parent branch. If the branch already exists it will return the branch details'
 branding:
-  icon: "box"
-  color: "green"
+  icon: 'box'
+  color: 'green'
 
 inputs:
   project_id:
-    required: true
-    type: string
-  parent_branch_id:
     required: true
     type: string
   branch_name:
@@ -17,45 +14,74 @@ inputs:
     type: string
   api_key:
     required: true
-    
+  username:
+    required: true
+  database:
+    type: string
+    default: neondb
+  prisma:
+    type: boolean
+    default: false
+
 outputs:
+  db_url:
+    description: 'New branch DATABASE_URL'
+    value: ${{ steps.create-branch.outputs.db_url }}
+  db_url_with_pooler:
+    description: 'New branch DATABASE_URL'
+    value: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+  host:
+    description: 'New branch host'
+    value: ${{ steps.create-branch.outputs.host }}
   branch_id:
-    description: "Newly created branch Id"
-    value: ${{ steps.output-branch-id.outputs.branch_id }}
-  project_id:
-    description: "Project Id"
-    value: ${{ steps.output-project-id.outputs.project_id }}
+    description: 'New branch id'
+    value: ${{ steps.create-branch.outputs.branch_id }}
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - shell: bash
+    - uses: actions/setup-node@v3
+    - run: yarn add global neonctl@v1.18.0
+      shell: bash
+    - name: Create new Neon branch
+      env:
+        NEON_API_KEY: ${{ inputs.api_key }}
+      id: create-branch
+      shell: bash
       run: |
-        OUTPUT=`curl -X 'POST' \
-        'https://console.neon.tech/api/v2/projects/${{inputs.project_id}}/branches' \
-        -H 'accept: application/json' \
-        -H 'Authorization: Bearer ${{ inputs.api_key }}' \
-        -H 'Content-Type: application/json' \
-        -d '{
-        "branch": {
-          "parent_id": "${{inputs.parent_branch_id}}",
-          "name": "${{inputs.branch_name}}"
-        }
-        }'`
-        echo $OUTPUT > output.json
-    - uses: notiz-dev/github-action-json-property@release
-      id: get_branch_id
-      with: 
-        path: 'output.json'
-        prop_path: 'branch.id'
-    - run: echo "branch_id=${{steps.get_branch_id.outputs.prop}}" >> $GITHUB_OUTPUT
-      shell: bash
-      id: output-branch-id
-    - uses: notiz-dev/github-action-json-property@release
-      id: get_project_id
-      with: 
-        path: 'output.json'
-        prop_path: 'branch.project_id'
-    - run: echo "project_id=${{steps.get_project_id.outputs.prop}}" >> $GITHUB_OUTPUT
-      shell: bash
-      id: output-project-id
+        yarn -s neonctl branches create \
+          --project-id ${{ inputs.project_id }} \
+          --name ${{ inputs.branch_name }} \
+          --output json \
+          2> branch_err > branch_out || true
+
+        echo "branch created:\n" >> debug.log
+
+        if [[ $(cat branch_err) == *"already exists"* ]]; then
+
+        # Get the branch id by its name. We list all branches and filter by name
+        branch_id=$(yarn -s neonctl branches list --project-id ${{ inputs.project_id }} -o json \
+            | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
+            | jq -r)
+
+        echo "branch exists, branch id: ${branch_id}\n" >> debug.log
+
+        echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
+        echo "db_url=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+        echo "db_url_with_pooler=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+
+        else
+          branch_id=$(cat branch_out | jq --raw-output '.branch.id')
+
+          echo "branch doesn't exist, branch id: ${branch_id}\n" >> debug.log
+
+          echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
+          echo "db_url=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+          echo "db_url_with_pooler=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+        fi
+    - uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: Create branch log
+        path: debug.log
+
