@@ -41,7 +41,7 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/setup-node@v3
-    - run: yarn add global neonctl@v1.18.0
+    - run: yarn add global neonctl@v1
       shell: bash
     - name: Create new Neon branch
       env:
@@ -59,26 +59,27 @@ runs:
 
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
-        # Get the branch id by its name. We list all branches and filter by name
-        branch_id=$(yarn -s neonctl branches list --project-id ${{ inputs.project_id }} -o json \
-            | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
-            | jq -r)
+          # Get the branch id by its name. We list all branches and filter by name
+          branch_id=$(yarn -s neonctl branches list --project-id ${{ inputs.project_id }} -o json \
+              | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
+              | jq -r)
 
-        echo "branch exists, branch id: ${branch_id}\n" >> debug.log
+          echo "branch exists, branch id: ${branch_id}\n" >> debug.log
 
-        echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-        echo "db_url=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
-        echo "db_url_with_pooler=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
-
+          echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
+          DB_URL=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})
+          DB_URL_WITH_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})
         else
           branch_id=$(cat branch_out | jq --raw-output '.branch.id')
 
           echo "branch doesn't exist, branch id: ${branch_id}\n" >> debug.log
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          echo "db_url=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
-          echo "db_url_with_pooler=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})" >> $GITHUB_OUTPUT
+          DB_URL=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})
+          DB_URL_WITH_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})
         fi
+        echo "db_url=${DB_URL}" >> $GITHUB_OUTPUT
+        echo "db_url_with_pooler=${DB_URL_WITH_POOLER}" >> $GITHUB_OUTPUT
     - uses: actions/upload-artifact@v3
       if: always()
       with:
