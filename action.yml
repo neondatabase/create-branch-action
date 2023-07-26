@@ -49,6 +49,8 @@ runs:
       id: create-branch
       shell: bash
       run: |
+        set -e
+        shopt -s inherit_errexit
         yarn -s neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name ${{ inputs.branch_name }} \
