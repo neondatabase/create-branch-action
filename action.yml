@@ -8,20 +8,22 @@ branding:
 inputs:
   project_id:
     required: true
-    type: string
+    description: 'The project id'
   branch_name:
     required: false
-    type: string
+    description: 'The branch name'
   api_key:
+    description: 'The Neon API key'
     required: true
   username:
+    description: 'The db role name'
     required: true
   database:
-    type: string
+    description: 'The database name'
     default: neondb
   prisma:
-    type: boolean
-    default: false
+    description: 'Use prisma or not'
+    default: 'false'
 
 outputs:
   db_url:
@@ -33,6 +35,9 @@ outputs:
   host:
     description: 'New branch host'
     value: ${{ steps.create-branch.outputs.host }}
+  host_with_pooler:
+    description: 'New branch pooled host'
+    value: ${{ steps.create-branch.outputs.host_with_pooler }}
   branch_id:
     description: 'New branch id'
     value: ${{ steps.create-branch.outputs.branch_id }}
@@ -67,19 +72,29 @@ runs:
           echo "branch exists, branch id: ${branch_id}\n" >> debug.log
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          DB_URL=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})
-          DB_URL_WITH_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})
+          NEON_CS=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended)
+          DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
+          DB_HOST=$(echo $NEON_CS | jq -r '.host')
+          NEON_CS_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})
+          DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
+          DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         else
           branch_id=$(cat branch_out | jq --raw-output '.branch.id')
 
           echo "branch doesn't exist, branch id: ${branch_id}\n" >> debug.log
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          DB_URL=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})
-          DB_URL_WITH_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})
+          NEON_CS=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }})
+          DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
+          DB_HOST=$(echo $NEON_CS | jq -r '.host')
+          NEON_CS_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }})
+          DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
+          DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         fi
         echo "db_url=${DB_URL}" >> $GITHUB_OUTPUT
         echo "db_url_with_pooler=${DB_URL_WITH_POOLER}" >> $GITHUB_OUTPUT
+        echo "host=${DB_HOST}" >> $GITHUB_OUTPUT
+        echo "host_with_pooler=${DB_HOST_WITH_POOLER}" >> $GITHUB_OUTPUT
     - uses: actions/upload-artifact@v3
       if: always()
       with:
