@@ -54,7 +54,7 @@ runs:
       id: create-branch
       shell: bash
       run: |
-        yarn -s neonctl branches create \
+        neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name ${{ inputs.branch_name }} \
           --output json \
@@ -65,17 +65,17 @@ runs:
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
           # Get the branch id by its name. We list all branches and filter by name
-          branch_id=$(yarn -s neonctl branches list --project-id ${{ inputs.project_id }} -o json \
+          branch_id=$(neonctl branches list --project-id ${{ inputs.project_id }} -o json \
               | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
               | jq -r)
 
           echo "branch exists, branch id: ${branch_id}\n" >> debug.log
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          NEON_CS=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
           DB_HOST=$(echo $NEON_CS | jq -r '.host')
-          NEON_CS_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         else
@@ -84,10 +84,10 @@ runs:
           echo "branch doesn't exist, branch id: ${branch_id}\n" >> debug.log
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          NEON_CS=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
           DB_HOST=$(echo $NEON_CS | jq -r '.host')
-          NEON_CS_POOLER=$(yarn -s neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         fi
