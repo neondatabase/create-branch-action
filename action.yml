@@ -62,7 +62,7 @@ runs:
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name ${{ inputs.branch_name }} \
-          --suspend_timeout ${{ inputs.suspend_timeout }} \
+          --suspend-timeout ${{ inputs.suspend_timeout }} \
           --output json \
           2> branch_err > branch_out || true
 
