@@ -89,7 +89,7 @@ runs:
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         elif [[ $(cat branch_err) == "ERROR:"* ]]; then
-          echo "::error branch create failed, branch err: $(cat branch_err)\n"
+          echo "branch create failed, branch err: $(cat branch_err)\n"
           exit 1
         else
           branch_id=$(cat branch_out | jq --raw-output '.branch.id')
