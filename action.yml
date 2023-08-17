@@ -89,7 +89,7 @@ runs:
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         elif [[ $(cat branch_err) == "ERROR:"* ]]; then
-          echo "FAIL: branch creation failed"
+          echo "ERROR: branch creation failed"
           cat branch_err
           exit 1
         else
