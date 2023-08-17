@@ -16,7 +16,7 @@ jobs:
     uses: neondatabase/create-branch-action@v4
     with:
       project_id: rapid-haze-373089
-      parent_id: br-long-forest-224191
+      parent: dev
       branch_name: from_action_reusable
       api_key: {{ secrets.NEON_API_KEY }}
     id: create-branch
