@@ -24,6 +24,11 @@ inputs:
   prisma:
     description: 'Use prisma or not'
     default: 'false'
+  suspend_timeout: 
+    description: >
+      Duration of inactivity in seconds after which the compute endpoint is
+      For more information, see [Auto-suspend configuration](https://neon.tech/docs/manage/endpoints#auto-suspend-configuration).
+    default: '0'
 
 outputs:
   db_url:
@@ -57,6 +62,7 @@ runs:
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name ${{ inputs.branch_name }} \
+          --suspend_timeout ${{ inputs.suspend_timeout }} \
           --output json \
           2> branch_err > branch_out || true
 
