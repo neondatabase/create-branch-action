@@ -79,8 +79,7 @@ runs:
 
           # Get the branch id by its name. We list all branches and filter by name
           branch_id=$(neonctl branches list --project-id ${{ inputs.project_id }} -o json \
-              | jq -c '.[] | select(.name | contains("'${{ inputs.branch_name }}'")) .id' \
-              | jq -r)
+              | jq -r '.[] | select(.name == "${{ inputs.branch_name }}") | .id')
 
           echo "branch exists, branch id: ${branch_id}\n" >> debug.log
 
