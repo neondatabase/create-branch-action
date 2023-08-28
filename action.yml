@@ -64,7 +64,10 @@ runs:
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name ${{ inputs.branch_name }} \
-          --suspend-timeout ${{ inputs.suspend_timeout }} \
+          $(if [ "${{ inputs.suspend_timeout }}" == 0 ]; \
+            then echo ""; \
+            else echo "--suspend-timeout ${{ inputs.suspend_timeout }}"; \
+          fi)
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
           2> branch_err > branch_out || true
