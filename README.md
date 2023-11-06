@@ -16,23 +16,35 @@ jobs:
     uses: neondatabase/create-branch-action@v4
     with:
       project_id: rapid-haze-373089
+      # optional (defaults to your default branch)
       parent: dev
       branch_name: from_action_reusable
+      username: db_user_for_url
       api_key: {{ secrets.NEON_API_KEY }}
     id: create-branch
-  - run: echo project_id ${{ steps.create-branch.outputs.project_id}}
-  - run: echo branch_id ${{ steps.create-branch.outputs.branch_id}}
+  - run: echo db_url ${{ steps.create-branch.outputs.db_url }}
+  - run: echo host ${{ steps.create-branch.outputs.host }}
+  - run: echo branch_id ${{ steps.create-branch.outputs.branch_id }}
 ```
 
 ## Outputs
 ```yml
 outputs:
+  db_url:
+    description: 'New branch DATABASE_URL'
+    value: ${{ steps.create-branch.outputs.db_url }}
+  db_url_with_pooler:
+    description: 'New branch DATABASE_URL'
+    value: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+  host:
+    description: 'New branch host'
+    value: ${{ steps.create-branch.outputs.host }}
+  host_with_pooler:
+    description: 'New branch pooled host'
+    value: ${{ steps.create-branch.outputs.host_with_pooler }}
   branch_id:
-    description: "Newly created branch Id"
-    value: ${{ steps.output-branch-id.outputs.branch_id }}
-  project_id:
-    description: "Project Id"
-    value: ${{ steps.output-project-id.outputs.project_id }}
+    description: 'New branch id'
+    value: ${{ steps.create-branch.outputs.branch_id }}
 ```
 
 ## How to set up the NEON_API_KEY
