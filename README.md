@@ -16,7 +16,7 @@ jobs:
     uses: neondatabase/create-branch-action@v4
     with:
       project_id: rapid-haze-373089
-      # optional (defaults to your default branch)
+      # optional (defaults to your primary branch)
       parent: dev
       branch_name: from_action_reusable
       username: db_user_for_url
