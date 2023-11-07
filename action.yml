@@ -10,7 +10,7 @@ inputs:
     required: true
     description: 'The project id'
   branch_name:
-    required: true
+    required: false
     description: 'The branch name'
   api_key:
     description: 'The Neon API key'
