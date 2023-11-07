@@ -69,8 +69,10 @@ runs:
           --output json \
           2> branch_err > branch_out || true
 
-        echo "branch create out:\n${branch_out}"
-        echo "branch create err:\n${branch_err}"
+        echo "branch create out:"
+        cat branch_out
+        echo "branch create err:"
+        cat branch_err
 
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
