@@ -34,17 +34,20 @@ outputs:
     description: 'New branch DATABASE_URL'
     value: ${{ steps.create-branch.outputs.db_url }}
   db_url_with_pooler:
-    description: 'New branch DATABASE_URL with pooling enabled'
+    description: 'New branch DATABASE_URL'
     value: ${{ steps.create-branch.outputs.db_url_with_pooler }}
   host:
     description: 'New branch host'
     value: ${{ steps.create-branch.outputs.host }}
   host_with_pooler:
-    description: 'New branch host with pooling enabled'
+    description: 'New branch pooled host'
     value: ${{ steps.create-branch.outputs.host_with_pooler }}
   branch_id:
     description: 'New branch id'
     value: ${{ steps.create-branch.outputs.branch_id }}
+  password:
+    description: 'Password for connecting to the new branch database with the input username'
+    value: ${{ steps.create-branch.outputs.password }}
 ```
 
 ## How to set up the NEON_API_KEY
