@@ -25,7 +25,7 @@ inputs:
     description: 'Use prisma or not'
     default: 'false'
   parent:
-    description: 'The parent branch name or id or LSN or timestamp . By default the primary branch is used'
+    description: 'The parent branch name or id or LSN or timestamp. By default the primary branch is used'
   suspend_timeout:
     description: >
       Duration of inactivity in seconds after which the compute endpoint is
@@ -37,13 +37,13 @@ outputs:
     description: 'New branch DATABASE_URL'
     value: ${{ steps.create-branch.outputs.db_url }}
   db_url_with_pooler:
-    description: 'New branch DATABASE_URL'
+    description: 'New branch DATABASE_URL with pooling enabled'
     value: ${{ steps.create-branch.outputs.db_url_with_pooler }}
   host:
     description: 'New branch host'
     value: ${{ steps.create-branch.outputs.host }}
   host_with_pooler:
-    description: 'New branch pooled host'
+    description: 'New branch host with pooling enabled'
     value: ${{ steps.create-branch.outputs.host_with_pooler }}
   branch_id:
     description: 'New branch id'
@@ -69,11 +69,10 @@ runs:
           --output json \
           2> branch_err > branch_out || true
 
-        echo "branch create out:\n" >> debug.log
-        cat branch_out >> debug.log
-        echo "\nbranch create err:\n" >> debug.log
-        cat branch_err >> debug.log
-        echo "\n" >> debug.log
+        echo "branch create out:"
+        cat branch_out
+        echo "branch create err:"
+        cat branch_err
 
         if [[ $(cat branch_err) == *"already exists"* ]]; then
 
@@ -81,7 +80,7 @@ runs:
           branch_id=$(neonctl branches list --project-id ${{ inputs.project_id }} -o json \
               | jq -r '.[] | select(.name == "${{ inputs.branch_name }}") | .id')
 
-          echo "branch exists, branch id: ${branch_id}\n" >> debug.log
+          echo "branch exists, branch id: ${branch_id}"
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
           NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
@@ -101,7 +100,7 @@ runs:
             exit 1
           fi
 
-          echo "branch doesn't exist, branch id: ${branch_id}\n" >> debug.log
+          echo "branch doesn't exist, branch id: ${branch_id}"
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
           NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
@@ -115,9 +114,3 @@ runs:
         echo "db_url_with_pooler=${DB_URL_WITH_POOLER}" >> $GITHUB_OUTPUT
         echo "host=${DB_HOST}" >> $GITHUB_OUTPUT
         echo "host_with_pooler=${DB_HOST_WITH_POOLER}" >> $GITHUB_OUTPUT
-    - uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: Create branch log
-        path: debug.log
-
