@@ -20,7 +20,7 @@ jobs:
       parent: dev
       branch_name: from_action_reusable
       username: db_user_for_url
-      api_key: {{ secrets.NEON_API_KEY }}
+      api_key: ${{ secrets.NEON_API_KEY }}
     id: create-branch
   - run: echo db_url ${{ steps.create-branch.outputs.db_url }}
   - run: echo host ${{ steps.create-branch.outputs.host }}
