@@ -72,6 +72,7 @@ runs:
           --output json \
           2> branch_err > branch_out || true
 
+        echo "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"
         echo "branch create out:"
         cat branch_out
         echo "branch create err:"
