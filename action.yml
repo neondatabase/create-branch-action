@@ -31,6 +31,10 @@ inputs:
       Duration of inactivity in seconds after which the compute endpoint is
       For more information, see [Auto-suspend configuration](https://neon.tech/docs/manage/endpoints#auto-suspend-configuration).
     default: '0'
+  ssl:
+    description: >
+      Add sslmode to the connection string. Supported values are: "require", "verify-ca", "verify-full", "omit".
+    default: 'require'
 
 outputs:
   db_url:
@@ -56,7 +60,7 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/setup-node@v4
-    - run: npm i -g neonctl@1.26.2
+    - run: npm i -g neonctl@1
       shell: bash
     - name: Create new Neon branch
       env:
