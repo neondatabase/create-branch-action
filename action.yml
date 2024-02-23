@@ -91,11 +91,11 @@ runs:
           echo "branch exists, branch id: ${branch_id}"
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
           DB_HOST=$(echo $NEON_CS | jq -r '.host')
           DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')
-          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         elif [[ $(cat branch_err) == *"ERROR:"* ]]; then
@@ -112,11 +112,11 @@ runs:
           echo "branch doesn't exist, branch id: ${branch_id}"
 
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
           DB_HOST=$(echo $NEON_CS | jq -r '.host')
           DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')
-          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
+          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         fi
