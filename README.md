@@ -18,6 +18,8 @@ jobs:
       project_id: rapid-haze-373089
       # optional (defaults to your primary branch)
       parent: dev
+      # optional (defaults to neondb)
+      database: my-database
       branch_name: from_action_reusable
       username: db_user_for_url
       api_key: ${{ secrets.NEON_API_KEY }}
@@ -26,6 +28,8 @@ jobs:
   - run: echo host ${{ steps.create-branch.outputs.host }}
   - run: echo branch_id ${{ steps.create-branch.outputs.branch_id }}
 ```
+
+The full list of supported parameters can be seen in the [_action.yml_](/action.yml) file.
 
 ## Outputs
 ```yml
