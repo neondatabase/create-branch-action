@@ -120,6 +120,9 @@ runs:
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         fi
+        
+        echo "::add-mask::$DB_PASSWORD"
+
         echo "db_url=${DB_URL}" >> $GITHUB_OUTPUT
         echo "db_url_with_pooler=${DB_URL_WITH_POOLER}" >> $GITHUB_OUTPUT
         echo "password=${DB_PASSWORD}" >> $GITHUB_OUTPUT
