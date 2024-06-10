@@ -80,7 +80,7 @@ runs:
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
-          --oauth-url "${{ inputs.oauth_url }}" --api-url="${{ inputs.api_url }}" \
+          --oauth-host "${{ inputs.oauth_url }}" --api-host="${{ inputs.api_url }}" \
           json \
           2> branch_err > branch_out || true
 
@@ -94,7 +94,7 @@ runs:
 
           # Get the branch id by its name. We list all branches and filter by name
           branch_id=$(neonctl branches list --project-id ${{ inputs.project_id }} -o json \
-              --oauth-url "${{ inputs.oauth_url }}" --api-url="${{ inputs.api_url }}" \
+              --oauth-host "${{ inputs.oauth_url }}" --api-host="${{ inputs.api_url }}" \
               | jq -r '.[] | select(.name == "${{ inputs.branch_name }}") | .id')
 
           echo "branch exists, branch id: ${branch_id}"
@@ -102,13 +102,13 @@ runs:
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
           NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} 
             --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --prisma ${{ inputs.prisma }} --extended -o json \
-            --oauth-url "${{ inputs.oauth_url }}" --api-url="${{ inputs.api_url }}")
+            --oauth-host "${{ inputs.oauth_url }}" --api-host="${{ inputs.api_url }}")
           DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
           DB_HOST=$(echo $NEON_CS | jq -r '.host')
           DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')
           NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} 
             --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --pooled --prisma ${{ inputs.prisma }} --extended -o json \
-            --oauth-url "${{ inputs.oauth_url }}" --api-url="${{ inputs.api_url }}")
+            --oauth-host "${{ inputs.oauth_url }}" --api-host="${{ inputs.api_url }}")
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         elif [[ $(cat branch_err) == *"ERROR:"* ]]; then
@@ -127,13 +127,13 @@ runs:
           echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
           NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} 
             --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --prisma ${{ inputs.prisma }} --extended -o json \
-            --oauth-url "${{ inputs.oauth_url }}" --api-url="${{ inputs.api_url }}")
+            --oauth-host "${{ inputs.oauth_url }}" --api-host="${{ inputs.api_url }}")
           DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
           DB_HOST=$(echo $NEON_CS | jq -r '.host')
           DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')
           NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} 
             --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --pooled --prisma ${{ inputs.prisma }} --extended -o json \
-            --oauth-url "${{ inputs.oauth_url }}" --api-url="${{ inputs.api_url }}")
+            --oauth-host "${{ inputs.oauth_url }}" --api-host="${{ inputs.api_url }}")
           DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
           DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
         fi
