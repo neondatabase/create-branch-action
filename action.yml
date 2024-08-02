@@ -35,10 +35,10 @@ inputs:
     description: >
       Add sslmode to the connection string. Supported values are: "require", "verify-ca", "verify-full", "omit".
     default: 'require'
-  created_branch_annotation:
+  annotation:
     description: >
-      A JSON-encoded object of annotation properties to be displayed in Neon Console UI.
-      Possible map keys:
+      A JSON-encoded object with string keys and string values of annotation properties to be displayed in Neon Console UI.
+      Possible object keys:
        - commit-repo
        - commit-author-login
        - commit-author-name
