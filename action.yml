@@ -83,7 +83,7 @@ runs:
       id: create-branch
       shell: bash
       run: |
-        echo '${{ inputs.annotation }}'
+        echo 'annotation debug: ${{ inputs.annotation }}'
         # validate and convert annotation to map[string]string
         if [[ -n "${{ inputs.annotation }}" ]]; then
           annotation=$(echo "${{ inputs.annotation }} | jq -r \
