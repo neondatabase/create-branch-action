@@ -85,7 +85,7 @@ runs:
       run: |
         # validate and convert annotation to map[string]string
         if [[ -n '${{ inputs.annotation }}' ]]; then
-          annotation=$(echo '${{ inputs.annotation }}' | jq -r \
+          annotation=$(echo '${{ inputs.annotation }}' | jq -cr \
           'if type!="object" then "" else with_entries(.key |= "github-\(.)") | with_entries(.value |= (.|tostring)) end') || echo "failed to validate annotation"
           echo 'annotation: ${{ inputs.annotation }} processed:' "${annotation}"
         fi
