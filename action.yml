@@ -35,6 +35,21 @@ inputs:
     description: >
       Add sslmode to the connection string. Supported values are: "require", "verify-ca", "verify-full", "omit".
     default: 'require'
+  created_branch_annotation:
+    description: >
+      A JSON-encoded object of annotation properties to be displayed in Neon Console UI.
+      Possible map keys:
+       - commit-repo
+       - commit-author-login
+       - commit-author-name
+       - commit-ref
+       - commit-message
+       - commit-sha
+       - pr-number
+       - pr-title
+      For example, '{"commit-ref":"my-branch"}'
+    required: false
+    default: ""
 
 outputs:
   db_url:
@@ -68,9 +83,17 @@ runs:
       id: create-branch
       shell: bash
       run: |
+        # validate and convert annotation to map[string]string
+        if [[ -n "${{ inputs.annotation }}" ]]; then
+          annotation=$(echo $annotation | jq -r \
+          'if type!="object" then "" else with_entries(.key |= "github-\(.)") | with_entries(.value |= (.|tostring)) end')
+          echo "annotation: ${{ inputs.annotation }}, processed: ${annotation}"
+        fi
+        
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
+          --annotation "${annotation}" \
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
