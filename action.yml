@@ -84,13 +84,7 @@ runs:
       shell: bash
       run: |
         if [[ -n '${{ inputs.annotation }}' ]]; then
-          # this command:
-          # - validates if annotation is JSON object (not an array, string, number). if not it returns empty string.
-          # - if annotation is a JSON object, then it adds "github-" prefix to each key 
-          # - if key or value are not strings, they will be converted to strings (because we need map[string]string)
-          annotation=$(echo '${{ inputs.annotation }}' | jq -cr \
-          'if type!="object" then "" else with_entries(.key |= "github-\(.)") | with_entries(.value |= (.|tostring)) end')
-          echo 'annotation: ${{ inputs.annotation }} processed:' "${annotation}"
+          annotation=$(echo '${{ inputs.annotation }}' | jq -c 
         fi
         
         neonctl branches create \
