@@ -84,7 +84,7 @@ runs:
       shell: bash
       run: |
         if [[ -n '${{ inputs.annotation }}' ]]; then
-          annotation=$(echo '${{ inputs.annotation }}' | jq -c 
+          annotation=$(echo '${{ inputs.annotation }}' | jq -c) 
         fi
         
         neonctl branches create \
