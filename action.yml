@@ -88,6 +88,12 @@ runs:
           echo "annotation: ${annotation}"
         fi
         
+          echo "--arg github-commit-repo ${{ github.repository }}"
+          echo "--arg github-commit-author-login ${{ github.event.pull_request.user.login }}"
+          echo "--arg github-commit-sha ${{ github.event.pull_request.head.sha }}"
+          echo "--arg github-pr-number "${{ github.event.pull_request.number }}"
+          echo "--arg github-pr-title "${{ github.event.pull_request.title }}"
+        
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
