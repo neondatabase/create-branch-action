@@ -74,7 +74,7 @@ runs:
           --arg github-commit-sha '${{ github.event.pull_request.head.sha }}' \
           --arg github-pr-number '${{ github.event.pull_request.number }}' \
           --arg github-pr-title '${{ github.event.pull_request.title }}' \
-        )"
+        )
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
