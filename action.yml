@@ -70,7 +70,8 @@ runs:
         ANNOTATION_PR_NUMBER: ${{ github.event.pull_request.number || '' }}
         ANNOTATION_PR_TITLE: ${{ github.event.pull_request.title || '' }}
         ANNOTATION_COMMIT_SHA: ${{ github.event.after || '' }}
-        ANNOTATION_COMMIT_REF: ${{ github.head_ref || github.event.pull_request.head.ref || '' }}
+        ANNOTATION_COMMIT_REF: ${{ github.event.ref || github.event.pull_request.head.ref || '' }}
+        ANNOTATION_COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
 
         GITHUB_CONTEXT: ${{ toJson(github) }}
       id: create-branch
@@ -78,10 +79,14 @@ runs:
       run: |
         echo $GITHUB_CONTEXT
         
+        ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}
+        ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/tags\//}
+        
         annotation_json=$(jq -cn '$ARGS.named' \
           --arg github-commit-repo "${ANNOTATION_REPOSITORY}" \
           --arg github-commit-author-login "${ANNOTATION_ACTOR_LOGIN}" \
           --arg github-commit-sha "${ANNOTATION_COMMIT_SHA}" \
+          --arg github-commit-message "${ANNOTATION_COMMIT_SHA}" \
           --arg github-pr-number "${ANNOTATION_PR_NUMBER}" \
           --arg github-pr-title "${ANNOTATION_PR_TITLE}" \
           --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
