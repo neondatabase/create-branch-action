@@ -65,15 +65,20 @@ runs:
     - name: Create new Neon branch
       env:
         NEON_API_KEY: ${{ inputs.api_key }}
+        ANNOTATION_REPOSITORY: ${{ github.repository }}
+        ANNOTATION_PR_USER_LOGIN: ${{ github.event.pull_request.user.login }}
+        ANNOTATION_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        ANNOTATION_PR_NUMBER: ${{ github.event.pull_request.number }}
+        ANNOTATION_PR_TITLE: ${{ github.event.pull_request.title }}
       id: create-branch
       shell: bash
       run: |
         annotation_json=$(jq -cn '$ARGS.named' \
-          --arg github-commit-repo '${{ github.repository }}' \
-          --arg github-commit-author-login '${{ github.event.pull_request.user.login }}' \
-          --arg github-commit-sha '${{ github.event.pull_request.head.sha }}' \
-          --arg github-pr-number '${{ github.event.pull_request.number }}' \
-          --arg github-pr-title '${{ github.event.pull_request.title }}' \
+          --arg github-commit-repo "${ANNOTATION_REPOSITORY}" \
+          --arg github-commit-author-login "${ANNOTATION_PR_USER_LOGIN}" \
+          --arg github-commit-sha "${ANNOTATION_PR_HEAD_SHA}" \
+          --arg github-pr-number "${ANNOTATION_PR_NUMBER}" \
+          --arg github-pr-title "${ANNOTATION_PR_TITLE}" \
         )
         
         neonctl branches create \
