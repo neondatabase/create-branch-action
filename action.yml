@@ -65,6 +65,10 @@ runs:
     - name: Create new Neon branch
       env:
         NEON_API_KEY: ${{ inputs.api_key }}
+        # Annotation data, extracted from github.* variables to be displayed in the Console.
+        # Must be moved to env due to security recommendations.
+        # Action can be triggered from many event types.
+        # Values are extracted the most generic way possible.
         ANNOTATION_REPOSITORY: ${{ github.repository }}
         ANNOTATION_ACTOR_LOGIN: ${{ github.actor }}
         ANNOTATION_PR_NUMBER: ${{ github.event.pull_request.number || '' }}
@@ -75,21 +79,21 @@ runs:
       id: create-branch
       shell: bash
       run: |
-        echo $GITHUB_CONTEXT
-        
+        # branch name can be prefixed with "refs/heads/"
         ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}
+        
+        # construct compact annotation JSON from scratch with all the parameters.
         annotation_json=$(jq -cn '$ARGS.named' \
           --arg github-commit-repo "${ANNOTATION_REPOSITORY}" \
           --arg github-commit-author-login "${ANNOTATION_ACTOR_LOGIN}" \
           --arg github-commit-sha "${ANNOTATION_COMMIT_SHA}" \
-          --arg github-commit-message "${ANNOTATION_COMMIT_SHA}" \
+          --arg github-commit-message "${ANNOTATION_COMMIT_MESSAGE}" \
           --arg github-pr-number "${ANNOTATION_PR_NUMBER}" \
           --arg github-pr-title "${ANNOTATION_PR_TITLE}" \
           --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
         )
+        # remove all empty string values if any
         annotation_json=$(echo $annotation_json | jq -r 'with_entries(select(.value != ""))')
-        
-        echo $annotation_json
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
