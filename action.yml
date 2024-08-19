@@ -35,21 +35,6 @@ inputs:
     description: >
       Add sslmode to the connection string. Supported values are: "require", "verify-ca", "verify-full", "omit".
     default: 'require'
-  annotation:
-    description: >
-      A JSON-encoded object with string keys and string values of annotation properties to be displayed in Neon Console UI.
-      Possible object keys:
-       - commit-repo
-       - commit-author-login
-       - commit-author-name
-       - commit-ref
-       - commit-message
-       - commit-sha
-       - pr-number
-       - pr-title
-      For example, '{"commit-ref":"my-branch"}'
-    required: false
-    default: ""
 
 outputs:
   db_url:
@@ -83,21 +68,18 @@ runs:
       id: create-branch
       shell: bash
       run: |
-        if [[ -n '${{ inputs.annotation }}' ]]; then
-          annotation=$(echo '${{ inputs.annotation }}' | jq -c) 
-          echo "annotation: ${annotation}"
-        fi
-        
-          echo "--arg github-commit-repo ${{ github.repository }}"
-          echo "--arg github-commit-author-login ${{ github.event.pull_request.user.login }}"
-          echo "--arg github-commit-sha ${{ github.event.pull_request.head.sha }}"
-          echo "--arg github-pr-number "${{ github.event.pull_request.number }}"
-          echo "--arg github-pr-title "${{ github.event.pull_request.title }}"
+        annotation_json=$(jq -cn '$ARGS.named' \
+          --arg github-commit-repo '${{ github.repository }}' \
+          --arg github-commit-author-login '${{ github.event.pull_request.user.login }}' \
+          --arg github-commit-sha '${{ github.event.pull_request.head.sha }}' \
+          --arg github-pr-number '${{ github.event.pull_request.number }}' \
+          --arg github-pr-title '${{ github.event.pull_request.title }}' \
+        )"
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
-          --annotation "${annotation}" \
+          --annotation "${annotation_json}" \
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
