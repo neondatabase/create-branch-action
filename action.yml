@@ -104,6 +104,9 @@ runs:
         fi
         echo "${annotation_valid}"
         
+        # input field separator to newline to avoid using space as separator
+        IFS=$"\n"
+        
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
