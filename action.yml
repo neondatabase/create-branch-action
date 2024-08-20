@@ -105,6 +105,7 @@ runs:
         echo "${annotation_valid}"
         
         # input field separator to newline to avoid using space as separator
+        OIFS=IFS
         IFS=$"\n"
         
         neonctl branches create \
