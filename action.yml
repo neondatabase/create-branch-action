@@ -94,7 +94,9 @@ runs:
         )
         
         # remove all empty string values if any
-        annotation_json=$(echo $annotation_json | jq -rac 'with_entries(select(.value != ""))')
+        annotation_json=$(echo $annotation_json | jq -acr 'with_entries(select(.value != ""))')
+        # replace space character
+        annotation_json=${annotation_json/ /\\u0020}
         echo "$annotation_json"
         
         if [[ -n "$annotation_json" ]]; then
@@ -103,10 +105,6 @@ runs:
           fi
         fi
         echo "${annotation_valid}"
-        
-        # input field separator to newline to avoid using space as separator
-        OIFS=IFS
-        IFS=$"\t"
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
