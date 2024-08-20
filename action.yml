@@ -67,7 +67,7 @@ runs:
         NEON_API_KEY: ${{ inputs.api_key }}
         # Annotation data, extracted from github.* variables to be displayed in the Console.
         # Must be moved to env due to security recommendations.
-        # Action can be triggered from many event types.
+        # Action can be triggered by different events (push, pull_request, for example).
         # Values are extracted the most generic way possible.
         ANNOTATION_REPOSITORY: ${{ github.repository }}
         ANNOTATION_ACTOR_LOGIN: ${{ github.actor }}
@@ -94,7 +94,7 @@ runs:
         )
         
         # remove all empty string values if any
-        annotation_json=$(echo $annotation_json | jq -rc 'with_entries(select(.value != ""))')
+        annotation_json=$(echo ${annotation_json} | jq -rc 'with_entries(select(.value != ""))')
         
         # construct annotation argument
         if [[ -n "${annotation_json}" ]]; then
@@ -109,7 +109,7 @@ runs:
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
-          "${annotation_arg}" \
+          $(if [[ -n "${annotation_arg}" ]]; then echo ${annotation_arg}; fi) \
           2> branch_err > branch_out || true
 
         echo "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"
