@@ -109,7 +109,7 @@ runs:
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
-          $(if [[ -n "${annotation_arg}" ]]; then echo "${annotation_arg}"; fi) \
+          ${annotation_arg} \
           2> branch_err > branch_out || true
 
         echo "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"
