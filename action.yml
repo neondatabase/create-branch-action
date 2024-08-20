@@ -106,7 +106,7 @@ runs:
         
         # input field separator to newline to avoid using space as separator
         OIFS=IFS
-        IFS=$"\n"
+        IFS=$"\t"
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
