@@ -95,10 +95,7 @@ runs:
         
         # remove all empty string values if any
         annotation_json=$(echo $annotation_json | jq -acr 'with_entries(select(.value != ""))')
-        echo "$annotation_json"
-        
-        echo "IFS=${IFS}"
-        OIFS=IFS
+        # unset IFS (internal file separator) to avoid JSON being interpret as multiple strings
         unset IFS
         
         if [[ -n "$annotation_json" ]]; then
