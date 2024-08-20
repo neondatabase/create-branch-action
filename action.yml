@@ -93,8 +93,8 @@ runs:
           --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
         )
         
-        # unset IFS (internal file separator) to avoid JSON being interpret as multiple arguments
-        unset IFS
+        # set IFS (internal file separator) to \n to avoid JSON space being an arguments separator
+        IFS=$'\n'
         
         if [[ -n "$annotation_json" ]]; then
             annotation_arg="--annotation '${annotation_json}'"
