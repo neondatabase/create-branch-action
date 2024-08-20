@@ -94,16 +94,15 @@ runs:
         )
         
         # remove all empty string values if any
-        annotation_json=$(echo ${annotation_json} | jq -rc 'with_entries(select(.value != ""))')
-        echo "${annotation_json}"
+        annotation_json=$(echo $annotation_json | jq -rc 'with_entries(select(.value != ""))')
+        echo "$annotation_json"
         
-        # construct annotation argument
-        if [[ -n "${annotation_json}" ]]; then
-          if [[ "${annotation_json}" != "{}" ]]; then
-            annotation_arg="--annotation \"${annotation_json}\""
+        if [[ -n "$annotation_json" ]]; then
+          if [[ "$annotation_json" != "{}" ]]; then
+            annotation_valid=true
           fi
         fi
-        echo "${annotation_arg}"
+        echo "${annotation_valid}"
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
@@ -111,7 +110,7 @@ runs:
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
-          $(if [[ -n "${annotation_arg}" ]]; then echo "${annotation_arg}"; fi) \
+          $(if [[ -n "${annotation_valid}" ]]; then echo "--annotation $annotation_json"; fi) \
           2> branch_err > branch_out || true
 
         echo "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"
