@@ -94,7 +94,7 @@ runs:
         )
         
         # remove all empty string values if any
-        annotation_json=$(echo $annotation_json | jq -rc 'with_entries(select(.value != ""))')
+        annotation_json=$(echo $annotation_json | jq -rac 'with_entries(select(.value != ""))')
         echo "$annotation_json"
         
         if [[ -n "$annotation_json" ]]; then
