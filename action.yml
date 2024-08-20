@@ -95,6 +95,7 @@ runs:
         
         # remove all empty string values if any
         annotation_json=$(echo ${annotation_json} | jq -rc 'with_entries(select(.value != ""))')
+        echo "${annotation_json}"
         
         # construct annotation argument
         if [[ -n "${annotation_json}" ]]; then
@@ -102,6 +103,7 @@ runs:
             annotation_arg="--annotation ${annotation_json}"
           fi
         fi
+        echo "${annotation_arg}"
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
