@@ -83,7 +83,7 @@ runs:
         ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}
         
         # construct compact annotation JSON from scratch with all the parameters.
-        annotation_json=$(jq -cn '$ARGS.named' \
+        annotation_json=$(jq -cnr '$ARGS.named | with_entries(select(.value != ""))' \
           --arg github-commit-repo "${ANNOTATION_REPOSITORY}" \
           --arg github-commit-author-login "${ANNOTATION_ACTOR_LOGIN}" \
           --arg github-commit-sha "${ANNOTATION_COMMIT_SHA}" \
@@ -93,15 +93,11 @@ runs:
           --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
         )
         
-        # remove all empty string values if any
-        annotation_json=$(echo $annotation_json | jq -acr 'with_entries(select(.value != ""))')
         # unset IFS (internal file separator) to avoid JSON being interpret as multiple arguments
         unset IFS
         
         if [[ -n "$annotation_json" ]]; then
-          if [[ "${annotation_json}" != "{}" ]]; then
             annotation_arg="--annotation '${annotation_json}'"
-          fi
         fi
         echo $annotation_json
         
