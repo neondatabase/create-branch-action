@@ -92,13 +92,21 @@ runs:
           --arg github-pr-title "${ANNOTATION_PR_TITLE}" \
           --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
         )
+        
         # remove all empty string values if any
-        annotation_json=$(echo $annotation_json | jq -r 'with_entries(select(.value != ""))')
+        annotation_json=$(echo $annotation_json | jq -rc 'with_entries(select(.value != ""))')
+        
+        # construct annotation argument
+        if [[ -n "${annotation_json}" ]]; then
+          if [[ "${annotation_json}" != "{}" ]]; then
+            annotation_arg="--annotation ${annotation_json}"
+          fi
+        fi
         
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
-          --annotation "${annotation_json}" \
+          ${annotation_arg} \
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
