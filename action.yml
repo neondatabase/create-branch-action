@@ -100,7 +100,7 @@ runs:
         # construct annotation argument
         if [[ -n "${annotation_json}" ]]; then
           if [[ "${annotation_json}" != "{}" ]]; then
-            annotation_arg="--annotation ${annotation_json}"
+            annotation_arg="--annotation '${annotation_json}'"
           fi
         fi
         echo "${annotation_arg}"
