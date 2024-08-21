@@ -15,15 +15,15 @@ jobs:
   Create-Neon-Branch:
   steps:
     - uses: neondatabase/create-branch-action@v5
-        with:
-          project_id: rapid-haze-373089
-          # optional (defaults to your project's default branch)
-          parent: dev
-          # optional (defaults to neondb)
-          database: my-database
-          branch_name: from_action_reusable
-          username: db_user_for_url
-          api_key: ${{ secrets.NEON_API_KEY }}
+      with:
+        project_id: rapid-haze-373089
+        # optional (defaults to your project's default branch)
+        parent: dev
+        # optional (defaults to neondb)
+        database: my-database
+        branch_name: from_action_reusable
+        username: db_user_for_url
+        api_key: ${{ secrets.NEON_API_KEY }}
         id: create-branch
     - run: echo db_url ${{ steps.create-branch.outputs.db_url }}
     - run: echo host ${{ steps.create-branch.outputs.host }}

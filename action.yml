@@ -65,15 +65,45 @@ runs:
     - name: Create new Neon branch
       env:
         NEON_API_KEY: ${{ inputs.api_key }}
+        # Annotation data, extracted from github.* variables to be displayed in the Console.
+        # Must be moved to env due to security recommendations.
+        # Action can be triggered by different events (push, pull_request, for example).
+        # Values are extracted the most generic way possible.
+        ANNOTATION_REPOSITORY: ${{ github.repository }}
+        ANNOTATION_ACTOR_LOGIN: ${{ github.actor }}
+        ANNOTATION_PR_NUMBER: ${{ github.event.pull_request.number || '' }}
+        ANNOTATION_PR_TITLE: ${{ github.event.pull_request.title || '' }}
+        ANNOTATION_COMMIT_SHA: ${{ github.event.after || '' }}
+        ANNOTATION_COMMIT_REF: ${{ github.event.ref || github.event.pull_request.head.ref || '' }}
+        ANNOTATION_COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
       id: create-branch
       shell: bash
       run: |
+        # branch name can be prefixed with "refs/heads/"
+        ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}
+        
+        # construct compact annotation JSON from scratch with all the parameters and filter our all empty values.
+        # if there is no values at all, annotation_json will be empty string.
+        annotation_json=$(jq -cnr '$ARGS.named | with_entries(select(.value != ""))' \
+          --arg github-commit-repo "${ANNOTATION_REPOSITORY}" \
+          --arg github-commit-author-login "${ANNOTATION_ACTOR_LOGIN}" \
+          --arg github-commit-sha "${ANNOTATION_COMMIT_SHA}" \
+          --arg github-commit-message "${ANNOTATION_COMMIT_MESSAGE}" \
+          --arg github-pr-number "${ANNOTATION_PR_NUMBER}" \
+          --arg github-pr-title "${ANNOTATION_PR_TITLE}" \
+          --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
+        )
+        
+        # set IFS (internal file separator) to \n to avoid JSON space being an arguments separator
+        IFS=$'\n'
+        
         neonctl branches create \
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
           --suspend-timeout ${{ inputs.suspend_timeout }} \
           $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
           --output json \
+          $(if [[ -n "${annotation_json}" ]]; then echo "--annotation='$annotation_json'"; fi) \
           2> branch_err > branch_out || true
 
         echo "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"
