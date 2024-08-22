@@ -76,6 +76,7 @@ runs:
         ANNOTATION_COMMIT_SHA: ${{ github.event.after || '' }}
         ANNOTATION_COMMIT_REF: ${{ github.event.ref || github.event.pull_request.head.ref || '' }}
         ANNOTATION_COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
+        ANNOTATION_ACTION_REF: ${{ github.action_ref || '' }}
       id: create-branch
       shell: bash
       run: |
@@ -92,6 +93,7 @@ runs:
           --arg github-pr-number "${ANNOTATION_PR_NUMBER}" \
           --arg github-pr-title "${ANNOTATION_PR_TITLE}" \
           --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
+          --arg github-action-ref "${ANNOTATION_ACTION_REF}" \
         )
         
         # set IFS (internal file separator) to \n to avoid JSON space being an arguments separator
@@ -101,7 +103,7 @@ runs:
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
           --suspend-timeout ${{ inputs.suspend_timeout }} \
-          $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
+          $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent=${{ inputs.parent }}"; fi) \
           --output json \
           $(if [[ -n "${annotation_json}" ]]; then echo "--annotation='$annotation_json'"; fi) \
           2> branch_err > branch_out || true
