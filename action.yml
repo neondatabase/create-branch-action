@@ -101,7 +101,7 @@ runs:
           --project-id ${{ inputs.project_id }} \
           --name "${{ inputs.branch_name }}" \
           --suspend-timeout ${{ inputs.suspend_timeout }} \
-          $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent ${{ inputs.parent }}"; fi) \
+          $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent=${{ inputs.parent }}"; fi) \
           --output json \
           $(if [[ -n "${annotation_json}" ]]; then echo "--annotation='$annotation_json'"; fi) \
           2> branch_err > branch_out || true
