@@ -15,6 +15,9 @@ inputs:
   api_key:
     description: 'The Neon API key'
     required: true
+  api_host:
+    description: 'The Neon API Host'
+    default: 'https://console.neon.tech/api/v2'
   username:
     description: 'The db role name'
     required: true
@@ -65,6 +68,7 @@ runs:
     - name: Create new Neon branch
       env:
         NEON_API_KEY: ${{ inputs.api_key }}
+        NEON_API_HOST: ${{ inputs.api_host }}
         # Annotation data, extracted from github.* variables to be displayed in the Console.
         # Must be moved to env due to security recommendations.
         # Action can be triggered by different events (push, pull_request, for example).
