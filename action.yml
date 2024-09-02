@@ -68,7 +68,7 @@ runs:
         node-version: 20
     - name: Add node_modules path to output
       id: node_modules
-      run: echo "NODE_MODULES_PATH=$(npm root -g) >> $GITHUB_OUTPUT"
+      run: echo "NODE_MODULES_PATH=$(npm root -g)" >> "$GITHUB_OUTPUT"
       shell: bash
     - name: Cache npm
       uses: actions/cache@v3
