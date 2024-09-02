@@ -66,11 +66,17 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: 20
+    - name: Add node_modules path to output
+      id: node_modules
+      run: echo "NODE_MODULES_PATH=$(npm root -g) >> $GITHUB_OUTPUT"
+      shell: bash
     - name: Cache npm
       uses: actions/cache@v3
       with:
         key: ${{ runner.os }}-npm-v5
-        path: ~/.npm
+        path: |
+          ~/.npm
+          ${{ steps.node_modules.outputs.NODE_MODULES_PATH }}
     - name: Install neonctl
       run: npm i -g neonctl@1
       shell: bash
