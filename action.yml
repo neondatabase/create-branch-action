@@ -62,10 +62,14 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/setup-node@v4
-    - run: npm config get cache
-      shell: bash
-    - run: npm i -g neonctl@1
+    - name: Setup node
+      uses: actions/setup-node@v4
+    - name: Cache npm
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+    - name: Install neonctl
+      run: npm i -g neonctl@1
       shell: bash
     - name: Create new Neon branch
       env:
