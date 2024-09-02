@@ -63,9 +63,7 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-        cache: 'npm'
+    - run: npm config get cache
     - run: npm i -g neonctl@1
       shell: bash
     - name: Create new Neon branch
