@@ -64,6 +64,7 @@ runs:
   steps:
     - uses: actions/setup-node@v4
     - run: npm config get cache
+      shell: bash
     - run: npm i -g neonctl@1
       shell: bash
     - name: Create new Neon branch
