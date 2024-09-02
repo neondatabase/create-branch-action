@@ -67,6 +67,7 @@ runs:
     - name: Cache npm
       uses: actions/cache@v3
       with:
+        key: ${{ runner.os }}-npm-v5
         path: ~/.npm
     - name: Install neonctl
       run: npm i -g neonctl@1
