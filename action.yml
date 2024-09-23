@@ -115,7 +115,7 @@ runs:
         echo "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"
         echo "branch create out:"
         cat branch_out
-        if [[ $(cat branch_err) ]]; then
+        if [[ -f branch_err ]]; then
           echo "branch create err:"
           cat branch_err
         fi
