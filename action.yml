@@ -63,7 +63,7 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/setup-node@v4
-    - run: npm i -g neonctl@1
+    - run: npm i -g neonctl@2
       shell: bash
     - name: Create new Neon branch
       env:
