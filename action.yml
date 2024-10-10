@@ -84,7 +84,8 @@ runs:
       id: create-branch
       shell: bash
       run: |
-        cat $GITHUB_ACTION_PATH
+        ls -laR $GITHUB_ACTION_PATH
+        cat ${{ toJSON(github) }}
         env
         # branch name can be prefixed with "refs/heads/"
         ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}
