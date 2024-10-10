@@ -84,6 +84,7 @@ runs:
       id: create-branch
       shell: bash
       run: |
+        env
         # branch name can be prefixed with "refs/heads/"
         ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}
         
