@@ -33,7 +33,7 @@ The following fields are required to run the Create Branch action:
 - `username` — the database username (role name) to be created for connecting to the new branch.
 
 > [!IMPORTANT]
-> Ensure the database username (role) specified in the username input is already created in your Neon project. This action does not create database roles and will fail if the specified username does not exist. You can use the default `neondb_owner` role if suitable.
+> Ensure the database username (role) specified in the username input is already created in your Neon project. This action will fail if the specified username (role) does not exist.
 
 Setup the action in your workflow:
 
