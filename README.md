@@ -50,7 +50,7 @@ steps:
 
 Alternatively, you can use `${{ vars.NEON_PROJECT_ID }}` to get your `project_id`. If you have set up the [Neon GitHub Integration](https://neon.tech/docs/guides/neon-github-integration), the `NEON_PROJECT_ID` variable will be defined as a variable in your GitHub repository.
 
-By default, the action creates a branch based on your project's _primary_ branch. If you want to create a branch from a different parent branch, you can specify the `parent` field. You can use either the name or the ID of the parent branch.
+By default, the action creates a branch based on your project's _default_ branch. If you want to create a branch from a different parent branch, you can specify the `parent` field. You can use either the name or the ID of the parent branch.
 
 ```yml
 steps:
