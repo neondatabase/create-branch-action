@@ -107,7 +107,7 @@ jobs:
 
 ## Advanced usage
 
-You can customize the action using the following optional fields:
+You can customize the action as follows, using the action's optional fields:
 
 - **Specify Parent Branch:** Use the `parent` input to create a branch from a specific parent branch (name or ID) instead of the default primary branch.
 - **Customize Database and Username:** The `database` and `username` inputs allow you to specify the database name and database role for the new branch.
