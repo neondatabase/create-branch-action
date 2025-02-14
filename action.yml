@@ -15,7 +15,6 @@ inputs:
     default: https://console.neon.tech/api/v2
   branch_name:
     description: The name of the branch to create
-    required: true
   project_id:
     description: The Neon project ID
     required: true

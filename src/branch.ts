@@ -1,4 +1,3 @@
-import * as github from '@actions/github'
 import {
   Branch,
   createApiClient,
@@ -6,6 +5,7 @@ import {
   EndpointType
 } from '@neondatabase/api-client'
 
+import { buildAnnotations } from './annotations.js'
 import { version } from './version.js'
 
 interface CreateResponse {
@@ -21,7 +21,6 @@ interface CreateResponse {
 export async function create(
   apiKey: string,
   apiHost: string,
-  branchName: string,
   projectId: string,
   usePrisma: boolean,
   database: string,
@@ -29,6 +28,7 @@ export async function create(
   schemaOnly: boolean,
   sslMode: string,
   suspendTimeout: number,
+  branchName?: string,
   parentBranch?: string
 ): Promise<CreateResponse> {
   const client = createApiClient({
@@ -41,7 +41,7 @@ export async function create(
     }
   })
 
-  let branch: Branch & { created: boolean }
+  let branch: GetOrCreateBranchResponse
   try {
     branch = await getOrCreateBranch(client, {
       branchName,
@@ -51,11 +51,7 @@ export async function create(
       suspendTimeout
     })
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to create branch: ${error.message}`)
-    } else {
-      throw new Error('Failed to create branch: unknown error')
-    }
+    throw new Error(`Failed to create branch. ${String(error)}`)
   }
 
   let connectionInfo: ConnectionInfoResponse
@@ -69,11 +65,7 @@ export async function create(
       role
     })
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to get connection info: ${error.message}`)
-    } else {
-      throw new Error('Failed to get connection info: unknown error')
-    }
+    throw new Error(`Failed to get connection info. ${String(error)}`)
   }
 
   return {
@@ -87,23 +79,7 @@ export async function create(
   }
 }
 
-function buildAnnotations(): Record<string, string> {
-  const { context } = github
-
-  return {
-    'github-commit-repo': context.repo.repo,
-    'github-commit-author-login': context.actor,
-    'github-commit-sha': context.payload.head_commit?.id || '',
-    'github-commit-message': context.payload.head_commit?.message || '',
-    'github-pr-number': context.payload.pull_request?.number.toString() || '',
-    'github-pr-title': context.payload.pull_request?.title || '',
-    'github-commit-ref':
-      context.ref || context.payload.pull_request?.head?.ref || '',
-    'github-action-ref': context.ref || ''
-  }
-}
-
-async function getBranch(
+export async function getBranch(
   client: ReturnType<typeof createApiClient>,
   projectId: string,
   branchIdentifier: string
@@ -131,28 +107,34 @@ async function getBranch(
 }
 
 interface GetOrCreateBranchParams {
-  branchName: string
+  branchName?: string
   projectId: string
   schemaOnly: boolean
   parentBranch?: string
   suspendTimeout: number
 }
 
-async function getOrCreateBranch(
+type GetOrCreateBranchResponse = Branch & { created: boolean }
+
+export async function getOrCreateBranch(
   client: ReturnType<typeof createApiClient>,
   params: GetOrCreateBranchParams
-): Promise<Branch & { created: boolean }> {
-  const { projectId, branchName } = params
-  const existingBranch = await getBranch(client, projectId, branchName)
-  if (existingBranch) {
-    return { ...existingBranch, created: false }
+): Promise<GetOrCreateBranchResponse> {
+  if (params.branchName) {
+    const { projectId, branchName } = params
+    const existingBranch = await getBranch(client, projectId, branchName)
+    if (existingBranch) {
+      return { ...existingBranch, created: false }
+    }
   }
-
+  // If the branch name is provided but it does
+  // not exist, we will create a new branch with
+  // the provided name.
   const createdBranch = await createBranch(client, params)
   return { ...createdBranch, created: true }
 }
 
-async function createBranch(
+export async function createBranch(
   client: ReturnType<typeof createApiClient>,
   params: GetOrCreateBranchParams
 ): Promise<Branch> {
@@ -206,7 +188,7 @@ interface GetConnectionInfoParams {
   role: string
 }
 
-async function getConnectionInfo(
+export async function getConnectionInfo(
   client: ReturnType<typeof createApiClient>,
   params: GetConnectionInfoParams
 ): Promise<ConnectionInfoResponse> {
@@ -226,41 +208,37 @@ async function getConnectionInfo(
 
     endpoint = endpoints.data.endpoints[0]
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to get branch endpoints: ${error.message}`)
-    } else {
-      throw new Error('Failed to get branch endpoints: unknown error')
-    }
+    throw new Error(`Failed to get branch endpoints. ${String(error)}`)
   }
 
   try {
     await client.getProjectBranchDatabase(projectId, branchId, database)
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Database ${database} not found: ${error.message}`)
-    } else {
-      throw new Error(`Database ${database} not found: unknown error`)
-    }
+    throw new Error(
+      `Failed to get branch database ${database}. ${String(error)}`
+    )
   }
 
   // get the role
   try {
     await client.getProjectBranchRole(projectId, branchId, role)
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Role ${role} not found: ${error.message}`)
-    } else {
-      throw new Error(`Role ${role} not found: unknown error`)
-    }
+    throw new Error(`Failed to get branch role ${role}. ${String(error)}`)
   }
 
-  const passwordResposne = await client.getProjectBranchRolePassword(
-    projectId,
-    branchId,
-    role
-  )
-
-  const password = passwordResposne.data.password
+  let password: string
+  try {
+    const passwordResposne = await client.getProjectBranchRolePassword(
+      projectId,
+      branchId,
+      role
+    )
+    password = passwordResposne.data.password
+  } catch (error) {
+    throw new Error(
+      `Failed to get branch password for role ${role}. ${String(error)}`
+    )
+  }
 
   const host = endpoint.host
   const hostPooled = endpoint.host.replace(endpoint.id, `${endpoint.id}-pooler`)

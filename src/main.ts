@@ -16,10 +16,6 @@ export async function run(): Promise<void> {
       required: true,
       trimWhitespace: true
     })
-    const branchName: string = core.getInput('branch_name', {
-      required: true,
-      trimWhitespace: true
-    })
     const projectId: string = core.getInput('project_id', {
       required: true,
       trimWhitespace: true
@@ -55,6 +51,12 @@ export async function run(): Promise<void> {
     if (parentBranch === '') {
       parentBranch = undefined
     }
+    let branchName: string | undefined = core.getInput('branch_name', {
+      trimWhitespace: true
+    })
+    if (branchName === '') {
+      branchName = undefined
+    }
 
     if (!urlRegex.test(apiHost)) {
       throw new Error('API host must be a valid URL')
@@ -65,12 +67,13 @@ export async function run(): Promise<void> {
     }
 
     const suspendTimeout = parseInt(suspendTimeoutString, 10)
+    if (isNaN(suspendTimeout)) {
+      throw new Error('Suspend timeout must be a number')
+    }
 
-    // Create branch
     const result = await create(
       apiKey,
       apiHost,
-      branchName,
       projectId,
       usePrisma,
       database,
@@ -78,6 +81,7 @@ export async function run(): Promise<void> {
       schemaOnly,
       sslMode,
       suspendTimeout,
+      branchName,
       parentBranch
     )
 
