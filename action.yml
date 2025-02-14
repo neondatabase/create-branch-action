@@ -1,168 +1,61 @@
-name: 'Neon Database Create Branch Action'
-author: 'Neon Database'
-description: 'Creates a new Neon Postgres branch based a parent branch. If the branch already exists it will return the branch details'
+name: Neon Create Branch GitHub Action
+description:
+  Creates a new branch in a Neon project, if the branch already exists it will
+  return the existing branch.
+author: Neon Database
 branding:
-  icon: 'box'
-  color: 'green'
-
+  icon: align-left
+  color: green
 inputs:
-  project_id:
-    required: true
-    description: 'The project id'
-  branch_name:
-    required: false
-    description: 'The branch name'
   api_key:
-    description: 'The Neon API key'
+    description: The Neon API key
     required: true
   api_host:
-    description: 'The Neon API Host'
-    default: 'https://console.neon.tech/api/v2'
-  username:
-    description: 'The db role name'
+    description: The Neon API Host
+    default: https://console.neon.tech/api/v2
+  branch_name:
+    description: The name of the branch to create
     required: true
-  database:
-    description: 'The database name'
-    default: neondb
+  project_id:
+    description: The Neon project ID
+    required: true
+  parent_branch:
+    description: The parent branch to create the new branch from
   prisma:
-    description: 'Use prisma or not'
+    description: Whether to use prisma or not
     default: 'false'
-  parent:
-    description: 'The parent branch name or id or LSN or timestamp. By default the primary branch is used'
-  suspend_timeout:
-    description: >
-      Duration of inactivity in seconds after which the compute endpoint is
-      For more information, see [Auto-suspend configuration](https://neon.tech/docs/manage/endpoints#auto-suspend-configuration).
-    default: '0'
+  database:
+    description: The database name
+    default: 'neondb'
+  role:
+    description: The role of the user
+    default: 'neondb_owner'
+  schema_only:
+    description: Whether to create the branch with schema only
+    default: 'false'
   ssl:
-    description: >
-      Add sslmode to the connection string. Supported values are: "require", "verify-ca", "verify-full", "omit".
+    description:
+      "The SSL mode for the connection string. Supported values are: 'require',
+      'verify-ca', 'verify-full', 'omit'."
     default: 'require'
-
+  suspend_timeout:
+    description:
+      Duration of inactivity in seconds after the compute endpoint is suspended
+    default: '0'
 outputs:
   db_url:
-    description: 'New branch DATABASE_URL'
-    value: ${{ steps.create-branch.outputs.db_url }}
-  db_url_with_pooler:
-    description: 'New branch DATABASE_URL with pooling enabled'
-    value: ${{ steps.create-branch.outputs.db_url_with_pooler }}
-  host:
-    description: 'New branch host'
-    value: ${{ steps.create-branch.outputs.host }}
-  host_with_pooler:
-    description: 'New branch host with pooling enabled'
-    value: ${{ steps.create-branch.outputs.host_with_pooler }}
-  branch_id:
-    description: 'New branch id'
-    value: ${{ steps.create-branch.outputs.branch_id }}
+    description: The database connection string
+  db_url_pooled:
+    description: The database connection string with connection pooling
+  db_host:
+    description: The database host
+  db_host_pooled:
+    description: The database host with connection pooling
   password:
-    description: 'Password for connecting to the new branch database with the input username'
-    value: ${{ steps.create-branch.outputs.password }}
+    description: The database password
+  branch_id:
+    description: The ID of the branch
 
 runs:
-  using: 'composite'
-  steps:
-    - uses: actions/setup-node@v4
-    - run: npm i -g neonctl@2
-      shell: bash
-    - name: Create new Neon branch
-      env:
-        NEON_API_KEY: ${{ inputs.api_key }}
-        NEON_API_HOST: ${{ inputs.api_host }}
-        # Annotation data, extracted from github.* variables to be displayed in the Console.
-        # Must be moved to env due to security recommendations.
-        # Action can be triggered by different events (push, pull_request, for example).
-        # Values are extracted the most generic way possible.
-        ANNOTATION_REPOSITORY: ${{ github.repository }}
-        ANNOTATION_ACTOR_LOGIN: ${{ github.actor }}
-        ANNOTATION_PR_NUMBER: ${{ github.event.pull_request.number || '' }}
-        ANNOTATION_PR_TITLE: ${{ github.event.pull_request.title || '' }}
-        ANNOTATION_COMMIT_SHA: ${{ github.event.after || '' }}
-        ANNOTATION_COMMIT_REF: ${{ github.event.ref || github.event.pull_request.head.ref || '' }}
-        ANNOTATION_COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
-        ANNOTATION_ACTION_REF: ${{ github.action_ref || '' }}
-      id: create-branch
-      shell: bash
-      run: |
-        # branch name can be prefixed with "refs/heads/"
-        ANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}
-        
-        # construct compact annotation JSON from scratch with all the parameters and filter our all empty values.
-        # if there is no values at all, annotation_json will be empty string.
-        annotation_json=$(jq -cnr '$ARGS.named | with_entries(select(.value != ""))' \
-          --arg github-commit-repo "${ANNOTATION_REPOSITORY}" \
-          --arg github-commit-author-login "${ANNOTATION_ACTOR_LOGIN}" \
-          --arg github-commit-sha "${ANNOTATION_COMMIT_SHA}" \
-          --arg github-commit-message "${ANNOTATION_COMMIT_MESSAGE}" \
-          --arg github-pr-number "${ANNOTATION_PR_NUMBER}" \
-          --arg github-pr-title "${ANNOTATION_PR_TITLE}" \
-          --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \
-          --arg github-action-ref "${ANNOTATION_ACTION_REF}" \
-        )
-        
-        # set IFS (internal file separator) to \n to avoid JSON space being an arguments separator
-        IFS=$'\n'
-        
-        neonctl branches create \
-          --project-id ${{ inputs.project_id }} \
-          --name "${{ inputs.branch_name }}" \
-          --suspend-timeout ${{ inputs.suspend_timeout }} \
-          $(if [[ -n "${{ inputs.parent }}" ]]; then echo "--parent=${{ inputs.parent }}"; fi) \
-          --output json \
-          $(if [[ -n "${annotation_json}" ]]; then echo "--annotation='$annotation_json'"; fi) \
-          2> branch_err > branch_out || true
-
-        echo "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"
-        echo "branch create out:"
-        cat branch_out
-        if [[ -s branch_err ]]; then
-          echo "branch create err:"
-          cat branch_err
-        fi
-
-        if [[ $(cat branch_err) == *"already exists"* ]]; then
-
-          # Get the branch id by its name. We list all branches and filter by name
-          branch_id=$(neonctl branches list --project-id ${{ inputs.project_id }} -o json \
-              | jq -r '.[] | select(.name == "${{ inputs.branch_name }}") | .id')
-
-          echo "branch exists, branch id: ${branch_id}"
-
-          echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --prisma ${{ inputs.prisma }} --extended -o json)
-          DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
-          DB_HOST=$(echo $NEON_CS | jq -r '.host')
-          DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')
-          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
-          DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
-          DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
-        elif [[ $(cat branch_err) == *"ERROR:"* ]]; then
-          echo "ERROR: branch creation failed"
-          cat branch_err
-          exit 1
-        else
-          branch_id=$(cat branch_out | jq --raw-output '.branch.id')
-          if [[ -z "${branch_id}" ]]; then
-            echo "ERROR: didn't get the branch id"
-            exit 1
-          fi
-
-          echo "branch doesn't exist, branch id: ${branch_id}"
-
-          echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT
-          NEON_CS=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --prisma ${{ inputs.prisma }} --extended -o json)
-          DB_URL=$(echo $NEON_CS | jq -r '.connection_string')
-          DB_HOST=$(echo $NEON_CS | jq -r '.host')
-          DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')
-          NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id ${{ inputs.project_id }} --role-name ${{ inputs.username }} --database-name ${{ inputs.database }} --ssl ${{ inputs.ssl }} --pooled --prisma ${{ inputs.prisma }} --extended -o json)
-          DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')
-          DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')
-        fi
-        
-        echo "::add-mask::$DB_PASSWORD"
-
-        echo "db_url=${DB_URL}" >> $GITHUB_OUTPUT
-        echo "db_url_with_pooler=${DB_URL_WITH_POOLER}" >> $GITHUB_OUTPUT
-        echo "password=${DB_PASSWORD}" >> $GITHUB_OUTPUT
-        echo "host=${DB_HOST}" >> $GITHUB_OUTPUT
-        echo "host_with_pooler=${DB_HOST_WITH_POOLER}" >> $GITHUB_OUTPUT
+  using: node20
+  main: dist/index.js
