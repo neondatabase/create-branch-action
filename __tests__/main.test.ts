@@ -114,7 +114,6 @@ describe('action', () => {
     expect(create).toHaveBeenCalledWith(
       'apiKey',
       'http://console.neon.tech/api/v2',
-      'branchName',
       'projectId',
       false,
       'postgres',
@@ -122,6 +121,7 @@ describe('action', () => {
       false,
       'require',
       0,
+      'branchName',
       undefined
     )
 
@@ -176,7 +176,6 @@ describe('action', () => {
     expect(create).toHaveBeenCalledWith(
       'apiKey',
       'http://console.neon.tech/api/v2',
-      'branchName',
       'projectId',
       false,
       'postgres',
@@ -184,6 +183,7 @@ describe('action', () => {
       false,
       'require',
       0,
+      'branchName',
       undefined
     )
 

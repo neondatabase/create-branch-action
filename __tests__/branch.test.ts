@@ -555,14 +555,14 @@ describe('branch actions', () => {
       const response = await create(
         'apiKey',
         'apiHost',
-        'branchName',
         'projectId',
         false,
         'neondb',
         'neondb_owner',
         false,
         'require',
-        0
+        0,
+        'branchName'
       )
 
       expect(response).toBeDefined()
