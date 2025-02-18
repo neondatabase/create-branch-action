@@ -47,29 +47,3 @@ jobs:
       - name: Test
         id: test
         run: bun run test
-
-  test-action:
-    name: GitHub Actions Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Test Local Action
-        id: test-action
-        uses: ./
-        env:
-          ENVIRONMENT: development
-        with:
-          api_key: ${{ secrets.NEON_API_KEY }}
-          project_id: ${{ secrets.NEON_PROJECT_ID }}
-          compare_branch: new_branch
-          base_branch: main
-
-      - name: Print
-        id: output
-        run: |
-          echo "diff: ${{ steps.test-action.outputs.diff }}"
-          echo "comment_url: ${{ steps.test-action.outputs.comment_url }}"

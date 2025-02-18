@@ -112,6 +112,8 @@ The action provides the following outputs:
 - `branch_id` — The unique ID of the new Neon branch.
 - `password` — The password for connecting to the new branch database with the
   input username.
+- `created` - `true` if the branch was created, `false` is the branch already
+  exists and is being reused.
 
 ### Example Workflow
 

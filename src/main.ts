@@ -87,8 +87,10 @@ export async function run(): Promise<void> {
 
     if (result.createdBranch) {
       core.info(`Branch ${branchName} created successfully`)
+      core.setOutput('created', true)
     } else {
       core.info(`Branch ${branchName} already exists, reusing existing branch`)
+      core.setOutput('created', false)
     }
 
     core.setOutput('db_url', result.databaseURL)

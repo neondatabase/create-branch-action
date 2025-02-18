@@ -130,7 +130,8 @@ describe('action', () => {
       1,
       'Branch branchName created successfully'
     )
-    expect(core.setOutput).toHaveBeenCalledTimes(6) // 6 outputs
+    expect(core.setOutput).toHaveBeenCalledTimes(7) // 7 outputs
+    expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', true)
   })
 
   it('create existing branch', async () => {
@@ -188,6 +189,7 @@ describe('action', () => {
     )
 
     expect(core.setFailed).not.toHaveBeenCalled()
-    expect(core.setOutput).toHaveBeenCalledTimes(6) // 6 outputs
+    expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', false)
+    expect(core.setOutput).toHaveBeenCalledTimes(7) // 7 outputs
   })
 })

@@ -51907,9 +51907,11 @@ async function run() {
         const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch);
         if (result.createdBranch) {
             coreExports.info(`Branch ${branchName} created successfully`);
+            coreExports.setOutput('created', true);
         }
         else {
             coreExports.info(`Branch ${branchName} already exists, reusing existing branch`);
+            coreExports.setOutput('created', false);
         }
         coreExports.setOutput('db_url', result.databaseURL);
         coreExports.setOutput('db_url_pooled', result.databaseURLPooled);

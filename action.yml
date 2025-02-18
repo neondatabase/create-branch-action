@@ -54,6 +54,8 @@ outputs:
     description: The database password
   branch_id:
     description: The ID of the branch
+  created:
+    description: Whether the branch was created or reused
 
 runs:
   using: node20
