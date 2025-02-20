@@ -14,7 +14,7 @@ export function buildAnnotations(): Record<string, string> {
 
   // Add other fields only if they have values
   addIfNotEmpty('github-commit-author-login', context.actor)
-  addIfNotEmpty('github-commit-sha', context.payload.head_commit?.id)
+  addIfNotEmpty('github-commit-sha', context.payload.after)
   addIfNotEmpty('github-commit-message', context.payload.head_commit?.message)
   addIfNotEmpty(
     'github-pr-number',
@@ -23,9 +23,9 @@ export function buildAnnotations(): Record<string, string> {
   addIfNotEmpty('github-pr-title', context.payload.pull_request?.title)
   addIfNotEmpty(
     'github-commit-ref',
-    context.ref || context.payload.pull_request?.head?.ref
+    context.payload.ref || context.payload.pull_request?.head?.ref
   )
-  addIfNotEmpty('github-action-ref', context.action)
+  addIfNotEmpty('github-action-ref', context.ref)
 
   return annotations
 }
