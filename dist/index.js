@@ -51844,6 +51844,9 @@ const SSL_MODES = ['require', 'verify-ca', 'verify-full', 'omit'];
 function isSSLMode(sslMode) {
     return SSL_MODES.includes(sslMode);
 }
+function isBranchType(branchType) {
+    return branchType === 'default' || branchType === 'schema-only';
+}
 
 const urlRegex = /https?:\/\/[^\s/$.?#].[^\s]*/i;
 /**
@@ -51872,9 +51875,9 @@ async function run() {
         const role = coreExports.getInput('role', {
             trimWhitespace: true
         }); // defaults to 'neondb_owner'
-        const schemaOnly = coreExports.getInput('schema_only', {
+        const branchType = coreExports.getInput('branch_type', {
             trimWhitespace: true
-        }) === 'true'; // defaults to false
+        }); // defaults to 'default'
         const sslMode = coreExports.getInput('ssl', {
             trimWhitespace: true
         }); // defaults to 'require'
@@ -51900,11 +51903,14 @@ async function run() {
         if (!isSSLMode(sslMode)) {
             throw new Error(`Invalid SSL mode: ${sslMode}`);
         }
+        if (!isBranchType(branchType)) {
+            throw new Error(`Invalid branch type: ${branchType}`);
+        }
         const suspendTimeout = parseInt(suspendTimeoutString, 10);
         if (isNaN(suspendTimeout)) {
             throw new Error('Suspend timeout must be a number');
         }
-        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch);
+        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch);
         if (result.createdBranch) {
             coreExports.info(`Branch ${branchName} created successfully`);
             coreExports.setOutput('created', true);

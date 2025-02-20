@@ -29,9 +29,9 @@ inputs:
   role:
     description: The role of the user
     default: 'neondb_owner'
-  schema_only:
-    description: Whether to create the branch with schema only
-    default: 'false'
+  branch_type:
+    description: The type of branch to create, 'default' or 'schema-only'
+    default: 'default'
   ssl:
     description:
       "The SSL mode for the connection string. Supported values are: 'require',

@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 
 import { create } from './branch.js'
-import { isSSLMode } from './utils.js'
+import { isBranchType, isSSLMode } from './utils.js'
 
 const urlRegex = /https?:\/\/[^\s/$.?#].[^\s]*/i
 
@@ -33,10 +33,9 @@ export async function run(): Promise<void> {
     const role = core.getInput('role', {
       trimWhitespace: true
     }) // defaults to 'neondb_owner'
-    const schemaOnly =
-      core.getInput('schema_only', {
-        trimWhitespace: true
-      }) === 'true' // defaults to false
+    const branchType = core.getInput('branch_type', {
+      trimWhitespace: true
+    }) // defaults to 'default'
     const sslMode = core.getInput('ssl', {
       trimWhitespace: true
     }) // defaults to 'require'
@@ -66,6 +65,10 @@ export async function run(): Promise<void> {
       throw new Error(`Invalid SSL mode: ${sslMode}`)
     }
 
+    if (!isBranchType(branchType)) {
+      throw new Error(`Invalid branch type: ${branchType}`)
+    }
+
     const suspendTimeout = parseInt(suspendTimeoutString, 10)
     if (isNaN(suspendTimeout)) {
       throw new Error('Suspend timeout must be a number')
@@ -78,7 +81,7 @@ export async function run(): Promise<void> {
       usePrisma,
       database,
       role,
-      schemaOnly,
+      branchType === 'schema-only',
       sslMode,
       suspendTimeout,
       branchName,

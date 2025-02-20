@@ -162,6 +162,8 @@ You can customize the action as follows, using the action's optional fields:
 - **SSL Mode:** Control the `sslmode` in the connection string using the `ssl`
   input. Supported values are: `"require"`, `"verify-ca"`, `"verify-full"`,
   `"omit"`.
+- **Branch type**: Use `schema-only` to create a new branch with the schema of
+  the `parent_branch`.
 
 If you don't provide values for the optional fields, the action uses the
 following defaults:
@@ -173,7 +175,7 @@ following defaults:
 - `parent_branch` — Your project's default _primary_ branch.
 - `suspend_timeout` - `0` (auto-suspend disabled)
 - `ssl` - `require`
-- `schema_only` - `false`
+- `branch_type` - `default`
 
 Supported parameters:
 
@@ -189,7 +191,7 @@ Supported parameters:
 | `parent_branch`   | optional          | _Project's primary branch_         |
 | `suspend_timeout` | optional          | `0`                                |
 | `ssl`             | optional          | `require`                          |
-| `schema_only`     | optional          | `false`                            |
+| `branch_type`     | optional          | `default`                          |
 
 ---
 

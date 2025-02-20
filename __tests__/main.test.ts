@@ -54,6 +54,8 @@ describe('action', () => {
       switch (name) {
         case 'suspend_timeout':
           return 'invalid'
+        case 'branch_type':
+          return 'default'
         case 'api_host':
           return 'http://console.neon.tech/api/v2'
         case 'ssl':
@@ -86,8 +88,8 @@ describe('action', () => {
           return 'postgres'
         case 'role':
           return 'postgres'
-        case 'schema_only':
-          return 'false'
+        case 'branch_type':
+          return 'default'
         case 'suspend_timeout':
           return '0'
         case 'ssl':
@@ -149,8 +151,8 @@ describe('action', () => {
           return 'postgres'
         case 'role':
           return 'postgres'
-        case 'schema_only':
-          return 'false'
+        case 'branch_type':
+          return 'default'
         case 'suspend_timeout':
           return '0'
         case 'ssl':

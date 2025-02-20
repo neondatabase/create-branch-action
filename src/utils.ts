@@ -9,3 +9,7 @@ const SSL_MODES = ['require', 'verify-ca', 'verify-full', 'omit']
 export function isSSLMode(sslMode: string): boolean {
   return SSL_MODES.includes(sslMode)
 }
+
+export function isBranchType(branchType: string): boolean {
+  return branchType === 'default' || branchType === 'schema-only'
+}
