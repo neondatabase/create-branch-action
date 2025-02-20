@@ -25,7 +25,7 @@ export function buildAnnotations(): Record<string, string> {
     'github-commit-ref',
     context.payload.ref || context.payload.pull_request?.head?.ref
   )
-  addIfNotEmpty('github-action-ref', context.ref)
+  addIfNotEmpty('github-action-ref', context.action)
 
   return annotations
 }

@@ -51672,7 +51672,7 @@ function buildAnnotations() {
     addIfNotEmpty('github-pr-number', githubExports.context.payload.pull_request?.number?.toString());
     addIfNotEmpty('github-pr-title', githubExports.context.payload.pull_request?.title);
     addIfNotEmpty('github-commit-ref', githubExports.context.payload.ref || githubExports.context.payload.pull_request?.head?.ref);
-    addIfNotEmpty('github-action-ref', githubExports.context.ref);
+    addIfNotEmpty('github-action-ref', githubExports.context.action);
     return annotations;
 }
 
