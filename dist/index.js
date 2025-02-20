@@ -51656,16 +51656,24 @@ function requireGithub () {
 var githubExports = requireGithub();
 
 function buildAnnotations() {
-    return {
-        'github-commit-repo': githubExports.context.repo.repo,
-        'github-commit-author-login': githubExports.context.actor,
-        'github-commit-sha': githubExports.context.payload.head_commit?.id || '',
-        'github-commit-message': githubExports.context.payload.head_commit?.message || '',
-        'github-pr-number': githubExports.context.payload.pull_request?.number.toString() || '',
-        'github-pr-title': githubExports.context.payload.pull_request?.title || '',
-        'github-commit-ref': githubExports.context.ref || githubExports.context.payload.pull_request?.head?.ref || '',
-        'github-action-ref': githubExports.context.ref || ''
+    const annotations = {};
+    // Helper to add non-empty values
+    const addIfNotEmpty = (key, value) => {
+        if (value)
+            annotations[key] = value;
     };
+    // Repo is always available through context.repo
+    annotations['github-commit-repo'] =
+        `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`;
+    // Add other fields only if they have values
+    addIfNotEmpty('github-commit-author-login', githubExports.context.actor);
+    addIfNotEmpty('github-commit-sha', githubExports.context.payload.head_commit?.id);
+    addIfNotEmpty('github-commit-message', githubExports.context.payload.head_commit?.message);
+    addIfNotEmpty('github-pr-number', githubExports.context.payload.pull_request?.number?.toString());
+    addIfNotEmpty('github-pr-title', githubExports.context.payload.pull_request?.title);
+    addIfNotEmpty('github-commit-ref', githubExports.context.ref || githubExports.context.payload.pull_request?.head?.ref);
+    addIfNotEmpty('github-action-ref', githubExports.context.action);
+    return annotations;
 }
 
 const version = '6.0.0';
