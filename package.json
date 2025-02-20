@@ -1,0 +1,74 @@
+{
+  "name": "create-branch",
+  "description": "Neon Create Branch GitHub Action",
+  "version": "6.0.0",
+  "author": "",
+  "private": false,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neondatabase/create-branch-action.git"
+  },
+  "bugs": {
+    "url": "https://github.com/neondatabase/create-branch-action/issues"
+  },
+  "keywords": [
+    "actions"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=21"
+  },
+  "scripts": {
+    "bundle": "bun run prebuild && bun run format:write && bun run package",
+    "ci-test": "vitest run",
+    "coverage": "vitest run --coverage && bunx make-coverage-badge --output-path ./docs/coverage.svg",
+    "format:write": "bunx prettier --write .",
+    "format:check": "bunx prettier --check .",
+    "lint": "bunx eslint .",
+    "local-action": "bunx local-action . src/main.ts .env",
+    "package": "bunx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "package:watch": "bun run package -- --watch",
+    "prebuild": "sh ./scripts/generate-version.sh",
+    "test": "vitest run",
+    "all": "bun run format:write && bun run lint && bun run test && bun run coverage && bun run package"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "@neondatabase/api-client": "^1.11.5",
+    "diff": "^7.0.0"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^1.2.6",
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.20.0",
+    "@github/local-action": "^2.6.1",
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/diff": "^7.0.1",
+    "@types/node": "^22.13.0",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "@vercel/ncc": "^0.38.3",
+    "@vitest/coverage-v8": "^3.0.5",
+    "@vitest/eslint-plugin": "^1.1.27",
+    "eslint": "^9.20.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsonc": "^2.19.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "globals": "^15.14.0",
+    "make-coverage-badge": "^1.2.0",
+    "prettier": "^3.5.0",
+    "prettier-eslint": "^16.3.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}
