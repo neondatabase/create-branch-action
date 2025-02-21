@@ -59,13 +59,24 @@ The following fields are required to run the Create Branch action:
 Setup the action in your workflow:
 
 ```yml
+# v6 (latest)
 steps:
-  - uses: neondatabase/create-branch-action@v5
+  - uses: neondatabase/create-branch-action@v6
     id: create-branch
     with:
       project_id: your_neon_project_id
       branch_name: actions_reusable
-      role: neondb_owner
+      username: neondb_owner
+      api_key: ${{ secrets.NEON_API_KEY }}
+
+# v5
+steps:
+  - uses: neondatabase/create-branch-action@v6
+    id: create-branch
+    with:
+      project_id: your_neon_project_id
+      branch_name: actions_reusable
+      username: neondb_owner
       api_key: ${{ secrets.NEON_API_KEY }}
 ```
 
@@ -83,7 +94,7 @@ projects, which are `neondb` and `neondb_owner`, respectively.
 
 ```yml
 steps:
-  - uses: neondatabase/create-branch-action@v5
+  - uses: neondatabase/create-branch-action@v6
     id: create-branch
     with:
       project_id: ${{ vars.NEON_PROJECT_ID }}
@@ -128,10 +139,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  Create-Neon-Branch:
+  create-neon-branch:
     runs-on: ubuntu-24.04
     steps:
-      - uses: neondatabase/create-branch-action@v5
+      - uses: neondatabase/create-branch-action@v6
         id: create-branch
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
