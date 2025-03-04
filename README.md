@@ -105,8 +105,8 @@ steps:
 ```
 
 > [!IMPORTANT] Ensure the database role specified in the input is already
-> created in your Neon project. This action will fail if the specified
-> role does not exist.
+> created in your Neon project. This action will fail if the specified role does
+> not exist.
 
 If you need to connect to the newly created branch in subsequent steps, you can
 use the outputs of this action. See the [Outputs](#outputs) section below for
