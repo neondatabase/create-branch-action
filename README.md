@@ -66,7 +66,7 @@ steps:
     with:
       project_id: your_neon_project_id
       branch_name: actions_reusable
-      username: neondb_owner
+      role: neondb_owner
       api_key: ${{ secrets.NEON_API_KEY }}
 
 # v5
@@ -76,7 +76,7 @@ steps:
     with:
       project_id: your_neon_project_id
       branch_name: actions_reusable
-      username: neondb_owner
+      role: neondb_owner
       api_key: ${{ secrets.NEON_API_KEY }}
 ```
 
@@ -105,8 +105,8 @@ steps:
 ```
 
 > [!IMPORTANT] Ensure the database role specified in the input is already
-> created in your Neon project. This action will fail if the specified username
-> role does not exist.
+> created in your Neon project. This action will fail if the specified role does
+> not exist.
 
 If you need to connect to the newly created branch in subsequent steps, you can
 use the outputs of this action. See the [Outputs](#outputs) section below for
@@ -117,12 +117,12 @@ details.
 The action provides the following outputs:
 
 - `db_url` — The DATABASE_URL connection string for the new branch.
-- `db_url_with_pooler` — DATABASE_URL with connection pooling enabled.
+- `db_url_pooled` — DATABASE_URL with connection pooling enabled.
 - `db_host` — The host address of the new branch.
-- `db_host_with_pooler` — The host address with connection pooling enabled.
+- `db_host_pooled` — The host address with connection pooling enabled.
 - `branch_id` — The unique ID of the new Neon branch.
 - `password` — The password for connecting to the new branch database with the
-  input username.
+  input role.
 - `created` - `true` if the branch was created, `false` is the branch already
   exists and is being reused.
 
