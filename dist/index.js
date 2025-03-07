@@ -51874,7 +51874,7 @@ async function run() {
         });
         // Optional fields but with default value
         const apiHost = coreExports.getInput('api_host', { trimWhitespace: true }); // defaults to https://console.neon.tech/api/v2
-        const usePrisma = coreExports.getInput('use_prisma', {
+        const usePrisma = coreExports.getInput('prisma', {
             trimWhitespace: true
         }) === 'true'; // defaults to false
         const database = coreExports.getInput('database', {
