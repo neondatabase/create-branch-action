@@ -24,7 +24,7 @@ export async function run(): Promise<void> {
     // Optional fields but with default value
     const apiHost: string = core.getInput('api_host', { trimWhitespace: true }) // defaults to https://console.neon.tech/api/v2
     const usePrisma: boolean =
-      core.getInput('use_prisma', {
+      core.getInput('prisma', {
         trimWhitespace: true
       }) === 'true' // defaults to false
     const database: string = core.getInput('database', {
