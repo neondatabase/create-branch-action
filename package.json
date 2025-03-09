@@ -1,7 +1,7 @@
 {
   "name": "create-branch",
   "description": "Neon Create Branch GitHub Action",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "author": "",
   "private": false,
   "type": "module",
@@ -33,7 +33,7 @@
     "package:watch": "bun run package -- --watch",
     "prebuild": "sh ./scripts/generate-version.sh",
     "test": "vitest run",
-    "all": "bun run format:write && bun run lint && bun run test && bun run coverage && bun run package"
+    "all": "bun run prebuild && bun run format:write && bun run lint && bun run test && bun run coverage && bun run package"
   },
   "license": "MIT",
   "dependencies": {
