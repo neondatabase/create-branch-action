@@ -51676,7 +51676,7 @@ function buildAnnotations() {
     return annotations;
 }
 
-const version = '6.0.0';
+const version = '6.0.1';
 // This file is auto-generated. Use 'bun run prebuild' when you need to update the version!
 
 async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch) {
@@ -51874,7 +51874,7 @@ async function run() {
         });
         // Optional fields but with default value
         const apiHost = coreExports.getInput('api_host', { trimWhitespace: true }); // defaults to https://console.neon.tech/api/v2
-        const usePrisma = coreExports.getInput('use_prisma', {
+        const usePrisma = coreExports.getInput('prisma', {
             trimWhitespace: true
         }) === 'true'; // defaults to false
         const database = coreExports.getInput('database', {
