@@ -33,7 +33,8 @@
     "package:watch": "bun run package -- --watch",
     "prebuild": "sh ./scripts/generate-version.sh",
     "test": "vitest run",
-    "all": "bun run prebuild && bun run format:write && bun run lint && bun run test && bun run coverage && bun run package"
+    "all": "bun run prebuild && bun run format:write && bun run lint && bun run test && bun run coverage && bun run package",
+    "postinstall": "bun run package"
   },
   "license": "MIT",
   "dependencies": {
