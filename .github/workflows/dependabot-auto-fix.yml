@@ -7,6 +7,7 @@ on:
     paths:
       - '**/bun.lockb'
       - '**/bun.lock'
+  workflow_dispatch:
 
 permissions:
   # Needed for checkout and push
@@ -18,8 +19,10 @@ jobs:
   auto-package:
     name: Auto Package Dependabot PR
     runs-on: ubuntu-latest
-    # Only run on Dependabot PRs
-    if: github.actor == 'dependabot[bot]'
+    # Run on Dependabot PRs or manual triggers
+    if:
+      github.actor == 'dependabot[bot]' || github.event_name ==
+      'workflow_dispatch'
 
     steps:
       - name: Harden Runner
@@ -52,9 +55,9 @@ jobs:
         id: check-changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Commit and push if changes exist
