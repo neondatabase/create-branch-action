@@ -1,0 +1,83 @@
+name: Dependabot Auto Package
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/bun.lockb'
+      - '**/bun.lock'
+  workflow_dispatch:
+
+permissions:
+  # Needed for checkout and push
+  contents: write
+  # Needed for PR comments
+  pull-requests: write
+
+jobs:
+  auto-package:
+    name: Auto Package Dependabot PR
+    runs-on: ubuntu-latest
+    # Run on Dependabot PRs or manual triggers
+    if:
+      github.actor == 'dependabot[bot]' || github.event_name ==
+      'workflow_dispatch'
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # Required to push changes
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Need to fetch complete PR
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Bun
+        id: setup-bun
+        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 # v2.0.1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Run Packaging
+        run: bun run all
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push if changes exist
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -m "chore: update package after dependency updates"
+          git push
+
+      - name: Add comment to PR
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: actions/github-script@e69ef5462fd455e02edcaf4dd7708eda96b9eda0 # v7.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 I just pushed packaging updates after the dependency changes. Please verify the changes!'
+            })
