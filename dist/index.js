@@ -47516,7 +47516,7 @@ function requireApi_gen () {
 	    return (mod && mod.__esModule) ? mod : { "default": mod };
 	};
 	Object.defineProperty(api_gen, "__esModule", { value: true });
-	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.SupportTicketSeverity = api_gen.IdentityAuthProviderProjectTransferStatus = api_gen.IdentityAuthProviderProjectOwnedBy = api_gen.IdentitySupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
+	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.SupportTicketSeverity = api_gen.NeonAuthProviderProjectTransferStatus = api_gen.NeonAuthProviderProjectOwnedBy = api_gen.NeonAuthSupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
 	/** The action performed by the operation */
 	var OperationAction;
 	(function (OperationAction) {
@@ -47651,21 +47651,21 @@ function requireApi_gen () {
 	(function (OrgDeletionConditionName) {
 	    OrgDeletionConditionName["ProjectCount"] = "project_count";
 	})(OrgDeletionConditionName || (api_gen.OrgDeletionConditionName = OrgDeletionConditionName = {}));
-	var IdentitySupportedAuthProvider;
-	(function (IdentitySupportedAuthProvider) {
-	    IdentitySupportedAuthProvider["Mock"] = "mock";
-	    IdentitySupportedAuthProvider["Stack"] = "stack";
-	})(IdentitySupportedAuthProvider || (api_gen.IdentitySupportedAuthProvider = IdentitySupportedAuthProvider = {}));
-	var IdentityAuthProviderProjectOwnedBy;
-	(function (IdentityAuthProviderProjectOwnedBy) {
-	    IdentityAuthProviderProjectOwnedBy["User"] = "user";
-	    IdentityAuthProviderProjectOwnedBy["Neon"] = "neon";
-	})(IdentityAuthProviderProjectOwnedBy || (api_gen.IdentityAuthProviderProjectOwnedBy = IdentityAuthProviderProjectOwnedBy = {}));
-	var IdentityAuthProviderProjectTransferStatus;
-	(function (IdentityAuthProviderProjectTransferStatus) {
-	    IdentityAuthProviderProjectTransferStatus["Initiated"] = "initiated";
-	    IdentityAuthProviderProjectTransferStatus["Finished"] = "finished";
-	})(IdentityAuthProviderProjectTransferStatus || (api_gen.IdentityAuthProviderProjectTransferStatus = IdentityAuthProviderProjectTransferStatus = {}));
+	var NeonAuthSupportedAuthProvider;
+	(function (NeonAuthSupportedAuthProvider) {
+	    NeonAuthSupportedAuthProvider["Mock"] = "mock";
+	    NeonAuthSupportedAuthProvider["Stack"] = "stack";
+	})(NeonAuthSupportedAuthProvider || (api_gen.NeonAuthSupportedAuthProvider = NeonAuthSupportedAuthProvider = {}));
+	var NeonAuthProviderProjectOwnedBy;
+	(function (NeonAuthProviderProjectOwnedBy) {
+	    NeonAuthProviderProjectOwnedBy["User"] = "user";
+	    NeonAuthProviderProjectOwnedBy["Neon"] = "neon";
+	})(NeonAuthProviderProjectOwnedBy || (api_gen.NeonAuthProviderProjectOwnedBy = NeonAuthProviderProjectOwnedBy = {}));
+	var NeonAuthProviderProjectTransferStatus;
+	(function (NeonAuthProviderProjectTransferStatus) {
+	    NeonAuthProviderProjectTransferStatus["Initiated"] = "initiated";
+	    NeonAuthProviderProjectTransferStatus["Finished"] = "finished";
+	})(NeonAuthProviderProjectTransferStatus || (api_gen.NeonAuthProviderProjectTransferStatus = NeonAuthProviderProjectTransferStatus = {}));
 	var SupportTicketSeverity;
 	(function (SupportTicketSeverity) {
 	    SupportTicketSeverity["Low"] = "low";
@@ -47997,12 +47997,12 @@ function requireApi_gen () {
 	         * @description Creates a project on a third-party authentication provider's platform for use with Neon Auth. Use this endpoint if the frontend integration flow can't be used.
 	         *
 	         * @tags Auth
-	         * @name CreateProjectIdentityIntegration
+	         * @name CreateNeonAuthIntegration
 	         * @summary Create Neon Auth integration
 	         * @request POST:/projects/auth/create
 	         * @secure
 	         */
-	        _this.createProjectIdentityIntegration = function (data, params) {
+	        _this.createNeonAuthIntegration = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/create", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
@@ -48010,12 +48010,12 @@ function requireApi_gen () {
 	         * @description Generates SDK or API Keys for the auth provider. These might be called different things depending on the auth provider you're using, but are generally used for setting up the frontend and backend SDKs.
 	         *
 	         * @tags Auth
-	         * @name CreateProjectIdentityAuthProviderSdkKeys
+	         * @name CreateNeonAuthProviderSdkKeys
 	         * @summary Create Auth Provider SDK keys
 	         * @request POST:/projects/auth/keys
 	         * @secure
 	         */
-	        _this.createProjectIdentityAuthProviderSdkKeys = function (data, params) {
+	        _this.createNeonAuthProviderSdkKeys = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/keys", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
@@ -48023,12 +48023,12 @@ function requireApi_gen () {
 	         * @description Transfer ownership of your Neon-managed auth project to your own auth provider account.
 	         *
 	         * @tags Auth
-	         * @name TransferProjectIdentityAuthProviderProject
+	         * @name TransferNeonAuthProviderProject
 	         * @summary Transfer Neon-managed auth project to your own account
 	         * @request POST:/projects/auth/transfer_ownership
 	         * @secure
 	         */
-	        _this.transferProjectIdentityAuthProviderProject = function (data, params) {
+	        _this.transferNeonAuthProviderProject = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/transfer_ownership", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
@@ -48036,12 +48036,12 @@ function requireApi_gen () {
 	         * No description
 	         *
 	         * @tags Auth
-	         * @name ListProjectIdentityIntegrations
+	         * @name ListNeonAuthIntegrations
 	         * @summary Lists active integrations with auth providers
 	         * @request GET:/projects/{project_id}/auth/integrations
 	         * @secure
 	         */
-	        _this.listProjectIdentityIntegrations = function (projectId, params) {
+	        _this.listNeonAuthIntegrations = function (projectId, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integrations"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
@@ -48049,12 +48049,12 @@ function requireApi_gen () {
 	         * No description
 	         *
 	         * @tags Auth
-	         * @name DeleteProjectIdentityIntegration
+	         * @name DeleteNeonAuthIntegration
 	         * @summary Delete integration with auth provider
 	         * @request DELETE:/projects/{project_id}/auth/integration/{auth_provider}
 	         * @secure
 	         */
-	        _this.deleteProjectIdentityIntegration = function (projectId, authProvider, params) {
+	        _this.deleteNeonAuthIntegration = function (projectId, authProvider, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integration/").concat(encodeURIComponent(authProvider)), method: 'DELETE', secure: true }, params));
 	        };
@@ -48714,7 +48714,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/organizations/".concat(encodeURIComponent(orgId), "/vpc/region/").concat(encodeURIComponent(regionId), "/vpc_endpoints/").concat(encodeURIComponent(vpcEndpointId)), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
-	         * @description Deletes the VPC endpoint from the specified Neon organization.
+	         * @description Deletes the VPC endpoint from the specified Neon organization. If you delete a VPC endpoint from a Neon organization, that VPC endpoint cannot be added back to the Neon organization.
 	         *
 	         * @tags Organizations
 	         * @name DeleteOrganizationVpcEndpoint
@@ -48777,6 +48777,19 @@ function requireApi_gen () {
 	        _this.transferProjectsFromUserToOrg = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/users/me/projects/transfer", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Returns auth information about the passed credentials. It can refer to an API key, Bearer token or OAuth session.
+	         *
+	         * @tags Users
+	         * @name GetAuthDetails
+	         * @summary Get request authentication details
+	         * @request GET:/auth
+	         * @secure
+	         */
+	        _this.getAuthDetails = function (params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/auth", method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        return _this;
 	    }
