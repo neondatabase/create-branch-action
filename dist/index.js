@@ -34,9 +34,9 @@ import require$$2$4 from 'node:http';
 import require$$0$c from 'node:buffer';
 import require$$7$1 from 'node:querystring';
 import require$$0$f from 'node:diagnostics_channel';
-import require$$5$1 from 'node:tls';
+import require$$4$3 from 'node:tls';
 import require$$1$7 from 'node:zlib';
-import require$$5$2 from 'node:perf_hooks';
+import require$$5$1 from 'node:perf_hooks';
 import require$$8$1 from 'node:util/types';
 import require$$1$6 from 'node:worker_threads';
 import require$$1$8 from 'node:url';
@@ -49028,6 +49028,437 @@ function requireSymbols () {
 	return symbols;
 }
 
+var timers;
+var hasRequiredTimers;
+
+function requireTimers () {
+	if (hasRequiredTimers) return timers;
+	hasRequiredTimers = 1;
+
+	/**
+	 * This module offers an optimized timer implementation designed for scenarios
+	 * where high precision is not critical.
+	 *
+	 * The timer achieves faster performance by using a low-resolution approach,
+	 * with an accuracy target of within 500ms. This makes it particularly useful
+	 * for timers with delays of 1 second or more, where exact timing is less
+	 * crucial.
+	 *
+	 * It's important to note that Node.js timers are inherently imprecise, as
+	 * delays can occur due to the event loop being blocked by other operations.
+	 * Consequently, timers may trigger later than their scheduled time.
+	 */
+
+	/**
+	 * The fastNow variable contains the internal fast timer clock value.
+	 *
+	 * @type {number}
+	 */
+	let fastNow = 0;
+
+	/**
+	 * RESOLUTION_MS represents the target resolution time in milliseconds.
+	 *
+	 * @type {number}
+	 * @default 1000
+	 */
+	const RESOLUTION_MS = 1e3;
+
+	/**
+	 * TICK_MS defines the desired interval in milliseconds between each tick.
+	 * The target value is set to half the resolution time, minus 1 ms, to account
+	 * for potential event loop overhead.
+	 *
+	 * @type {number}
+	 * @default 499
+	 */
+	const TICK_MS = (RESOLUTION_MS >> 1) - 1;
+
+	/**
+	 * fastNowTimeout is a Node.js timer used to manage and process
+	 * the FastTimers stored in the `fastTimers` array.
+	 *
+	 * @type {NodeJS.Timeout}
+	 */
+	let fastNowTimeout;
+
+	/**
+	 * The kFastTimer symbol is used to identify FastTimer instances.
+	 *
+	 * @type {Symbol}
+	 */
+	const kFastTimer = Symbol('kFastTimer');
+
+	/**
+	 * The fastTimers array contains all active FastTimers.
+	 *
+	 * @type {FastTimer[]}
+	 */
+	const fastTimers = [];
+
+	/**
+	 * These constants represent the various states of a FastTimer.
+	 */
+
+	/**
+	 * The `NOT_IN_LIST` constant indicates that the FastTimer is not included
+	 * in the `fastTimers` array. Timers with this status will not be processed
+	 * during the next tick by the `onTick` function.
+	 *
+	 * A FastTimer can be re-added to the `fastTimers` array by invoking the
+	 * `refresh` method on the FastTimer instance.
+	 *
+	 * @type {-2}
+	 */
+	const NOT_IN_LIST = -2;
+
+	/**
+	 * The `TO_BE_CLEARED` constant indicates that the FastTimer is scheduled
+	 * for removal from the `fastTimers` array. A FastTimer in this state will
+	 * be removed in the next tick by the `onTick` function and will no longer
+	 * be processed.
+	 *
+	 * This status is also set when the `clear` method is called on the FastTimer instance.
+	 *
+	 * @type {-1}
+	 */
+	const TO_BE_CLEARED = -1;
+
+	/**
+	 * The `PENDING` constant signifies that the FastTimer is awaiting processing
+	 * in the next tick by the `onTick` function. Timers with this status will have
+	 * their `_idleStart` value set and their status updated to `ACTIVE` in the next tick.
+	 *
+	 * @type {0}
+	 */
+	const PENDING = 0;
+
+	/**
+	 * The `ACTIVE` constant indicates that the FastTimer is active and waiting
+	 * for its timer to expire. During the next tick, the `onTick` function will
+	 * check if the timer has expired, and if so, it will execute the associated callback.
+	 *
+	 * @type {1}
+	 */
+	const ACTIVE = 1;
+
+	/**
+	 * The onTick function processes the fastTimers array.
+	 *
+	 * @returns {void}
+	 */
+	function onTick () {
+	  /**
+	   * Increment the fastNow value by the TICK_MS value, despite the actual time
+	   * that has passed since the last tick. This approach ensures independence
+	   * from the system clock and delays caused by a blocked event loop.
+	   *
+	   * @type {number}
+	   */
+	  fastNow += TICK_MS;
+
+	  /**
+	   * The `idx` variable is used to iterate over the `fastTimers` array.
+	   * Expired timers are removed by replacing them with the last element in the array.
+	   * Consequently, `idx` is only incremented when the current element is not removed.
+	   *
+	   * @type {number}
+	   */
+	  let idx = 0;
+
+	  /**
+	   * The len variable will contain the length of the fastTimers array
+	   * and will be decremented when a FastTimer should be removed from the
+	   * fastTimers array.
+	   *
+	   * @type {number}
+	   */
+	  let len = fastTimers.length;
+
+	  while (idx < len) {
+	    /**
+	     * @type {FastTimer}
+	     */
+	    const timer = fastTimers[idx];
+
+	    // If the timer is in the ACTIVE state and the timer has expired, it will
+	    // be processed in the next tick.
+	    if (timer._state === PENDING) {
+	      // Set the _idleStart value to the fastNow value minus the TICK_MS value
+	      // to account for the time the timer was in the PENDING state.
+	      timer._idleStart = fastNow - TICK_MS;
+	      timer._state = ACTIVE;
+	    } else if (
+	      timer._state === ACTIVE &&
+	      fastNow >= timer._idleStart + timer._idleTimeout
+	    ) {
+	      timer._state = TO_BE_CLEARED;
+	      timer._idleStart = -1;
+	      timer._onTimeout(timer._timerArg);
+	    }
+
+	    if (timer._state === TO_BE_CLEARED) {
+	      timer._state = NOT_IN_LIST;
+
+	      // Move the last element to the current index and decrement len if it is
+	      // not the only element in the array.
+	      if (--len !== 0) {
+	        fastTimers[idx] = fastTimers[len];
+	      }
+	    } else {
+	      ++idx;
+	    }
+	  }
+
+	  // Set the length of the fastTimers array to the new length and thus
+	  // removing the excess FastTimers elements from the array.
+	  fastTimers.length = len;
+
+	  // If there are still active FastTimers in the array, refresh the Timer.
+	  // If there are no active FastTimers, the timer will be refreshed again
+	  // when a new FastTimer is instantiated.
+	  if (fastTimers.length !== 0) {
+	    refreshTimeout();
+	  }
+	}
+
+	function refreshTimeout () {
+	  // If the fastNowTimeout is already set, refresh it.
+	  if (fastNowTimeout) {
+	    fastNowTimeout.refresh();
+	  // fastNowTimeout is not instantiated yet, create a new Timer.
+	  } else {
+	    clearTimeout(fastNowTimeout);
+	    fastNowTimeout = setTimeout(onTick, TICK_MS);
+
+	    // If the Timer has an unref method, call it to allow the process to exit if
+	    // there are no other active handles.
+	    if (fastNowTimeout.unref) {
+	      fastNowTimeout.unref();
+	    }
+	  }
+	}
+
+	/**
+	 * The `FastTimer` class is a data structure designed to store and manage
+	 * timer information.
+	 */
+	class FastTimer {
+	  [kFastTimer] = true
+
+	  /**
+	   * The state of the timer, which can be one of the following:
+	   * - NOT_IN_LIST (-2)
+	   * - TO_BE_CLEARED (-1)
+	   * - PENDING (0)
+	   * - ACTIVE (1)
+	   *
+	   * @type {-2|-1|0|1}
+	   * @private
+	   */
+	  _state = NOT_IN_LIST
+
+	  /**
+	   * The number of milliseconds to wait before calling the callback.
+	   *
+	   * @type {number}
+	   * @private
+	   */
+	  _idleTimeout = -1
+
+	  /**
+	   * The time in milliseconds when the timer was started. This value is used to
+	   * calculate when the timer should expire.
+	   *
+	   * @type {number}
+	   * @default -1
+	   * @private
+	   */
+	  _idleStart = -1
+
+	  /**
+	   * The function to be executed when the timer expires.
+	   * @type {Function}
+	   * @private
+	   */
+	  _onTimeout
+
+	  /**
+	   * The argument to be passed to the callback when the timer expires.
+	   *
+	   * @type {*}
+	   * @private
+	   */
+	  _timerArg
+
+	  /**
+	   * @constructor
+	   * @param {Function} callback A function to be executed after the timer
+	   * expires.
+	   * @param {number} delay The time, in milliseconds that the timer should wait
+	   * before the specified function or code is executed.
+	   * @param {*} arg
+	   */
+	  constructor (callback, delay, arg) {
+	    this._onTimeout = callback;
+	    this._idleTimeout = delay;
+	    this._timerArg = arg;
+
+	    this.refresh();
+	  }
+
+	  /**
+	   * Sets the timer's start time to the current time, and reschedules the timer
+	   * to call its callback at the previously specified duration adjusted to the
+	   * current time.
+	   * Using this on a timer that has already called its callback will reactivate
+	   * the timer.
+	   *
+	   * @returns {void}
+	   */
+	  refresh () {
+	    // In the special case that the timer is not in the list of active timers,
+	    // add it back to the array to be processed in the next tick by the onTick
+	    // function.
+	    if (this._state === NOT_IN_LIST) {
+	      fastTimers.push(this);
+	    }
+
+	    // If the timer is the only active timer, refresh the fastNowTimeout for
+	    // better resolution.
+	    if (!fastNowTimeout || fastTimers.length === 1) {
+	      refreshTimeout();
+	    }
+
+	    // Setting the state to PENDING will cause the timer to be reset in the
+	    // next tick by the onTick function.
+	    this._state = PENDING;
+	  }
+
+	  /**
+	   * The `clear` method cancels the timer, preventing it from executing.
+	   *
+	   * @returns {void}
+	   * @private
+	   */
+	  clear () {
+	    // Set the state to TO_BE_CLEARED to mark the timer for removal in the next
+	    // tick by the onTick function.
+	    this._state = TO_BE_CLEARED;
+
+	    // Reset the _idleStart value to -1 to indicate that the timer is no longer
+	    // active.
+	    this._idleStart = -1;
+	  }
+	}
+
+	/**
+	 * This module exports a setTimeout and clearTimeout function that can be
+	 * used as a drop-in replacement for the native functions.
+	 */
+	timers = {
+	  /**
+	   * The setTimeout() method sets a timer which executes a function once the
+	   * timer expires.
+	   * @param {Function} callback A function to be executed after the timer
+	   * expires.
+	   * @param {number} delay The time, in milliseconds that the timer should
+	   * wait before the specified function or code is executed.
+	   * @param {*} [arg] An optional argument to be passed to the callback function
+	   * when the timer expires.
+	   * @returns {NodeJS.Timeout|FastTimer}
+	   */
+	  setTimeout (callback, delay, arg) {
+	    // If the delay is less than or equal to the RESOLUTION_MS value return a
+	    // native Node.js Timer instance.
+	    return delay <= RESOLUTION_MS
+	      ? setTimeout(callback, delay, arg)
+	      : new FastTimer(callback, delay, arg)
+	  },
+	  /**
+	   * The clearTimeout method cancels an instantiated Timer previously created
+	   * by calling setTimeout.
+	   *
+	   * @param {NodeJS.Timeout|FastTimer} timeout
+	   */
+	  clearTimeout (timeout) {
+	    // If the timeout is a FastTimer, call its own clear method.
+	    if (timeout[kFastTimer]) {
+	      /**
+	       * @type {FastTimer}
+	       */
+	      timeout.clear();
+	      // Otherwise it is an instance of a native NodeJS.Timeout, so call the
+	      // Node.js native clearTimeout function.
+	    } else {
+	      clearTimeout(timeout);
+	    }
+	  },
+	  /**
+	   * The setFastTimeout() method sets a fastTimer which executes a function once
+	   * the timer expires.
+	   * @param {Function} callback A function to be executed after the timer
+	   * expires.
+	   * @param {number} delay The time, in milliseconds that the timer should
+	   * wait before the specified function or code is executed.
+	   * @param {*} [arg] An optional argument to be passed to the callback function
+	   * when the timer expires.
+	   * @returns {FastTimer}
+	   */
+	  setFastTimeout (callback, delay, arg) {
+	    return new FastTimer(callback, delay, arg)
+	  },
+	  /**
+	   * The clearTimeout method cancels an instantiated FastTimer previously
+	   * created by calling setFastTimeout.
+	   *
+	   * @param {FastTimer} timeout
+	   */
+	  clearFastTimeout (timeout) {
+	    timeout.clear();
+	  },
+	  /**
+	   * The now method returns the value of the internal fast timer clock.
+	   *
+	   * @returns {number}
+	   */
+	  now () {
+	    return fastNow
+	  },
+	  /**
+	   * Trigger the onTick function to process the fastTimers array.
+	   * Exported for testing purposes only.
+	   * Marking as deprecated to discourage any use outside of testing.
+	   * @deprecated
+	   * @param {number} [delay=0] The delay in milliseconds to add to the now value.
+	   */
+	  tick (delay = 0) {
+	    fastNow += delay - RESOLUTION_MS + 1;
+	    onTick();
+	    onTick();
+	  },
+	  /**
+	   * Reset FastTimers.
+	   * Exported for testing purposes only.
+	   * Marking as deprecated to discourage any use outside of testing.
+	   * @deprecated
+	   */
+	  reset () {
+	    fastNow = 0;
+	    fastTimers.length = 0;
+	    clearTimeout(fastNowTimeout);
+	    fastNowTimeout = null;
+	  },
+	  /**
+	   * Exporting for testing purposes only.
+	   * Marking as deprecated to discourage any use outside of testing.
+	   * @deprecated
+	   */
+	  kFastTimer
+	};
+	return timers;
+}
+
 var errors;
 var hasRequiredErrors;
 
@@ -49615,11 +50046,12 @@ function requireUtil$5 () {
 	const nodeUtil = require$$1$2;
 	const { stringify } = require$$7$1;
 	const { EventEmitter: EE } = require$$0$7;
-	const { InvalidArgumentError } = requireErrors();
+	const timers = requireTimers();
+	const { InvalidArgumentError, ConnectTimeoutError } = requireErrors();
 	const { headerNameLowerCasedRecord } = requireConstants$4();
 	const { tree } = requireTree();
 
-	const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(v => Number(v));
+	const [nodeMajor, nodeMinor] = process.versions.node.split('.', 2).map(v => Number(v));
 
 	class BodyAsyncIterable {
 	  constructor (body) {
@@ -49633,6 +50065,8 @@ function requireUtil$5 () {
 	    yield * this[kBody];
 	  }
 	}
+
+	function noop () {}
 
 	/**
 	 * @param {*} body
@@ -50443,6 +50877,78 @@ function requireUtil$5 () {
 	  }
 	}
 
+	/**
+	 * @param {WeakRef<net.Socket>} socketWeakRef
+	 * @param {object} opts
+	 * @param {number} opts.timeout
+	 * @param {string} opts.hostname
+	 * @param {number} opts.port
+	 * @returns {() => void}
+	 */
+	const setupConnectTimeout = process.platform === 'win32'
+	  ? (socketWeakRef, opts) => {
+	      if (!opts.timeout) {
+	        return noop
+	      }
+
+	      let s1 = null;
+	      let s2 = null;
+	      const fastTimer = timers.setFastTimeout(() => {
+	      // setImmediate is added to make sure that we prioritize socket error events over timeouts
+	        s1 = setImmediate(() => {
+	        // Windows needs an extra setImmediate probably due to implementation differences in the socket logic
+	          s2 = setImmediate(() => onConnectTimeout(socketWeakRef.deref(), opts));
+	        });
+	      }, opts.timeout);
+	      return () => {
+	        timers.clearFastTimeout(fastTimer);
+	        clearImmediate(s1);
+	        clearImmediate(s2);
+	      }
+	    }
+	  : (socketWeakRef, opts) => {
+	      if (!opts.timeout) {
+	        return noop
+	      }
+
+	      let s1 = null;
+	      const fastTimer = timers.setFastTimeout(() => {
+	      // setImmediate is added to make sure that we prioritize socket error events over timeouts
+	        s1 = setImmediate(() => {
+	          onConnectTimeout(socketWeakRef.deref(), opts);
+	        });
+	      }, opts.timeout);
+	      return () => {
+	        timers.clearFastTimeout(fastTimer);
+	        clearImmediate(s1);
+	      }
+	    };
+
+	/**
+	 * @param {net.Socket} socket
+	 * @param {object} opts
+	 * @param {number} opts.timeout
+	 * @param {string} opts.hostname
+	 * @param {number} opts.port
+	 */
+	function onConnectTimeout (socket, opts) {
+	  // The socket could be already garbage collected
+	  if (socket == null) {
+	    return
+	  }
+
+	  let message = 'Connect Timeout Error';
+	  if (Array.isArray(socket.autoSelectFamilyAttemptedAddresses)) {
+	    message += ` (attempted addresses: ${socket.autoSelectFamilyAttemptedAddresses.join(', ')},`;
+	  } else {
+	    message += ` (attempted address: ${opts.hostname}:${opts.port},`;
+	  }
+
+	  message += ` timeout: ${opts.timeout}ms)`;
+
+	  destroy(socket, new ConnectTimeoutError(message));
+	}
+
 	const kEnumerableProperty = Object.create(null);
 	kEnumerableProperty.enumerable = true;
 
@@ -50514,7 +51020,8 @@ function requireUtil$5 () {
 	  nodeMajor,
 	  nodeMinor,
 	  safeHTTPMethods: Object.freeze(['GET', 'HEAD', 'OPTIONS', 'TRACE']),
-	  wrapRequestBody
+	  wrapRequestBody,
+	  setupConnectTimeout
 	};
 	return util$5;
 }
@@ -51560,437 +52067,6 @@ function requireDispatcherBase () {
 	return dispatcherBase;
 }
 
-var timers;
-var hasRequiredTimers;
-
-function requireTimers () {
-	if (hasRequiredTimers) return timers;
-	hasRequiredTimers = 1;
-
-	/**
-	 * This module offers an optimized timer implementation designed for scenarios
-	 * where high precision is not critical.
-	 *
-	 * The timer achieves faster performance by using a low-resolution approach,
-	 * with an accuracy target of within 500ms. This makes it particularly useful
-	 * for timers with delays of 1 second or more, where exact timing is less
-	 * crucial.
-	 *
-	 * It's important to note that Node.js timers are inherently imprecise, as
-	 * delays can occur due to the event loop being blocked by other operations.
-	 * Consequently, timers may trigger later than their scheduled time.
-	 */
-
-	/**
-	 * The fastNow variable contains the internal fast timer clock value.
-	 *
-	 * @type {number}
-	 */
-	let fastNow = 0;
-
-	/**
-	 * RESOLUTION_MS represents the target resolution time in milliseconds.
-	 *
-	 * @type {number}
-	 * @default 1000
-	 */
-	const RESOLUTION_MS = 1e3;
-
-	/**
-	 * TICK_MS defines the desired interval in milliseconds between each tick.
-	 * The target value is set to half the resolution time, minus 1 ms, to account
-	 * for potential event loop overhead.
-	 *
-	 * @type {number}
-	 * @default 499
-	 */
-	const TICK_MS = (RESOLUTION_MS >> 1) - 1;
-
-	/**
-	 * fastNowTimeout is a Node.js timer used to manage and process
-	 * the FastTimers stored in the `fastTimers` array.
-	 *
-	 * @type {NodeJS.Timeout}
-	 */
-	let fastNowTimeout;
-
-	/**
-	 * The kFastTimer symbol is used to identify FastTimer instances.
-	 *
-	 * @type {Symbol}
-	 */
-	const kFastTimer = Symbol('kFastTimer');
-
-	/**
-	 * The fastTimers array contains all active FastTimers.
-	 *
-	 * @type {FastTimer[]}
-	 */
-	const fastTimers = [];
-
-	/**
-	 * These constants represent the various states of a FastTimer.
-	 */
-
-	/**
-	 * The `NOT_IN_LIST` constant indicates that the FastTimer is not included
-	 * in the `fastTimers` array. Timers with this status will not be processed
-	 * during the next tick by the `onTick` function.
-	 *
-	 * A FastTimer can be re-added to the `fastTimers` array by invoking the
-	 * `refresh` method on the FastTimer instance.
-	 *
-	 * @type {-2}
-	 */
-	const NOT_IN_LIST = -2;
-
-	/**
-	 * The `TO_BE_CLEARED` constant indicates that the FastTimer is scheduled
-	 * for removal from the `fastTimers` array. A FastTimer in this state will
-	 * be removed in the next tick by the `onTick` function and will no longer
-	 * be processed.
-	 *
-	 * This status is also set when the `clear` method is called on the FastTimer instance.
-	 *
-	 * @type {-1}
-	 */
-	const TO_BE_CLEARED = -1;
-
-	/**
-	 * The `PENDING` constant signifies that the FastTimer is awaiting processing
-	 * in the next tick by the `onTick` function. Timers with this status will have
-	 * their `_idleStart` value set and their status updated to `ACTIVE` in the next tick.
-	 *
-	 * @type {0}
-	 */
-	const PENDING = 0;
-
-	/**
-	 * The `ACTIVE` constant indicates that the FastTimer is active and waiting
-	 * for its timer to expire. During the next tick, the `onTick` function will
-	 * check if the timer has expired, and if so, it will execute the associated callback.
-	 *
-	 * @type {1}
-	 */
-	const ACTIVE = 1;
-
-	/**
-	 * The onTick function processes the fastTimers array.
-	 *
-	 * @returns {void}
-	 */
-	function onTick () {
-	  /**
-	   * Increment the fastNow value by the TICK_MS value, despite the actual time
-	   * that has passed since the last tick. This approach ensures independence
-	   * from the system clock and delays caused by a blocked event loop.
-	   *
-	   * @type {number}
-	   */
-	  fastNow += TICK_MS;
-
-	  /**
-	   * The `idx` variable is used to iterate over the `fastTimers` array.
-	   * Expired timers are removed by replacing them with the last element in the array.
-	   * Consequently, `idx` is only incremented when the current element is not removed.
-	   *
-	   * @type {number}
-	   */
-	  let idx = 0;
-
-	  /**
-	   * The len variable will contain the length of the fastTimers array
-	   * and will be decremented when a FastTimer should be removed from the
-	   * fastTimers array.
-	   *
-	   * @type {number}
-	   */
-	  let len = fastTimers.length;
-
-	  while (idx < len) {
-	    /**
-	     * @type {FastTimer}
-	     */
-	    const timer = fastTimers[idx];
-
-	    // If the timer is in the ACTIVE state and the timer has expired, it will
-	    // be processed in the next tick.
-	    if (timer._state === PENDING) {
-	      // Set the _idleStart value to the fastNow value minus the TICK_MS value
-	      // to account for the time the timer was in the PENDING state.
-	      timer._idleStart = fastNow - TICK_MS;
-	      timer._state = ACTIVE;
-	    } else if (
-	      timer._state === ACTIVE &&
-	      fastNow >= timer._idleStart + timer._idleTimeout
-	    ) {
-	      timer._state = TO_BE_CLEARED;
-	      timer._idleStart = -1;
-	      timer._onTimeout(timer._timerArg);
-	    }
-
-	    if (timer._state === TO_BE_CLEARED) {
-	      timer._state = NOT_IN_LIST;
-
-	      // Move the last element to the current index and decrement len if it is
-	      // not the only element in the array.
-	      if (--len !== 0) {
-	        fastTimers[idx] = fastTimers[len];
-	      }
-	    } else {
-	      ++idx;
-	    }
-	  }
-
-	  // Set the length of the fastTimers array to the new length and thus
-	  // removing the excess FastTimers elements from the array.
-	  fastTimers.length = len;
-
-	  // If there are still active FastTimers in the array, refresh the Timer.
-	  // If there are no active FastTimers, the timer will be refreshed again
-	  // when a new FastTimer is instantiated.
-	  if (fastTimers.length !== 0) {
-	    refreshTimeout();
-	  }
-	}
-
-	function refreshTimeout () {
-	  // If the fastNowTimeout is already set, refresh it.
-	  if (fastNowTimeout) {
-	    fastNowTimeout.refresh();
-	  // fastNowTimeout is not instantiated yet, create a new Timer.
-	  } else {
-	    clearTimeout(fastNowTimeout);
-	    fastNowTimeout = setTimeout(onTick, TICK_MS);
-
-	    // If the Timer has an unref method, call it to allow the process to exit if
-	    // there are no other active handles.
-	    if (fastNowTimeout.unref) {
-	      fastNowTimeout.unref();
-	    }
-	  }
-	}
-
-	/**
-	 * The `FastTimer` class is a data structure designed to store and manage
-	 * timer information.
-	 */
-	class FastTimer {
-	  [kFastTimer] = true
-
-	  /**
-	   * The state of the timer, which can be one of the following:
-	   * - NOT_IN_LIST (-2)
-	   * - TO_BE_CLEARED (-1)
-	   * - PENDING (0)
-	   * - ACTIVE (1)
-	   *
-	   * @type {-2|-1|0|1}
-	   * @private
-	   */
-	  _state = NOT_IN_LIST
-
-	  /**
-	   * The number of milliseconds to wait before calling the callback.
-	   *
-	   * @type {number}
-	   * @private
-	   */
-	  _idleTimeout = -1
-
-	  /**
-	   * The time in milliseconds when the timer was started. This value is used to
-	   * calculate when the timer should expire.
-	   *
-	   * @type {number}
-	   * @default -1
-	   * @private
-	   */
-	  _idleStart = -1
-
-	  /**
-	   * The function to be executed when the timer expires.
-	   * @type {Function}
-	   * @private
-	   */
-	  _onTimeout
-
-	  /**
-	   * The argument to be passed to the callback when the timer expires.
-	   *
-	   * @type {*}
-	   * @private
-	   */
-	  _timerArg
-
-	  /**
-	   * @constructor
-	   * @param {Function} callback A function to be executed after the timer
-	   * expires.
-	   * @param {number} delay The time, in milliseconds that the timer should wait
-	   * before the specified function or code is executed.
-	   * @param {*} arg
-	   */
-	  constructor (callback, delay, arg) {
-	    this._onTimeout = callback;
-	    this._idleTimeout = delay;
-	    this._timerArg = arg;
-
-	    this.refresh();
-	  }
-
-	  /**
-	   * Sets the timer's start time to the current time, and reschedules the timer
-	   * to call its callback at the previously specified duration adjusted to the
-	   * current time.
-	   * Using this on a timer that has already called its callback will reactivate
-	   * the timer.
-	   *
-	   * @returns {void}
-	   */
-	  refresh () {
-	    // In the special case that the timer is not in the list of active timers,
-	    // add it back to the array to be processed in the next tick by the onTick
-	    // function.
-	    if (this._state === NOT_IN_LIST) {
-	      fastTimers.push(this);
-	    }
-
-	    // If the timer is the only active timer, refresh the fastNowTimeout for
-	    // better resolution.
-	    if (!fastNowTimeout || fastTimers.length === 1) {
-	      refreshTimeout();
-	    }
-
-	    // Setting the state to PENDING will cause the timer to be reset in the
-	    // next tick by the onTick function.
-	    this._state = PENDING;
-	  }
-
-	  /**
-	   * The `clear` method cancels the timer, preventing it from executing.
-	   *
-	   * @returns {void}
-	   * @private
-	   */
-	  clear () {
-	    // Set the state to TO_BE_CLEARED to mark the timer for removal in the next
-	    // tick by the onTick function.
-	    this._state = TO_BE_CLEARED;
-
-	    // Reset the _idleStart value to -1 to indicate that the timer is no longer
-	    // active.
-	    this._idleStart = -1;
-	  }
-	}
-
-	/**
-	 * This module exports a setTimeout and clearTimeout function that can be
-	 * used as a drop-in replacement for the native functions.
-	 */
-	timers = {
-	  /**
-	   * The setTimeout() method sets a timer which executes a function once the
-	   * timer expires.
-	   * @param {Function} callback A function to be executed after the timer
-	   * expires.
-	   * @param {number} delay The time, in milliseconds that the timer should
-	   * wait before the specified function or code is executed.
-	   * @param {*} [arg] An optional argument to be passed to the callback function
-	   * when the timer expires.
-	   * @returns {NodeJS.Timeout|FastTimer}
-	   */
-	  setTimeout (callback, delay, arg) {
-	    // If the delay is less than or equal to the RESOLUTION_MS value return a
-	    // native Node.js Timer instance.
-	    return delay <= RESOLUTION_MS
-	      ? setTimeout(callback, delay, arg)
-	      : new FastTimer(callback, delay, arg)
-	  },
-	  /**
-	   * The clearTimeout method cancels an instantiated Timer previously created
-	   * by calling setTimeout.
-	   *
-	   * @param {NodeJS.Timeout|FastTimer} timeout
-	   */
-	  clearTimeout (timeout) {
-	    // If the timeout is a FastTimer, call its own clear method.
-	    if (timeout[kFastTimer]) {
-	      /**
-	       * @type {FastTimer}
-	       */
-	      timeout.clear();
-	      // Otherwise it is an instance of a native NodeJS.Timeout, so call the
-	      // Node.js native clearTimeout function.
-	    } else {
-	      clearTimeout(timeout);
-	    }
-	  },
-	  /**
-	   * The setFastTimeout() method sets a fastTimer which executes a function once
-	   * the timer expires.
-	   * @param {Function} callback A function to be executed after the timer
-	   * expires.
-	   * @param {number} delay The time, in milliseconds that the timer should
-	   * wait before the specified function or code is executed.
-	   * @param {*} [arg] An optional argument to be passed to the callback function
-	   * when the timer expires.
-	   * @returns {FastTimer}
-	   */
-	  setFastTimeout (callback, delay, arg) {
-	    return new FastTimer(callback, delay, arg)
-	  },
-	  /**
-	   * The clearTimeout method cancels an instantiated FastTimer previously
-	   * created by calling setFastTimeout.
-	   *
-	   * @param {FastTimer} timeout
-	   */
-	  clearFastTimeout (timeout) {
-	    timeout.clear();
-	  },
-	  /**
-	   * The now method returns the value of the internal fast timer clock.
-	   *
-	   * @returns {number}
-	   */
-	  now () {
-	    return fastNow
-	  },
-	  /**
-	   * Trigger the onTick function to process the fastTimers array.
-	   * Exported for testing purposes only.
-	   * Marking as deprecated to discourage any use outside of testing.
-	   * @deprecated
-	   * @param {number} [delay=0] The delay in milliseconds to add to the now value.
-	   */
-	  tick (delay = 0) {
-	    fastNow += delay - RESOLUTION_MS + 1;
-	    onTick();
-	    onTick();
-	  },
-	  /**
-	   * Reset FastTimers.
-	   * Exported for testing purposes only.
-	   * Marking as deprecated to discourage any use outside of testing.
-	   * @deprecated
-	   */
-	  reset () {
-	    fastNow = 0;
-	    fastTimers.length = 0;
-	    clearTimeout(fastNowTimeout);
-	    fastNowTimeout = null;
-	  },
-	  /**
-	   * Exporting for testing purposes only.
-	   * Marking as deprecated to discourage any use outside of testing.
-	   * @deprecated
-	   */
-	  kFastTimer
-	};
-	return timers;
-}
-
 var connect;
 var hasRequiredConnect;
 
@@ -52001,10 +52077,7 @@ function requireConnect () {
 	const net = require$$0$e;
 	const assert = require$$0$d;
 	const util = requireUtil$5();
-	const { InvalidArgumentError, ConnectTimeoutError } = requireErrors();
-	const timers = requireTimers();
-
-	function noop () {}
+	const { InvalidArgumentError } = requireErrors();
 
 	let tls; // include tls conditionally since it is not always available
 
@@ -52087,7 +52160,7 @@ function requireConnect () {
 	    let socket;
 	    if (protocol === 'https:') {
 	      if (!tls) {
-	        tls = require$$5$1;
+	        tls = require$$4$3;
 	      }
 	      servername = servername || options.servername || util.getServerName(host) || null;
 
@@ -52104,7 +52177,6 @@ function requireConnect () {
 	        servername,
 	        session,
 	        localAddress,
-	        // TODO(HTTP/2): Add support for h2c
 	        ALPNProtocols: allowH2 ? ['http/1.1', 'h2'] : ['http/1.1'],
 	        socket: httpSocket, // upgrade socket connection
 	        port,
@@ -52136,7 +52208,7 @@ function requireConnect () {
 	      socket.setKeepAlive(true, keepAliveInitialDelay);
 	    }
 
-	    const clearConnectTimeout = setupConnectTimeout(new WeakRef(socket), { timeout, hostname, port });
+	    const clearConnectTimeout = util.setupConnectTimeout(new WeakRef(socket), { timeout, hostname, port });
 
 	    socket
 	      .setNoDelay(true)
@@ -52161,78 +52233,6 @@ function requireConnect () {
 
 	    return socket
 	  }
-	}
-
-	/**
-	 * @param {WeakRef<net.Socket>} socketWeakRef
-	 * @param {object} opts
-	 * @param {number} opts.timeout
-	 * @param {string} opts.hostname
-	 * @param {number} opts.port
-	 * @returns {() => void}
-	 */
-	const setupConnectTimeout = process.platform === 'win32'
-	  ? (socketWeakRef, opts) => {
-	      if (!opts.timeout) {
-	        return noop
-	      }
-
-	      let s1 = null;
-	      let s2 = null;
-	      const fastTimer = timers.setFastTimeout(() => {
-	      // setImmediate is added to make sure that we prioritize socket error events over timeouts
-	        s1 = setImmediate(() => {
-	        // Windows needs an extra setImmediate probably due to implementation differences in the socket logic
-	          s2 = setImmediate(() => onConnectTimeout(socketWeakRef.deref(), opts));
-	        });
-	      }, opts.timeout);
-	      return () => {
-	        timers.clearFastTimeout(fastTimer);
-	        clearImmediate(s1);
-	        clearImmediate(s2);
-	      }
-	    }
-	  : (socketWeakRef, opts) => {
-	      if (!opts.timeout) {
-	        return noop
-	      }
-
-	      let s1 = null;
-	      const fastTimer = timers.setFastTimeout(() => {
-	      // setImmediate is added to make sure that we prioritize socket error events over timeouts
-	        s1 = setImmediate(() => {
-	          onConnectTimeout(socketWeakRef.deref(), opts);
-	        });
-	      }, opts.timeout);
-	      return () => {
-	        timers.clearFastTimeout(fastTimer);
-	        clearImmediate(s1);
-	      }
-	    };
-
-	/**
-	 * @param {net.Socket} socket
-	 * @param {object} opts
-	 * @param {number} opts.timeout
-	 * @param {string} opts.hostname
-	 * @param {number} opts.port
-	 */
-	function onConnectTimeout (socket, opts) {
-	  // The socket could be already garbage collected
-	  if (socket == null) {
-	    return
-	  }
-
-	  let message = 'Connect Timeout Error';
-	  if (Array.isArray(socket.autoSelectFamilyAttemptedAddresses)) {
-	    message += ` (attempted addresses: ${socket.autoSelectFamilyAttemptedAddresses.join(', ')},`;
-	  } else {
-	    message += ` (attempted address: ${opts.hostname}:${opts.port},`;
-	  }
-
-	  message += ` timeout: ${opts.timeout}ms)`;
-
-	  util.destroy(socket, new ConnectTimeoutError(message));
 	}
 
 	connect = buildConnector;
@@ -54527,7 +54527,7 @@ function requireUtil$4 () {
 	const { redirectStatusSet, referrerPolicyTokens, badPortsSet } = requireConstants$2();
 	const { getGlobalOrigin } = requireGlobal$1();
 	const { collectASequenceOfCodePoints, collectAnHTTPQuotedString, removeChars, parseMIMEType } = requireDataUrl();
-	const { performance } = require$$5$2;
+	const { performance } = require$$5$1;
 	const { ReadableStreamFrom, isValidHTTPToken, normalizedMethodRecordsBase } = requireUtil$5();
 	const assert = require$$0$d;
 	const { isUint8Array } = require$$8$1;
@@ -59460,6 +59460,7 @@ function requireClientH2 () {
 	  assert(client[kRunning] === 0);
 
 	  client.emit('disconnect', client[kUrl], [client], err);
+	  client.emit('connectionError', client[kUrl], [client], err);
 
 	  client[kResume]();
 	}
@@ -62274,6 +62275,136 @@ function requireRetryAgent () {
 	return retryAgent;
 }
 
+var h2cClient;
+var hasRequiredH2cClient;
+
+function requireH2cClient () {
+	if (hasRequiredH2cClient) return h2cClient;
+	hasRequiredH2cClient = 1;
+	const { connect } = require$$0$e;
+
+	const { kClose, kDestroy } = requireSymbols();
+	const { InvalidArgumentError } = requireErrors();
+	const util = requireUtil$5();
+
+	const Client = requireClient();
+	const DispatcherBase = requireDispatcherBase();
+
+	class H2CClient extends DispatcherBase {
+	  #client = null
+
+	  constructor (origin, clientOpts) {
+	    super();
+
+	    if (typeof origin === 'string') {
+	      origin = new URL(origin);
+	    }
+
+	    if (origin.protocol !== 'http:') {
+	      throw new InvalidArgumentError(
+	        'h2c-client: Only h2c protocol is supported'
+	      )
+	    }
+
+	    const { connect, maxConcurrentStreams, pipelining, ...opts } =
+	      clientOpts ?? {};
+	    let defaultMaxConcurrentStreams = 100;
+	    let defaultPipelining = 100;
+
+	    if (
+	      maxConcurrentStreams != null &&
+	      Number.isInteger(maxConcurrentStreams) &&
+	      maxConcurrentStreams > 0
+	    ) {
+	      defaultMaxConcurrentStreams = maxConcurrentStreams;
+	    }
+
+	    if (pipelining != null && Number.isInteger(pipelining) && pipelining > 0) {
+	      defaultPipelining = pipelining;
+	    }
+
+	    if (defaultPipelining > defaultMaxConcurrentStreams) {
+	      throw new InvalidArgumentError(
+	        'h2c-client: pipelining cannot be greater than maxConcurrentStreams'
+	      )
+	    }
+
+	    this.#client = new Client(origin, {
+	      ...opts,
+	      connect: this.#buildConnector(connect),
+	      maxConcurrentStreams: defaultMaxConcurrentStreams,
+	      pipelining: defaultPipelining,
+	      allowH2: true
+	    });
+	  }
+
+	  #buildConnector (connectOpts) {
+	    return (opts, callback) => {
+	      const timeout = connectOpts?.connectOpts ?? 10e3;
+	      const { hostname, port, pathname } = opts;
+	      const socket = connect({
+	        ...opts,
+	        host: hostname,
+	        port,
+	        pathname
+	      });
+
+	      // Set TCP keep alive options on the socket here instead of in connect() for the case of assigning the socket
+	      if (opts.keepAlive == null || opts.keepAlive) {
+	        const keepAliveInitialDelay =
+	          opts.keepAliveInitialDelay == null ? 60e3 : opts.keepAliveInitialDelay;
+	        socket.setKeepAlive(true, keepAliveInitialDelay);
+	      }
+
+	      socket.alpnProtocol = 'h2';
+
+	      const clearConnectTimeout = util.setupConnectTimeout(
+	        new WeakRef(socket),
+	        { timeout, hostname, port }
+	      );
+
+	      socket
+	        .setNoDelay(true)
+	        .once('connect', function () {
+	          queueMicrotask(clearConnectTimeout);
+
+	          if (callback) {
+	            const cb = callback;
+	            callback = null;
+	            cb(null, this);
+	          }
+	        })
+	        .on('error', function (err) {
+	          queueMicrotask(clearConnectTimeout);
+
+	          if (callback) {
+	            const cb = callback;
+	            callback = null;
+	            cb(err);
+	          }
+	        });
+
+	      return socket
+	    }
+	  }
+
+	  dispatch (opts, handler) {
+	    return this.#client.dispatch(opts, handler)
+	  }
+
+	  async [kClose] () {
+	    await this.#client.close();
+	  }
+
+	  async [kDestroy] () {
+	    await this.#client.destroy();
+	  }
+	}
+
+	h2cClient = H2CClient;
+	return h2cClient;
+}
+
 var api = {};
 
 var apiRequest = {exports: {}};
@@ -64011,7 +64142,7 @@ function requireMockUtils () {
 	    return path
 	  }
 
-	  const pathSegments = path.split('?');
+	  const pathSegments = path.split('?', 3);
 
 	  if (pathSegments.length !== 2) {
 	    return path
@@ -66273,7 +66404,21 @@ function requireCache$2 () {
 	    throw new Error('opts.origin is undefined')
 	  }
 
-	  /** @type {Record<string, string[] | string>} */
+	  const headers = normaliseHeaders(opts);
+
+	  return {
+	    origin: opts.origin.toString(),
+	    method: opts.method,
+	    path: opts.path,
+	    headers
+	  }
+	}
+
+	/**
+	 * @param {Record<string, string[] | string>}
+	 * @return {Record<string, string[] | string>}
+	 */
+	function normaliseHeaders (opts) {
 	  let headers;
 	  if (opts.headers == null) {
 	    headers = {};
@@ -66299,12 +66444,7 @@ function requireCache$2 () {
 	    throw new Error('opts.headers is not an object')
 	  }
 
-	  return {
-	    origin: opts.origin.toString(),
-	    method: opts.method,
-	    path: opts.path,
-	    headers
-	  }
+	  return headers
 	}
 
 	/**
@@ -66611,6 +66751,7 @@ function requireCache$2 () {
 
 	cache$2 = {
 	  makeCacheKey,
+	  normaliseHeaders,
 	  assertCacheKey,
 	  assertCacheValue,
 	  parseCacheControlHeader,
@@ -67552,7 +67693,7 @@ function requireCacheRevalidationHandler () {
 	 *  here, which we then just pass on to the next handler (most likely a
 	 *  CacheHandler). Note that this assumes the proper headers were already
 	 *  included in the request to tell the origin that we want to revalidate the
-	 *  response (i.e. if-modified-since).
+	 *  response (i.e. if-modified-since or if-none-match).
 	 *
 	 * @see https://www.rfc-editor.org/rfc/rfc9111.html#name-validation
 	 *
@@ -67681,7 +67822,7 @@ function requireCache$1 () {
 	const CacheHandler = requireCacheHandler();
 	const MemoryCacheStore = requireMemoryCacheStore();
 	const CacheRevalidationHandler = requireCacheRevalidationHandler();
-	const { assertCacheStore, assertCacheMethods, makeCacheKey, parseCacheControlHeader } = requireCache$2();
+	const { assertCacheStore, assertCacheMethods, makeCacheKey, normaliseHeaders, parseCacheControlHeader } = requireCache$2();
 	const { AbortError } = requireErrors();
 
 	/**
@@ -67896,7 +68037,7 @@ function requireCache$1 () {
 	  // Check if the response is stale
 	  if (needsRevalidation(result, reqCacheControl)) {
 	    if (util.isStream(opts.body) && util.bodyLength(opts.body) !== 0) {
-	      // If body is is stream we can't revalidate...
+	      // If body is a stream we can't revalidate...
 	      // TODO (fix): This could be less strict...
 	      return dispatch(opts, new CacheHandler(globalOpts, cacheKey, handler))
 	    }
@@ -67908,7 +68049,7 @@ function requireCache$1 () {
 	    }
 
 	    let headers = {
-	      ...opts.headers,
+	      ...normaliseHeaders(opts),
 	      'if-modified-since': new Date(result.cachedAt).toUTCString()
 	    };
 
@@ -68160,6 +68301,11 @@ function requireSqliteCacheStore () {
 	    this.#db = new DatabaseSync(opts?.location ?? ':memory:');
 
 	    this.#db.exec(`
+      PRAGMA journal_mode = WAL;
+      PRAGMA synchronous = NORMAL;
+      PRAGMA temp_store = memory;
+      PRAGMA optimize;
+
       CREATE TABLE IF NOT EXISTS cacheInterceptorV${VERSION} (
         -- Data specific to us
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68179,9 +68325,8 @@ function requireSqliteCacheStore () {
         staleAt INTEGER NOT NULL
       );
 
-      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION}_url ON cacheInterceptorV${VERSION}(url);
-      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION}_method ON cacheInterceptorV${VERSION}(method);
-      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION}_deleteAt ON cacheInterceptorV${VERSION}(deleteAt);
+      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION}_getValuesQuery ON cacheInterceptorV${VERSION}(url, method, deleteAt);
+      CREATE INDEX IF NOT EXISTS idx_cacheInterceptorV${VERSION}_deleteByUrlQuery ON cacheInterceptorV${VERSION}(deleteAt);
     `);
 
 	    this.#getValuesQuery = this.#db.prepare(`
@@ -68391,7 +68536,7 @@ function requireSqliteCacheStore () {
 	  }
 
 	  #prune () {
-	    if (this.size <= this.#maxCount) {
+	    if (Number.isFinite(this.#maxCount) && this.size <= this.#maxCount) {
 	      return 0
 	    }
 
@@ -71347,7 +71492,9 @@ function requireFetch () {
 	    originalURL.href,
 	    initiatorType,
 	    globalThis,
-	    cacheState
+	    cacheState,
+	    '', // bodyType
+	    response.status
 	  );
 	}
 
@@ -72017,7 +72164,7 @@ function requireFetch () {
 	    // 3. Set fetchParams’s controller’s report timing steps to the following steps given a global object global:
 	    fetchParams.controller.reportTimingSteps = () => {
 	      // 1. If fetchParams’s request’s URL’s scheme is not an HTTP(S) scheme, then return.
-	      if (fetchParams.request.url.protocol !== 'https:') {
+	      if (!urlIsHttpHttpsScheme(fetchParams.request.url)) {
 	        return
 	      }
 
@@ -72059,7 +72206,6 @@ function requireFetch () {
 	      //    fetchParams’s request’s URL, fetchParams’s request’s initiator type, global, cacheState, bodyInfo,
 	      //    and responseStatus.
 	      if (fetchParams.request.initiatorType != null) {
-	        // TODO: update markresourcetiming
 	        markResourceTiming(timingInfo, fetchParams.request.url.href, fetchParams.request.initiatorType, globalThis, cacheState, bodyInfo, responseStatus);
 	      }
 	    };
@@ -75838,7 +75984,7 @@ function requireUtil$1 () {
 
 	  while (position.position < extensions.length) {
 	    const pair = collectASequenceOfCodePointsFast(';', extensions, position);
-	    const [name, value = ''] = pair.split('=');
+	    const [name, value = ''] = pair.split('=', 2);
 
 	    extensionList.set(
 	      removeHTTPWhitespace(name, true, false),
@@ -79344,6 +79490,7 @@ function requireUndici () {
 		const ProxyAgent = requireProxyAgent();
 		const EnvHttpProxyAgent = requireEnvHttpProxyAgent();
 		const RetryAgent = requireRetryAgent();
+		const H2CClient = requireH2cClient();
 		const errors = requireErrors();
 		const util = requireUtil$5();
 		const { InvalidArgumentError } = errors;
@@ -79369,6 +79516,7 @@ function requireUndici () {
 		module.exports.ProxyAgent = ProxyAgent;
 		module.exports.EnvHttpProxyAgent = EnvHttpProxyAgent;
 		module.exports.RetryAgent = RetryAgent;
+		module.exports.H2CClient = H2CClient;
 		module.exports.RetryHandler = RetryHandler;
 
 		module.exports.DecoratorHandler = DecoratorHandler;
