@@ -6,7 +6,7 @@
       "dependencies": {
         "@actions/core": "^1.11.1",
         "@actions/github": "^6.0.0",
-        "@neondatabase/api-client": "^1.13.0",
+        "@neondatabase/api-client": "^2.0.0",
         "diff": "^7.0.0",
       },
       "devDependencies": {
@@ -199,7 +199,7 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@0.2.9", "", { "dependencies": { "@emnapi/core": "^1.4.0", "@emnapi/runtime": "^1.4.0", "@tybys/wasm-util": "^0.9.0" } }, "sha512-OKRBiajrrxB9ATokgEQoG87Z25c67pCpYcCwmXYX8PBftC9pBfN18gnm/fh1wurSLEKIAt+QRFLFCQISrb66Jg=="],
 
-    "@neondatabase/api-client": ["@neondatabase/api-client@1.13.0", "", { "dependencies": { "axios": "^1.7.9" } }, "sha512-grB9eW8YBS6oJe1Hun9mAzebpW2+ZoWb3BVKM1dhkYV/ZAtEOX2VOxwUcRKmi5PGA7xYItgszsKQuuQv068ULQ=="],
+    "@neondatabase/api-client": ["@neondatabase/api-client@2.0.0", "", { "dependencies": { "axios": "^1.7.9" } }, "sha512-UwjRRy8gyShNDfbbP1N+rA235FzqVWP/WPi4cgLnkGgConqpiR+U9Dsegaxu+HxAgK678kQ/5wc4/EPexvE7tw=="],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 
@@ -1160,8 +1160,6 @@
     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
 
     "@eslint/eslintrc/globals": ["globals@14.0.0", "", {}, "sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ=="],
-
-    "@github/local-action/typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 
     "@humanfs/node/@humanwhocodes/retry": ["@humanwhocodes/retry@0.3.1", "", {}, "sha512-JBxkERygn7Bv/GbN5Rv8Ul6LVknS+5Bp6RgDC/O8gEBU/yeH5Ui5C/OlWrTb6qct7LjjfT6Re2NxB0ln0yYybA=="],
 
