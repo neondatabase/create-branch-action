@@ -41,7 +41,7 @@
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.1",
     "@neondatabase/api-client": "^1.13.0",
-    "diff": "^7.0.0"
+    "diff": "^8.0.1"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.9",
