@@ -42650,7 +42650,7 @@ function requireFollowRedirects () {
 	return followRedirects.exports;
 }
 
-/*! Axios v1.8.3 Copyright (c) 2025 Matt Zabriskie and contributors */
+/*! Axios v1.10.0 Copyright (c) 2025 Matt Zabriskie and contributors */
 
 var axios_1;
 var hasRequiredAxios;
@@ -42694,6 +42694,7 @@ function requireAxios () {
 
 	const {toString} = Object.prototype;
 	const {getPrototypeOf} = Object;
+	const {iterator, toStringTag} = Symbol;
 
 	const kindOf = (cache => thing => {
 	    const str = toString.call(thing);
@@ -42820,7 +42821,7 @@ function requireAxios () {
 	  }
 
 	  const prototype = getPrototypeOf(val);
-	  return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in val) && !(Symbol.iterator in val);
+	  return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(toStringTag in val) && !(iterator in val);
 	};
 
 	/**
@@ -43171,13 +43172,13 @@ function requireAxios () {
 	 * @returns {void}
 	 */
 	const forEachEntry = (obj, fn) => {
-	  const generator = obj && obj[Symbol.iterator];
+	  const generator = obj && obj[iterator];
 
-	  const iterator = generator.call(obj);
+	  const _iterator = generator.call(obj);
 
 	  let result;
 
-	  while ((result = iterator.next()) && !result.done) {
+	  while ((result = _iterator.next()) && !result.done) {
 	    const pair = result.value;
 	    fn.call(obj, pair[0], pair[1]);
 	  }
@@ -43298,7 +43299,7 @@ function requireAxios () {
 	 * @returns {boolean}
 	 */
 	function isSpecCompliantForm(thing) {
-	  return !!(thing && isFunction(thing.append) && thing[Symbol.toStringTag] === 'FormData' && thing[Symbol.iterator]);
+	  return !!(thing && isFunction(thing.append) && thing[toStringTag] === 'FormData' && thing[iterator]);
 	}
 
 	const toJSONObject = (obj) => {
@@ -43367,6 +43368,10 @@ function requireAxios () {
 
 	// *********************
 
+
+	const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
+
+
 	const utils$1 = {
 	  isArray,
 	  isArrayBuffer,
@@ -43422,7 +43427,8 @@ function requireAxios () {
 	  isAsyncFn,
 	  isThenable,
 	  setImmediate: _setImmediate,
-	  asap
+	  asap,
+	  isIterable
 	};
 
 	/**
@@ -43636,6 +43642,10 @@ function requireAxios () {
 
 	    if (utils$1.isDate(value)) {
 	      return value.toISOString();
+	    }
+
+	    if (utils$1.isBoolean(value)) {
+	      return value.toString();
 	    }
 
 	    if (!useBlob && utils$1.isBlob(value)) {
@@ -44425,10 +44435,18 @@ function requireAxios () {
 	      setHeaders(header, valueOrRewrite);
 	    } else if(utils$1.isString(header) && (header = header.trim()) && !isValidHeaderName(header)) {
 	      setHeaders(parseHeaders(header), valueOrRewrite);
-	    } else if (utils$1.isHeaders(header)) {
-	      for (const [key, value] of header.entries()) {
-	        setHeader(value, key, rewrite);
+	    } else if (utils$1.isObject(header) && utils$1.isIterable(header)) {
+	      let obj = {}, dest, key;
+	      for (const entry of header) {
+	        if (!utils$1.isArray(entry)) {
+	          throw TypeError('Object iterator must return a key-value pair');
+	        }
+
+	        obj[key = entry[0]] = (dest = obj[key]) ?
+	          (utils$1.isArray(dest) ? [...dest, entry[1]] : [dest, entry[1]]) : entry[1];
 	      }
+
+	      setHeaders(obj, valueOrRewrite);
 	    } else {
 	      header != null && setHeader(valueOrRewrite, header, rewrite);
 	    }
@@ -44568,6 +44586,10 @@ function requireAxios () {
 
 	  toString() {
 	    return Object.entries(this.toJSON()).map(([header, value]) => header + ': ' + value).join('\n');
+	  }
+
+	  getSetCookie() {
+	    return this.get("set-cookie") || [];
 	  }
 
 	  get [Symbol.toStringTag]() {
@@ -44736,13 +44758,13 @@ function requireAxios () {
 	 */
 	function buildFullPath(baseURL, requestedURL, allowAbsoluteUrls) {
 	  let isRelativeUrl = !isAbsoluteURL(requestedURL);
-	  if (baseURL && isRelativeUrl || allowAbsoluteUrls == false) {
+	  if (baseURL && (isRelativeUrl || allowAbsoluteUrls == false)) {
 	    return combineURLs(baseURL, requestedURL);
 	  }
 	  return requestedURL;
 	}
 
-	const VERSION = "1.8.3";
+	const VERSION = "1.10.0";
 
 	function parseProtocol(url) {
 	  const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
@@ -45024,7 +45046,7 @@ function requireAxios () {
 	  }
 
 	  const boundaryBytes = textEncoder.encode('--' + boundary + CRLF);
-	  const footerBytes = textEncoder.encode('--' + boundary + '--' + CRLF + CRLF);
+	  const footerBytes = textEncoder.encode('--' + boundary + '--' + CRLF);
 	  let contentLength = footerBytes.byteLength;
 
 	  const parts = Array.from(form.entries()).map(([name, value]) => {
@@ -46579,7 +46601,7 @@ function requireAxios () {
 	      credentials: isCredentialsSupported ? withCredentials : undefined
 	    });
 
-	    let response = await fetch(request);
+	    let response = await fetch(request, fetchOptions);
 
 	    const isStreamResponse = supportsResponseStream && (responseType === 'stream' || responseType === 'response');
 
@@ -46625,7 +46647,7 @@ function requireAxios () {
 	  } catch (err) {
 	    unsubscribe && unsubscribe();
 
-	    if (err && err.name === 'TypeError' && /fetch/i.test(err.message)) {
+	    if (err && err.name === 'TypeError' && /Load failed|fetch/i.test(err.message)) {
 	      throw Object.assign(
 	        new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, request),
 	        {
@@ -46891,7 +46913,7 @@ function requireAxios () {
 	 */
 	class Axios {
 	  constructor(instanceConfig) {
-	    this.defaults = instanceConfig;
+	    this.defaults = instanceConfig || {};
 	    this.interceptors = {
 	      request: new InterceptorManager$1(),
 	      response: new InterceptorManager$1()
@@ -47431,6 +47453,7 @@ function requireApi_gen () {
 	hasRequiredApi_gen = 1;
 	/* eslint-disable */
 	/* tslint:disable */
+	// @ts-nocheck
 	/*
 	 * ---------------------------------------------------------------
 	 * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
@@ -47516,7 +47539,7 @@ function requireApi_gen () {
 	    return (mod && mod.__esModule) ? mod : { "default": mod };
 	};
 	Object.defineProperty(api_gen, "__esModule", { value: true });
-	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.SupportTicketSeverity = api_gen.IdentityAuthProviderProjectTransferStatus = api_gen.IdentityAuthProviderProjectOwnedBy = api_gen.IdentitySupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
+	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.SupportTicketSeverity = api_gen.NeonAuthProviderProjectTransferStatus = api_gen.NeonAuthProviderProjectOwnedBy = api_gen.NeonAuthSupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
 	/** The action performed by the operation */
 	var OperationAction;
 	(function (OperationAction) {
@@ -47544,6 +47567,7 @@ function requireApi_gen () {
 	    OperationAction["StartReservedCompute"] = "start_reserved_compute";
 	    OperationAction["SyncDbsAndRolesFromCompute"] = "sync_dbs_and_roles_from_compute";
 	    OperationAction["ApplySchemaFromBranch"] = "apply_schema_from_branch";
+	    OperationAction["TimelineMarkInvisible"] = "timeline_mark_invisible";
 	})(OperationAction || (api_gen.OperationAction = OperationAction = {}));
 	/** The status of the operation */
 	var OperationStatus;
@@ -47565,7 +47589,9 @@ function requireApi_gen () {
 	})(ConsumptionHistoryGranularity || (api_gen.ConsumptionHistoryGranularity = ConsumptionHistoryGranularity = {}));
 	var ProjectAuditLogLevel;
 	(function (ProjectAuditLogLevel) {
-	    ProjectAuditLogLevel["Hipaa"] = "hipaa";
+	    ProjectAuditLogLevel["Base"] = "base";
+	    ProjectAuditLogLevel["Extended"] = "extended";
+	    ProjectAuditLogLevel["Full"] = "full";
 	})(ProjectAuditLogLevel || (api_gen.ProjectAuditLogLevel = ProjectAuditLogLevel = {}));
 	/** The state of the compute endpoint */
 	var EndpointState;
@@ -47604,9 +47630,12 @@ function requireApi_gen () {
 	    BillingSubscriptionType["DirectSales"] = "direct_sales";
 	    BillingSubscriptionType["AwsMarketplace"] = "aws_marketplace";
 	    BillingSubscriptionType["FreeV2"] = "free_v2";
+	    BillingSubscriptionType["FreeV3"] = "free_v3";
+	    BillingSubscriptionType["ServerlessV3"] = "serverless_v3";
 	    BillingSubscriptionType["Launch"] = "launch";
 	    BillingSubscriptionType["Scale"] = "scale";
 	    BillingSubscriptionType["Business"] = "business";
+	    BillingSubscriptionType["BusinessV3"] = "business_v3";
 	    BillingSubscriptionType["VercelPgLegacy"] = "vercel_pg_legacy";
 	})(BillingSubscriptionType || (api_gen.BillingSubscriptionType = BillingSubscriptionType = {}));
 	/** Indicates whether and how an account makes payments. */
@@ -47639,7 +47668,6 @@ function requireApi_gen () {
 	    IdentityProviderId["Microsoftv2"] = "microsoftv2";
 	    IdentityProviderId["Vercelmp"] = "vercelmp";
 	    IdentityProviderId["Keycloak"] = "keycloak";
-	    IdentityProviderId["Test"] = "test";
 	})(IdentityProviderId || (api_gen.IdentityProviderId = IdentityProviderId = {}));
 	var UserDeletionConditionName;
 	(function (UserDeletionConditionName) {
@@ -47651,21 +47679,21 @@ function requireApi_gen () {
 	(function (OrgDeletionConditionName) {
 	    OrgDeletionConditionName["ProjectCount"] = "project_count";
 	})(OrgDeletionConditionName || (api_gen.OrgDeletionConditionName = OrgDeletionConditionName = {}));
-	var IdentitySupportedAuthProvider;
-	(function (IdentitySupportedAuthProvider) {
-	    IdentitySupportedAuthProvider["Mock"] = "mock";
-	    IdentitySupportedAuthProvider["Stack"] = "stack";
-	})(IdentitySupportedAuthProvider || (api_gen.IdentitySupportedAuthProvider = IdentitySupportedAuthProvider = {}));
-	var IdentityAuthProviderProjectOwnedBy;
-	(function (IdentityAuthProviderProjectOwnedBy) {
-	    IdentityAuthProviderProjectOwnedBy["User"] = "user";
-	    IdentityAuthProviderProjectOwnedBy["Neon"] = "neon";
-	})(IdentityAuthProviderProjectOwnedBy || (api_gen.IdentityAuthProviderProjectOwnedBy = IdentityAuthProviderProjectOwnedBy = {}));
-	var IdentityAuthProviderProjectTransferStatus;
-	(function (IdentityAuthProviderProjectTransferStatus) {
-	    IdentityAuthProviderProjectTransferStatus["Initiated"] = "initiated";
-	    IdentityAuthProviderProjectTransferStatus["Finished"] = "finished";
-	})(IdentityAuthProviderProjectTransferStatus || (api_gen.IdentityAuthProviderProjectTransferStatus = IdentityAuthProviderProjectTransferStatus = {}));
+	var NeonAuthSupportedAuthProvider;
+	(function (NeonAuthSupportedAuthProvider) {
+	    NeonAuthSupportedAuthProvider["Mock"] = "mock";
+	    NeonAuthSupportedAuthProvider["Stack"] = "stack";
+	})(NeonAuthSupportedAuthProvider || (api_gen.NeonAuthSupportedAuthProvider = NeonAuthSupportedAuthProvider = {}));
+	var NeonAuthProviderProjectOwnedBy;
+	(function (NeonAuthProviderProjectOwnedBy) {
+	    NeonAuthProviderProjectOwnedBy["User"] = "user";
+	    NeonAuthProviderProjectOwnedBy["Neon"] = "neon";
+	})(NeonAuthProviderProjectOwnedBy || (api_gen.NeonAuthProviderProjectOwnedBy = NeonAuthProviderProjectOwnedBy = {}));
+	var NeonAuthProviderProjectTransferStatus;
+	(function (NeonAuthProviderProjectTransferStatus) {
+	    NeonAuthProviderProjectTransferStatus["Initiated"] = "initiated";
+	    NeonAuthProviderProjectTransferStatus["Finished"] = "finished";
+	})(NeonAuthProviderProjectTransferStatus || (api_gen.NeonAuthProviderProjectTransferStatus = NeonAuthProviderProjectTransferStatus = {}));
 	var SupportTicketSeverity;
 	(function (SupportTicketSeverity) {
 	    SupportTicketSeverity["Low"] = "low";
@@ -47902,7 +47930,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Retrieves a list of operations for the specified Neon project. You can obtain a `project_id` by listing the projects for your Neon account. The number of operations returned can be large. To paginate the response, issue an initial request with a `limit` value. Then, add the `cursor` value that was returned in the response to the next request.
+	         * @description Retrieves a list of operations for the specified Neon project. You can obtain a `project_id` by listing the projects for your Neon account. The number of operations returned can be large. To paginate the response, issue an initial request with a `limit` value. Then, add the `cursor` value that was returned in the response to the next request. Operations older than 6 months may be deleted from our systems. If you need more history than that, you should store your own history.
 	         *
 	         * @tags Operation
 	         * @name ListProjectOperations
@@ -47955,6 +47983,45 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/permissions/").concat(encodeURIComponent(permissionId)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Return available shared preload libraries
+	         *
+	         * @tags Project
+	         * @name GetAvailablePreloadLibraries
+	         * @summary Return available shared preload libraries
+	         * @request GET:/projects/{project_id}/available_preload_libraries
+	         * @secure
+	         */
+	        _this.getAvailablePreloadLibraries = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/available_preload_libraries"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Creates a transfer request for the specified project. A transfer request allows the project to be transferred to another account or organization. The request has an expiration time after which it can no longer be used. To accept/claim the transfer request, the recipient user/organization must call the `/projects/{project_id}/transfer_requests/{request_id}` API endpoint, or visit `https://console.neon.tech/app/claim?p={project_id}&tr={request_id}&ru={redirect_url}` in the Neon Console. The `ru` parameter is optional and can be used to redirect the user after accepting the transfer request. This feature is currently in private preview. Get in touch with us to get access.
+	         *
+	         * @tags Project
+	         * @name CreateProjectTransferRequest
+	         * @summary Create a project transfer request
+	         * @request POST:/projects/{project_id}/transfer_requests
+	         * @secure
+	         */
+	        _this.createProjectTransferRequest = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/transfer_requests"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Accepts a transfer request for the specified project, transferring it to the specified organization or user. If org_id is not passed, the project will be transferred to the current user or organization account.
+	         *
+	         * @tags Project
+	         * @name AcceptProjectTransferRequest
+	         * @summary Accept a project transfer request
+	         * @request PUT:/projects/{project_id}/transfer_requests/{request_id}
+	         * @secure
+	         */
+	        _this.acceptProjectTransferRequest = function (projectId, requestId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/transfer_requests/").concat(encodeURIComponent(requestId)), method: 'PUT', body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
 	         * @description Returns the JWKS URLs available for verifying JWTs used as the authentication mechanism for the specified project.
 	         *
 	         * @tags Project
@@ -47994,41 +48061,132 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/jwks/").concat(encodeURIComponent(jwksId)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Creates a new instance of Neon Data API in the specified branch. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
+	         *
+	         * @tags DataAPI
+	         * @name CreateProjectBranchDataApi
+	         * @summary Create Neon Data API
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @secure
+	         */
+	        _this.createProjectBranchDataApi = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Deletes the Neon Data API for the specified branch. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
+	         *
+	         * @tags DataAPI
+	         * @name DeleteProjectBranchDataApi
+	         * @summary Delete Neon Data API
+	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @secure
+	         */
+	        _this.deleteProjectBranchDataApi = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'DELETE', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Retrieves the Neon Data API for the specified branch.
+	         *
+	         * @tags DataAPI
+	         * @name GetProjectBranchDataApi
+	         * @summary Get Neon Data API
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @secure
+	         */
+	        _this.getProjectBranchDataApi = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
 	         * @description Creates a project on a third-party authentication provider's platform for use with Neon Auth. Use this endpoint if the frontend integration flow can't be used.
 	         *
 	         * @tags Auth
-	         * @name CreateProjectIdentityIntegration
+	         * @name CreateNeonAuthIntegration
 	         * @summary Create Neon Auth integration
 	         * @request POST:/projects/auth/create
 	         * @secure
 	         */
-	        _this.createProjectIdentityIntegration = function (data, params) {
+	        _this.createNeonAuthIntegration = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/create", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Lists the domains in the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name ListNeonAuthRedirectUriWhitelistDomains
+	         * @summary List domains in redirect_uri whitelist
+	         * @request GET:/projects/{project_id}/auth/domains
+	         * @secure
+	         */
+	        _this.listNeonAuthRedirectUriWhitelistDomains = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Adds a domain to the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name AddNeonAuthDomainToRedirectUriWhitelist
+	         * @summary Add domain to redirect_uri whitelist
+	         * @request POST:/projects/{project_id}/auth/domains
+	         * @secure
+	         */
+	        _this.addNeonAuthDomainToRedirectUriWhitelist = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
+	         * @description Deletes a domain from the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name DeleteNeonAuthDomainFromRedirectUriWhitelist
+	         * @summary Delete domain from redirect_uri whitelist
+	         * @request DELETE:/projects/{project_id}/auth/domains
+	         * @secure
+	         */
+	        _this.deleteNeonAuthDomainFromRedirectUriWhitelist = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'DELETE', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
 	         * @description Generates SDK or API Keys for the auth provider. These might be called different things depending on the auth provider you're using, but are generally used for setting up the frontend and backend SDKs.
 	         *
 	         * @tags Auth
-	         * @name CreateProjectIdentityAuthProviderSdkKeys
+	         * @name CreateNeonAuthProviderSdkKeys
 	         * @summary Create Auth Provider SDK keys
 	         * @request POST:/projects/auth/keys
 	         * @secure
 	         */
-	        _this.createProjectIdentityAuthProviderSdkKeys = function (data, params) {
+	        _this.createNeonAuthProviderSdkKeys = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/keys", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Creates a new user in Neon Auth. The user will be created in your neon_auth.users_sync table and automatically propagated to your auth project, whether Neon-managed or provider-owned.
+	         *
+	         * @tags Auth
+	         * @name CreateNeonAuthNewUser
+	         * @summary Create new auth user
+	         * @request POST:/projects/auth/user
+	         * @secure
+	         */
+	        _this.createNeonAuthNewUser = function (data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/auth/user", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
 	         * @description Transfer ownership of your Neon-managed auth project to your own auth provider account.
 	         *
 	         * @tags Auth
-	         * @name TransferProjectIdentityAuthProviderProject
+	         * @name TransferNeonAuthProviderProject
 	         * @summary Transfer Neon-managed auth project to your own account
 	         * @request POST:/projects/auth/transfer_ownership
 	         * @secure
 	         */
-	        _this.transferProjectIdentityAuthProviderProject = function (data, params) {
+	        _this.transferNeonAuthProviderProject = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/transfer_ownership", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
@@ -48036,12 +48194,12 @@ function requireApi_gen () {
 	         * No description
 	         *
 	         * @tags Auth
-	         * @name ListProjectIdentityIntegrations
+	         * @name ListNeonAuthIntegrations
 	         * @summary Lists active integrations with auth providers
 	         * @request GET:/projects/{project_id}/auth/integrations
 	         * @secure
 	         */
-	        _this.listProjectIdentityIntegrations = function (projectId, params) {
+	        _this.listNeonAuthIntegrations = function (projectId, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integrations"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
@@ -48049,12 +48207,12 @@ function requireApi_gen () {
 	         * No description
 	         *
 	         * @tags Auth
-	         * @name DeleteProjectIdentityIntegration
+	         * @name DeleteNeonAuthIntegration
 	         * @summary Delete integration with auth provider
 	         * @request DELETE:/projects/{project_id}/auth/integration/{auth_provider}
 	         * @secure
 	         */
-	        _this.deleteProjectIdentityIntegration = function (projectId, authProvider, params) {
+	        _this.deleteNeonAuthIntegration = function (projectId, authProvider, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integration/").concat(encodeURIComponent(authProvider)), method: 'DELETE', secure: true }, params));
 	        };
@@ -48073,7 +48231,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/connection_uri"), method: 'GET', query: query, secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Creates a branch in the specified project. You can obtain a `project_id` by listing the projects for your Neon account. This method does not require a request body, but you can specify one to create a compute endpoint for the branch or to select a non-default parent branch. The default behavior is to create a branch from the project's default branch with no compute endpoint, and the branch name is auto-generated. There is a maximum of one read-write endpoint per branch. A branch can have multiple read-only endpoints. For related information, see [Manage branches](https://neon.tech/docs/manage/branches/).
+	         * @description Creates a branch in the specified project. You can obtain a `project_id` by listing the projects for your Neon account. This method does not require a request body, but you can specify one to create a compute endpoint for the branch or to select a non-default parent branch. By default, the branch is created from the project's default branch with no compute endpoint, and the branch name is auto-generated. To access the branch, you must add an endpoint object. A `read_write` endpoint allows you to perform read and write operations on the branch. Each branch supports one read-write endpoint and multiple read-only endpoints. For related information, see [Manage branches](https://neon.tech/docs/manage/branches/).
 	         *
 	         * @tags Branch
 	         * @name CreateProjectBranch
@@ -48714,7 +48872,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/organizations/".concat(encodeURIComponent(orgId), "/vpc/region/").concat(encodeURIComponent(regionId), "/vpc_endpoints/").concat(encodeURIComponent(vpcEndpointId)), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
-	         * @description Deletes the VPC endpoint from the specified Neon organization.
+	         * @description Deletes the VPC endpoint from the specified Neon organization. If you delete a VPC endpoint from a Neon organization, that VPC endpoint cannot be added back to the Neon organization.
 	         *
 	         * @tags Organizations
 	         * @name DeleteOrganizationVpcEndpoint
@@ -48777,6 +48935,19 @@ function requireApi_gen () {
 	        _this.transferProjectsFromUserToOrg = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/users/me/projects/transfer", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Returns auth information about the passed credentials. It can refer to an API key, Bearer token or OAuth session.
+	         *
+	         * @tags Users
+	         * @name GetAuthDetails
+	         * @summary Get request authentication details
+	         * @request GET:/auth
+	         * @secure
+	         */
+	        _this.getAuthDetails = function (params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/auth", method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        return _this;
 	    }
