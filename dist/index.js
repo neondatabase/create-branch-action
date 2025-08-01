@@ -40,11 +40,7 @@ function getAugmentedNamespace(n) {
   var f = n.default;
 	if (typeof f == "function") {
 		var a = function a () {
-			var isInstance = false;
-      try {
-        isInstance = this instanceof a;
-      } catch {}
-			if (isInstance) {
+			if (this instanceof a) {
         return Reflect.construct(f, arguments, this.constructor);
 			}
 			return f.apply(this, arguments);
@@ -11526,20 +11522,6 @@ function requirePool () {
 	      ? { ...options.interceptors }
 	      : undefined;
 	    this[kFactory] = factory;
-
-	    this.on('connectionError', (origin, targets, error) => {
-	      // If a connection error occurs, we remove the client from the pool,
-	      // and emit a connectionError event. They will not be re-used.
-	      // Fixes https://github.com/nodejs/undici/issues/3895
-	      for (const target of targets) {
-	        // Do not use kRemoveClient here, as it will close the client,
-	        // but the client cannot be closed in this state.
-	        const idx = this[kClients].indexOf(target);
-	        if (idx !== -1) {
-	          this[kClients].splice(idx, 1);
-	        }
-	      }
-	    });
 	  }
 
 	  [kGetDispatcher] () {
@@ -15001,7 +14983,6 @@ function requireHeaders () {
 	  isValidHeaderName,
 	  isValidHeaderValue
 	} = requireUtil$5();
-	const util = require$$0$3;
 	const { webidl } = requireWebidl();
 	const assert = require$$0$4;
 
@@ -15548,9 +15529,6 @@ function requireHeaders () {
 	  [Symbol.toStringTag]: {
 	    value: 'Headers',
 	    configurable: true
-	  },
-	  [util.inspect.custom]: {
-	    enumerable: false
 	  }
 	});
 
@@ -21440,10 +21418,9 @@ function requireUtil$1 () {
 	if (hasRequiredUtil$1) return util$1;
 	hasRequiredUtil$1 = 1;
 
-	/**
-	 * @param {string} value
-	 * @returns {boolean}
-	 */
+	const assert = require$$0$4;
+	const { kHeadersList } = requireSymbols$4();
+
 	function isCTLExcludingHtab (value) {
 	  if (value.length === 0) {
 	    return false
@@ -21704,13 +21681,31 @@ function requireUtil$1 () {
 	  return out.join('; ')
 	}
 
+	let kHeadersListNode;
+
+	function getHeadersList (headers) {
+	  if (headers[kHeadersList]) {
+	    return headers[kHeadersList]
+	  }
+
+	  if (!kHeadersListNode) {
+	    kHeadersListNode = Object.getOwnPropertySymbols(headers).find(
+	      (symbol) => symbol.description === 'headers list'
+	    );
+
+	    assert(kHeadersListNode, 'Headers cannot be parsed');
+	  }
+
+	  const headersList = headers[kHeadersListNode];
+	  assert(headersList);
+
+	  return headersList
+	}
+
 	util$1 = {
 	  isCTLExcludingHtab,
-	  validateCookieName,
-	  validateCookiePath,
-	  validateCookieValue,
-	  toIMFDate,
-	  stringify
+	  stringify,
+	  getHeadersList
 	};
 	return util$1;
 }
@@ -22048,7 +22043,7 @@ function requireCookies () {
 	hasRequiredCookies = 1;
 
 	const { parseSetCookie } = requireParse();
-	const { stringify } = requireUtil$1();
+	const { stringify, getHeadersList } = requireUtil$1();
 	const { webidl } = requireWebidl();
 	const { Headers } = requireHeaders();
 
@@ -22124,13 +22119,14 @@ function requireCookies () {
 
 	  webidl.brandCheck(headers, Headers, { strict: false });
 
-	  const cookies = headers.getSetCookie();
+	  const cookies = getHeadersList(headers).cookies;
 
 	  if (!cookies) {
 	    return []
 	  }
 
-	  return cookies.map((pair) => parseSetCookie(pair))
+	  // In older versions of undici, cookies is a list of name:value.
+	  return cookies.map((pair) => parseSetCookie(Array.isArray(pair) ? pair[1] : pair))
 	}
 
 	/**
@@ -39985,7 +39981,7 @@ function requireGetIntrinsic () {
 					if (!allowMissing) {
 						throw new $TypeError('base intrinsic for ' + name + ' exists, but the property is not available.');
 					}
-					return void undefined$1;
+					return void 0;
 				}
 				if ($gOPD && (i + 1) >= parts.length) {
 					var desc = $gOPD(value, part);
@@ -41066,7 +41062,7 @@ function requireCommon () {
 
 			const split = (typeof namespaces === 'string' ? namespaces : '')
 				.trim()
-				.replace(/\s+/g, ',')
+				.replace(' ', ',')
 				.split(',')
 				.filter(Boolean);
 
@@ -41418,7 +41414,7 @@ function requireBrowser () {
 		function load() {
 			let r;
 			try {
-				r = exports.storage.getItem('debug') || exports.storage.getItem('DEBUG') ;
+				r = exports.storage.getItem('debug');
 			} catch (error) {
 				// Swallow
 				// XXX (@Qix-) should we be logging these?
@@ -49328,7 +49324,7 @@ function requireUtils$1 () {
 	return utils;
 }
 
-function getUserAgent() {
+function getUserAgent$2() {
     if (typeof navigator === "object" && "userAgent" in navigator) {
         return navigator.userAgent;
     }
@@ -49530,9 +49526,19 @@ function requireBeforeAfterHook () {
 
 var beforeAfterHookExports = requireBeforeAfterHook();
 
+function getUserAgent$1() {
+    if (typeof navigator === "object" && "userAgent" in navigator) {
+        return navigator.userAgent;
+    }
+    if (typeof process === "object" && process.version !== undefined) {
+        return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
+    }
+    return "<environment undetectable>";
+}
+
 const VERSION$5 = "9.0.6";
 
-const userAgent = `octokit-endpoint.js/${VERSION$5} ${getUserAgent()}`;
+const userAgent = `octokit-endpoint.js/${VERSION$5} ${getUserAgent$1()}`;
 const DEFAULTS = {
   method: "GET",
   baseUrl: "https://api.github.com",
@@ -49860,6 +49866,16 @@ function withDefaults$2(oldDefaults, newDefaults) {
 }
 
 const endpoint = withDefaults$2(null, DEFAULTS);
+
+function getUserAgent() {
+    if (typeof navigator === "object" && "userAgent" in navigator) {
+        return navigator.userAgent;
+    }
+    if (typeof process === "object" && process.version !== undefined) {
+        return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
+    }
+    return "<environment undetectable>";
+}
 
 const VERSION$4 = "8.4.1";
 
@@ -50310,7 +50326,7 @@ function withDefaults(request2, newDefaults) {
 // pkg/dist-src/index.js
 withDefaults(request, {
   headers: {
-    "user-agent": `octokit-graphql.js/${VERSION$3} ${getUserAgent()}`
+    "user-agent": `octokit-graphql.js/${VERSION$3} ${getUserAgent$2()}`
   },
   method: "POST",
   url: "/graphql"
@@ -50371,29 +50387,14 @@ const createTokenAuth = function createTokenAuth2(token) {
 // pkg/dist-src/index.js
 
 // pkg/dist-src/version.js
-var VERSION$2 = "5.2.2";
+var VERSION$2 = "5.2.1";
 
 // pkg/dist-src/index.js
 var noop = () => {
 };
 var consoleWarn = console.warn.bind(console);
 var consoleError = console.error.bind(console);
-function createLogger(logger = {}) {
-  if (typeof logger.debug !== "function") {
-    logger.debug = noop;
-  }
-  if (typeof logger.info !== "function") {
-    logger.info = noop;
-  }
-  if (typeof logger.warn !== "function") {
-    logger.warn = consoleWarn;
-  }
-  if (typeof logger.error !== "function") {
-    logger.error = consoleError;
-  }
-  return logger;
-}
-var userAgentTrail = `octokit-core.js/${VERSION$2} ${getUserAgent()}`;
+var userAgentTrail = `octokit-core.js/${VERSION$2} ${getUserAgent$2()}`;
 var Octokit = class {
   static {
     this.VERSION = VERSION$2;
@@ -50466,7 +50467,15 @@ var Octokit = class {
     }
     this.request = request.defaults(requestDefaults);
     this.graphql = withCustomRequest(this.request).defaults(requestDefaults);
-    this.log = createLogger(options.log);
+    this.log = Object.assign(
+      {
+        debug: noop,
+        info: noop,
+        warn: consoleWarn,
+        error: consoleError
+      },
+      options.log
+    );
     this.hook = hook;
     if (!options.authStrategy) {
       if (!options.auth) {
@@ -53163,10 +53172,10 @@ function buildAnnotations() {
     return annotations;
 }
 
-const version = '6.0.1';
+const version = '6.0.2';
 // This file is auto-generated. Use 'bun run prebuild' when you need to update the version!
 
-async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch) {
+async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch, expiresAt) {
     const client = distExports.createApiClient({
         apiKey,
         baseURL: apiHost,
@@ -53183,7 +53192,8 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
             projectId,
             schemaOnly,
             parentBranch,
-            suspendTimeout
+            suspendTimeout,
+            expiresAt
         });
     }
     catch (error) {
@@ -53210,7 +53220,8 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
         databaseHostPooled: connectionInfo.databaseHostPooled,
         password: connectionInfo.password,
         branchId: branch.id,
-        createdBranch: branch.created
+        createdBranch: branch.created,
+        expiresAt: branch.expires_at
     };
 }
 async function getBranch(client, projectId, branchIdentifier) {
@@ -53393,6 +53404,12 @@ async function run() {
         if (branchName === '') {
             branchName = undefined;
         }
+        let expiresAt = coreExports.getInput('expires_at', {
+            trimWhitespace: true
+        });
+        if (expiresAt === '') {
+            expiresAt = undefined;
+        }
         if (!urlRegex.test(apiHost)) {
             throw new Error('API host must be a valid URL');
         }
@@ -53406,7 +53423,7 @@ async function run() {
         if (isNaN(suspendTimeout)) {
             throw new Error('Suspend timeout must be a number');
         }
-        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch);
+        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt);
         if (result.createdBranch) {
             coreExports.info(`Branch ${branchName} created successfully`);
             coreExports.setOutput('created', true);
