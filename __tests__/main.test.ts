@@ -124,6 +124,7 @@ describe('action', () => {
       'require',
       0,
       'branchName',
+      undefined,
       undefined
     )
 
@@ -187,11 +188,79 @@ describe('action', () => {
       'require',
       0,
       'branchName',
+      undefined,
       undefined
     )
 
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', false)
     expect(core.setOutput).toHaveBeenCalledTimes(7) // 7 outputs
+  })
+
+  it('create with expiration time', async () => {
+    core.getInput.mockImplementation((name: string) => {
+      switch (name) {
+        case 'api_host':
+          return 'http://console.neon.tech/api/v2'
+        case 'api_key':
+          return 'apiKey'
+        case 'project_id':
+          return 'projectId'
+        case 'branch_name':
+          return 'branchName'
+        case 'database':
+          return 'postgres'
+        case 'role':
+          return 'postgres'
+        case 'branch_type':
+          return 'default'
+        case 'suspend_timeout':
+          return '0'
+        case 'expires_at':
+          return '2025-12-31T00:00:00Z'
+        case 'ssl':
+          return 'require'
+        default:
+          return ''
+      }
+    })
+
+    create.mockImplementation(() =>
+      Promise.resolve({
+        databaseURL: 'postgresql://postgres:password@e1.endpoint.com/postgres',
+        databaseURLPooled:
+          'postgresql://postgres:password@e1-pooler.endpoint.com/postgres',
+        databaseHost: 'e1.endpoint.com',
+        databaseHostPooled: 'e1-pooler.endpoint.com',
+        password: 'password',
+        branchId: '1',
+        expiresAt: '2025-12-31T00:00:00Z',
+        createdBranch: true
+      })
+    )
+
+    await run()
+    expect(create).toHaveBeenCalledWith(
+      'apiKey',
+      'http://console.neon.tech/api/v2',
+      'projectId',
+      false,
+      'postgres',
+      'postgres',
+      false,
+      'require',
+      0,
+      'branchName',
+      undefined,
+      '2025-12-31T00:00:00Z'
+    )
+
+    expect(core.setFailed).not.toHaveBeenCalled()
+    expect(core.info).toHaveBeenNthCalledWith(
+      1,
+      'Branch branchName created successfully'
+    )
+    expect(core.setOutput).toHaveBeenCalledTimes(7) // 7 outputs
+    expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', true)
   })
 })

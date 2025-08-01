@@ -41,6 +41,9 @@ inputs:
     description:
       Duration of inactivity in seconds after the compute endpoint is suspended
     default: '0'
+  expires_at:
+    description: Date and time when the branch should be deleted.
+    default: ''
 outputs:
   db_url:
     description: The database connection string

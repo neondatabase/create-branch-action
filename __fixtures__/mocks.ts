@@ -11,7 +11,8 @@ import {
 export function buildBranch(
   id: string,
   name: string,
-  parentId?: string
+  parentId?: string,
+  expiresAt?: string
 ): Branch {
   return {
     id,
@@ -29,7 +30,8 @@ export function buildBranch(
     written_data_bytes: 0,
     data_transfer_bytes: 0,
     created_at: '2021-01-01T00:00:00Z',
-    updated_at: '2021-01-01T00:00:00Z'
+    updated_at: '2021-01-01T00:00:00Z',
+    expires_at: expiresAt
   }
 }
 
