@@ -169,9 +169,9 @@ You can customize the action as follows, using the action's optional fields:
 - **Configure Auto-Suspend:** Use `suspend_timeout` to set an auto-suspend
   duration (in seconds) for the compute endpoint associated with the new branch.
   Set to `0` to disable auto-suspend.
-- **Configure Branch Expiration:** Use `expires_at` to set automatic deletion
-  timestamps on branches. By default, auto-deletion is disabled. You can supply
-  timestamp in
+- **Configure Branch Expiration:** Set `expires_at` to define how long a branch
+  should exist before being automatically deleted. By default, `expires_at` is
+  empty, indicating no expiration. The timestamp must be in
   [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.6).
 - **SSL Mode:** Control the `sslmode` in the connection string using the `ssl`
   input. Supported values are: `"require"`, `"verify-ca"`, `"verify-full"`,
