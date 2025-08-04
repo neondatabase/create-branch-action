@@ -576,6 +576,83 @@ describe('branch actions', () => {
       expect(response.databaseHostPooled).toBe('e1-pooler.endpoint.com')
       expect(response.password).toBe('password')
       expect(response.branchId).toBe('1')
+      expect(response.expiresAt).toBeUndefined()
+    })
+  })
+
+  describe('create with expiration time', () => {
+    const expiresAt = '2024-01-01T00:00:00Z'
+
+    beforeEach(() => {
+      vi.mocked(createApiClient).mockReturnValue(
+        mockClient as unknown as ReturnType<typeof createApiClient>
+      )
+    })
+
+    it('should create a branch', async () => {
+      mockClient.listProjectBranches.mockResolvedValue(
+        apiResponse(200, {
+          branches: []
+        })
+      )
+
+      mockClient.createProjectBranch.mockResolvedValue(
+        apiResponse(200, {
+          branch: buildBranch('1', 'branchName', undefined, expiresAt)
+        })
+      )
+
+      mockClient.listProjectBranchEndpoints.mockResolvedValue(
+        apiResponse(200, {
+          endpoints: [buildEndpoint('e1')]
+        })
+      )
+
+      mockClient.getProjectBranchDatabase.mockResolvedValue(
+        apiResponse(200, {
+          database: buildDatabase(1, 'postgres')
+        })
+      )
+
+      mockClient.getProjectBranchRole.mockResolvedValue(
+        apiResponse(200, {
+          role: buildRole(1, 'postgres')
+        })
+      )
+
+      mockClient.getProjectBranchRolePassword.mockResolvedValue(
+        apiResponse(200, {
+          password: 'password'
+        })
+      )
+
+      const response = await create(
+        'apiKey',
+        'apiHost',
+        'projectId',
+        false,
+        'neondb',
+        'neondb_owner',
+        false,
+        'require',
+        0,
+        'branchName',
+        undefined,
+        expiresAt
+      )
+
+      expect(response).toBeDefined()
+      expect(response.databaseURL).toBe(
+        'postgresql://neondb_owner:password@e1.endpoint.com/neondb?sslmode=require'
+      )
+      expect(response.databaseURLPooled).toBe(
+        'postgresql://neondb_owner:password@e1-pooler.endpoint.com/neondb?sslmode=require'
+      )
+      expect(response.databaseHost).toBe('e1.endpoint.com')
+      expect(response.databaseHostPooled).toBe('e1-pooler.endpoint.com')
+      expect(response.password).toBe('password')
+      expect(response.branchId).toBe('1')
+      expect(response.expiresAt).toBe(expiresAt)
     })
   })
 })

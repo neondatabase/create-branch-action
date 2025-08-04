@@ -7,8 +7,9 @@ interface CreateResponse {
     password: string;
     branchId: string;
     createdBranch: boolean;
+    expiresAt?: string;
 }
-export declare function create(apiKey: string, apiHost: string, projectId: string, usePrisma: boolean, database: string, role: string, schemaOnly: boolean, sslMode: string, suspendTimeout: number, branchName?: string, parentBranch?: string): Promise<CreateResponse>;
+export declare function create(apiKey: string, apiHost: string, projectId: string, usePrisma: boolean, database: string, role: string, schemaOnly: boolean, sslMode: string, suspendTimeout: number, branchName?: string, parentBranch?: string, expiresAt?: string): Promise<CreateResponse>;
 export declare function getBranch(client: ReturnType<typeof createApiClient>, projectId: string, branchIdentifier: string): Promise<Branch | undefined>;
 interface GetOrCreateBranchParams {
     branchName?: string;
@@ -16,6 +17,7 @@ interface GetOrCreateBranchParams {
     schemaOnly: boolean;
     parentBranch?: string;
     suspendTimeout: number;
+    expiresAt?: string;
 }
 type GetOrCreateBranchResponse = Branch & {
     created: boolean;

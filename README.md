@@ -35,7 +35,6 @@ are two ways you can perform this setup:
   for instructions.
 - **Manual setup** — this method requires obtaining a Neon API key and
   configuring it manually in your GitHub repository.
-
   1. Obtain a Neon API key. See
      [Create an API key](https://neon.tech/docs/manage/api-keys#create-an-api-key)
      for instructions.
@@ -170,6 +169,10 @@ You can customize the action as follows, using the action's optional fields:
 - **Configure Auto-Suspend:** Use `suspend_timeout` to set an auto-suspend
   duration (in seconds) for the compute endpoint associated with the new branch.
   Set to `0` to disable auto-suspend.
+- **Configure Branch Expiration:** Set `expires_at` to define how long a branch
+  should exist before being automatically deleted. By default, `expires_at` is
+  empty, indicating no expiration. The timestamp must be in
+  [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.6).
 - **SSL Mode:** Control the `sslmode` in the connection string using the `ssl`
   input. Supported values are: `"require"`, `"verify-ca"`, `"verify-full"`,
   `"omit"`.
@@ -203,6 +206,7 @@ Supported parameters:
 | `suspend_timeout` | optional          | `0`                                |
 | `ssl`             | optional          | `require`                          |
 | `branch_type`     | optional          | `default`                          |
+| `expires_at`      | optional          | `""`                               |
 
 ---
 

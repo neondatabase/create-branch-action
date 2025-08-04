@@ -56,6 +56,12 @@ export async function run(): Promise<void> {
     if (branchName === '') {
       branchName = undefined
     }
+    let expiresAt: string | undefined = core.getInput('expires_at', {
+      trimWhitespace: true
+    })
+    if (expiresAt === '') {
+      expiresAt = undefined
+    }
 
     if (!urlRegex.test(apiHost)) {
       throw new Error('API host must be a valid URL')
@@ -85,7 +91,8 @@ export async function run(): Promise<void> {
       sslMode,
       suspendTimeout,
       branchName,
-      parentBranch
+      parentBranch,
+      expiresAt
     )
 
     if (result.createdBranch) {

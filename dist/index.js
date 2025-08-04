@@ -40079,12 +40079,11 @@ var hasRequiredPopulate;
 function requirePopulate () {
 	if (hasRequiredPopulate) return populate;
 	hasRequiredPopulate = 1;
-	// populates missing values
-	populate = function(dst, src) {
 
-	  Object.keys(src).forEach(function(prop)
-	  {
-	    dst[prop] = dst[prop] || src[prop];
+	// populates missing values
+	populate = function (dst, src) {
+	  Object.keys(src).forEach(function (prop) {
+	    dst[prop] = dst[prop] || src[prop]; // eslint-disable-line no-param-reassign
 	  });
 
 	  return dst;
@@ -40098,6 +40097,7 @@ var hasRequiredForm_data;
 function requireForm_data () {
 	if (hasRequiredForm_data) return form_data;
 	hasRequiredForm_data = 1;
+
 	var CombinedStream = requireCombined_stream();
 	var util = require$$0$3;
 	var path = require$$1$4;
@@ -40106,16 +40106,12 @@ function requireForm_data () {
 	var parseUrl = require$$0$a.parse;
 	var fs = require$$1;
 	var Stream = require$$0$6.Stream;
+	var crypto = require$$0$2;
 	var mime = requireMimeTypes();
 	var asynckit = requireAsynckit();
 	var setToStringTag = /*@__PURE__*/ requireEsSetTostringtag();
+	var hasOwn = /*@__PURE__*/ requireHasown();
 	var populate = requirePopulate();
-
-	// Public API
-	form_data = FormData;
-
-	// make it a Stream
-	util.inherits(FormData, CombinedStream);
 
 	/**
 	 * Create readable "multipart/form-data" streams.
@@ -40123,7 +40119,7 @@ function requireForm_data () {
 	 * and file uploads to other web applications.
 	 *
 	 * @constructor
-	 * @param {Object} options - Properties to be added/overriden for FormData and CombinedStream
+	 * @param {object} options - Properties to be added/overriden for FormData and CombinedStream
 	 */
 	function FormData(options) {
 	  if (!(this instanceof FormData)) {
@@ -40136,35 +40132,39 @@ function requireForm_data () {
 
 	  CombinedStream.call(this);
 
-	  options = options || {};
-	  for (var option in options) {
+	  options = options || {}; // eslint-disable-line no-param-reassign
+	  for (var option in options) { // eslint-disable-line no-restricted-syntax
 	    this[option] = options[option];
 	  }
 	}
 
+	// make it a Stream
+	util.inherits(FormData, CombinedStream);
+
 	FormData.LINE_BREAK = '\r\n';
 	FormData.DEFAULT_CONTENT_TYPE = 'application/octet-stream';
 
-	FormData.prototype.append = function(field, value, options) {
-
-	  options = options || {};
+	FormData.prototype.append = function (field, value, options) {
+	  options = options || {}; // eslint-disable-line no-param-reassign
 
 	  // allow filename as single option
-	  if (typeof options == 'string') {
-	    options = {filename: options};
+	  if (typeof options === 'string') {
+	    options = { filename: options }; // eslint-disable-line no-param-reassign
 	  }
 
 	  var append = CombinedStream.prototype.append.bind(this);
 
 	  // all that streamy business can't handle numbers
-	  if (typeof value == 'number') {
-	    value = '' + value;
+	  if (typeof value === 'number' || value == null) {
+	    value = String(value); // eslint-disable-line no-param-reassign
 	  }
 
 	  // https://github.com/felixge/node-form-data/issues/38
 	  if (Array.isArray(value)) {
-	    // Please convert your array into string
-	    // the way web server expects it
+	    /*
+	     * Please convert your array into string
+	     * the way web server expects it
+	     */
 	    this._error(new Error('Arrays are not supported.'));
 	    return;
 	  }
@@ -40180,15 +40180,17 @@ function requireForm_data () {
 	  this._trackLength(header, value, options);
 	};
 
-	FormData.prototype._trackLength = function(header, value, options) {
+	FormData.prototype._trackLength = function (header, value, options) {
 	  var valueLength = 0;
 
-	  // used w/ getLengthSync(), when length is known.
-	  // e.g. for streaming directly from a remote server,
-	  // w/ a known file a size, and not wanting to wait for
-	  // incoming file to finish to get its size.
+	  /*
+	   * used w/ getLengthSync(), when length is known.
+	   * e.g. for streaming directly from a remote server,
+	   * w/ a known file a size, and not wanting to wait for
+	   * incoming file to finish to get its size.
+	   */
 	  if (options.knownLength != null) {
-	    valueLength += +options.knownLength;
+	    valueLength += Number(options.knownLength);
 	  } else if (Buffer.isBuffer(value)) {
 	    valueLength = value.length;
 	  } else if (typeof value === 'string') {
@@ -40198,12 +40200,10 @@ function requireForm_data () {
 	  this._valueLength += valueLength;
 
 	  // @check why add CRLF? does this account for custom/multiple CRLFs?
-	  this._overheadLength +=
-	    Buffer.byteLength(header) +
-	    FormData.LINE_BREAK.length;
+	  this._overheadLength += Buffer.byteLength(header) + FormData.LINE_BREAK.length;
 
 	  // empty or either doesn't have path or not an http response or not a stream
-	  if (!value || ( !value.path && !(value.readable && Object.prototype.hasOwnProperty.call(value, 'httpVersion')) && !(value instanceof Stream))) {
+	  if (!value || (!value.path && !(value.readable && hasOwn(value, 'httpVersion')) && !(value instanceof Stream))) {
 	    return;
 	  }
 
@@ -40213,9 +40213,8 @@ function requireForm_data () {
 	  }
 	};
 
-	FormData.prototype._lengthRetriever = function(value, callback) {
-	  if (Object.prototype.hasOwnProperty.call(value, 'fd')) {
-
+	FormData.prototype._lengthRetriever = function (value, callback) {
+	  if (hasOwn(value, 'fd')) {
 	    // take read range into a account
 	    // `end` = Infinity –> read file till the end
 	    //
@@ -40224,54 +40223,52 @@ function requireForm_data () {
 	    // Fix it when node fixes it.
 	    // https://github.com/joyent/node/issues/7819
 	    if (value.end != undefined && value.end != Infinity && value.start != undefined) {
-
 	      // when end specified
 	      // no need to calculate range
 	      // inclusive, starts with 0
-	      callback(null, value.end + 1 - (value.start ? value.start : 0));
+	      callback(null, value.end + 1 - (value.start ? value.start : 0)); // eslint-disable-line callback-return
 
-	    // not that fast snoopy
+	      // not that fast snoopy
 	    } else {
 	      // still need to fetch file size from fs
-	      fs.stat(value.path, function(err, stat) {
-
-	        var fileSize;
-
+	      fs.stat(value.path, function (err, stat) {
 	        if (err) {
 	          callback(err);
 	          return;
 	        }
 
 	        // update final size based on the range options
-	        fileSize = stat.size - (value.start ? value.start : 0);
+	        var fileSize = stat.size - (value.start ? value.start : 0);
 	        callback(null, fileSize);
 	      });
 	    }
 
-	  // or http response
-	  } else if (Object.prototype.hasOwnProperty.call(value, 'httpVersion')) {
-	    callback(null, +value.headers['content-length']);
+	    // or http response
+	  } else if (hasOwn(value, 'httpVersion')) {
+	    callback(null, Number(value.headers['content-length'])); // eslint-disable-line callback-return
 
-	  // or request stream http://github.com/mikeal/request
-	  } else if (Object.prototype.hasOwnProperty.call(value, 'httpModule')) {
+	    // or request stream http://github.com/mikeal/request
+	  } else if (hasOwn(value, 'httpModule')) {
 	    // wait till response come back
-	    value.on('response', function(response) {
+	    value.on('response', function (response) {
 	      value.pause();
-	      callback(null, +response.headers['content-length']);
+	      callback(null, Number(response.headers['content-length']));
 	    });
 	    value.resume();
 
-	  // something else
+	    // something else
 	  } else {
-	    callback('Unknown stream');
+	    callback('Unknown stream'); // eslint-disable-line callback-return
 	  }
 	};
 
-	FormData.prototype._multiPartHeader = function(field, value, options) {
-	  // custom header specified (as string)?
-	  // it becomes responsible for boundary
-	  // (e.g. to handle extra CRLFs on .NET servers)
-	  if (typeof options.header == 'string') {
+	FormData.prototype._multiPartHeader = function (field, value, options) {
+	  /*
+	   * custom header specified (as string)?
+	   * it becomes responsible for boundary
+	   * (e.g. to handle extra CRLFs on .NET servers)
+	   */
+	  if (typeof options.header === 'string') {
 	    return options.header;
 	  }
 
@@ -40279,7 +40276,7 @@ function requireForm_data () {
 	  var contentType = this._getContentType(value, options);
 
 	  var contents = '';
-	  var headers  = {
+	  var headers = {
 	    // add custom disposition as third element or keep it two elements if not
 	    'Content-Disposition': ['form-data', 'name="' + field + '"'].concat(contentDisposition || []),
 	    // if no content type. allow it to be empty array
@@ -40287,18 +40284,18 @@ function requireForm_data () {
 	  };
 
 	  // allow custom headers.
-	  if (typeof options.header == 'object') {
+	  if (typeof options.header === 'object') {
 	    populate(headers, options.header);
 	  }
 
 	  var header;
-	  for (var prop in headers) {
-	    if (Object.prototype.hasOwnProperty.call(headers, prop)) {
+	  for (var prop in headers) { // eslint-disable-line no-restricted-syntax
+	    if (hasOwn(headers, prop)) {
 	      header = headers[prop];
 
 	      // skip nullish headers.
 	      if (header == null) {
-	        continue;
+	        continue; // eslint-disable-line no-restricted-syntax, no-continue
 	      }
 
 	      // convert all headers to arrays.
@@ -40316,49 +40313,45 @@ function requireForm_data () {
 	  return '--' + this.getBoundary() + FormData.LINE_BREAK + contents + FormData.LINE_BREAK;
 	};
 
-	FormData.prototype._getContentDisposition = function(value, options) {
-
-	  var filename
-	    , contentDisposition
-	    ;
+	FormData.prototype._getContentDisposition = function (value, options) { // eslint-disable-line consistent-return
+	  var filename;
 
 	  if (typeof options.filepath === 'string') {
 	    // custom filepath for relative paths
 	    filename = path.normalize(options.filepath).replace(/\\/g, '/');
-	  } else if (options.filename || value.name || value.path) {
-	    // custom filename take precedence
-	    // formidable and the browser add a name property
-	    // fs- and request- streams have path property
-	    filename = path.basename(options.filename || value.name || value.path);
-	  } else if (value.readable && Object.prototype.hasOwnProperty.call(value, 'httpVersion')) {
+	  } else if (options.filename || (value && (value.name || value.path))) {
+	    /*
+	     * custom filename take precedence
+	     * formidable and the browser add a name property
+	     * fs- and request- streams have path property
+	     */
+	    filename = path.basename(options.filename || (value && (value.name || value.path)));
+	  } else if (value && value.readable && hasOwn(value, 'httpVersion')) {
 	    // or try http response
 	    filename = path.basename(value.client._httpMessage.path || '');
 	  }
 
 	  if (filename) {
-	    contentDisposition = 'filename="' + filename + '"';
+	    return 'filename="' + filename + '"';
 	  }
-
-	  return contentDisposition;
 	};
 
-	FormData.prototype._getContentType = function(value, options) {
-
+	FormData.prototype._getContentType = function (value, options) {
 	  // use custom content-type above all
 	  var contentType = options.contentType;
 
 	  // or try `name` from formidable, browser
-	  if (!contentType && value.name) {
+	  if (!contentType && value && value.name) {
 	    contentType = mime.lookup(value.name);
 	  }
 
 	  // or try `path` from fs-, request- streams
-	  if (!contentType && value.path) {
+	  if (!contentType && value && value.path) {
 	    contentType = mime.lookup(value.path);
 	  }
 
 	  // or if it's http-reponse
-	  if (!contentType && value.readable && Object.prototype.hasOwnProperty.call(value, 'httpVersion')) {
+	  if (!contentType && value && value.readable && hasOwn(value, 'httpVersion')) {
 	    contentType = value.headers['content-type'];
 	  }
 
@@ -40368,18 +40361,18 @@ function requireForm_data () {
 	  }
 
 	  // fallback to the default content type if `value` is not simple value
-	  if (!contentType && typeof value == 'object') {
+	  if (!contentType && value && typeof value === 'object') {
 	    contentType = FormData.DEFAULT_CONTENT_TYPE;
 	  }
 
 	  return contentType;
 	};
 
-	FormData.prototype._multiPartFooter = function() {
-	  return function(next) {
+	FormData.prototype._multiPartFooter = function () {
+	  return function (next) {
 	    var footer = FormData.LINE_BREAK;
 
-	    var lastPart = (this._streams.length === 0);
+	    var lastPart = this._streams.length === 0;
 	    if (lastPart) {
 	      footer += this._lastBoundary();
 	    }
@@ -40388,18 +40381,18 @@ function requireForm_data () {
 	  }.bind(this);
 	};
 
-	FormData.prototype._lastBoundary = function() {
+	FormData.prototype._lastBoundary = function () {
 	  return '--' + this.getBoundary() + '--' + FormData.LINE_BREAK;
 	};
 
-	FormData.prototype.getHeaders = function(userHeaders) {
+	FormData.prototype.getHeaders = function (userHeaders) {
 	  var header;
 	  var formHeaders = {
 	    'content-type': 'multipart/form-data; boundary=' + this.getBoundary()
 	  };
 
-	  for (header in userHeaders) {
-	    if (Object.prototype.hasOwnProperty.call(userHeaders, header)) {
+	  for (header in userHeaders) { // eslint-disable-line no-restricted-syntax
+	    if (hasOwn(userHeaders, header)) {
 	      formHeaders[header.toLowerCase()] = userHeaders[header];
 	    }
 	  }
@@ -40407,11 +40400,14 @@ function requireForm_data () {
 	  return formHeaders;
 	};
 
-	FormData.prototype.setBoundary = function(boundary) {
+	FormData.prototype.setBoundary = function (boundary) {
+	  if (typeof boundary !== 'string') {
+	    throw new TypeError('FormData boundary must be a string');
+	  }
 	  this._boundary = boundary;
 	};
 
-	FormData.prototype.getBoundary = function() {
+	FormData.prototype.getBoundary = function () {
 	  if (!this._boundary) {
 	    this._generateBoundary();
 	  }
@@ -40419,60 +40415,55 @@ function requireForm_data () {
 	  return this._boundary;
 	};
 
-	FormData.prototype.getBuffer = function() {
-	  var dataBuffer = new Buffer.alloc(0);
+	FormData.prototype.getBuffer = function () {
+	  var dataBuffer = new Buffer.alloc(0); // eslint-disable-line new-cap
 	  var boundary = this.getBoundary();
 
 	  // Create the form content. Add Line breaks to the end of data.
 	  for (var i = 0, len = this._streams.length; i < len; i++) {
 	    if (typeof this._streams[i] !== 'function') {
-
 	      // Add content to the buffer.
-	      if(Buffer.isBuffer(this._streams[i])) {
-	        dataBuffer = Buffer.concat( [dataBuffer, this._streams[i]]);
-	      }else {
-	        dataBuffer = Buffer.concat( [dataBuffer, Buffer.from(this._streams[i])]);
+	      if (Buffer.isBuffer(this._streams[i])) {
+	        dataBuffer = Buffer.concat([dataBuffer, this._streams[i]]);
+	      } else {
+	        dataBuffer = Buffer.concat([dataBuffer, Buffer.from(this._streams[i])]);
 	      }
 
 	      // Add break after content.
-	      if (typeof this._streams[i] !== 'string' || this._streams[i].substring( 2, boundary.length + 2 ) !== boundary) {
-	        dataBuffer = Buffer.concat( [dataBuffer, Buffer.from(FormData.LINE_BREAK)] );
+	      if (typeof this._streams[i] !== 'string' || this._streams[i].substring(2, boundary.length + 2) !== boundary) {
+	        dataBuffer = Buffer.concat([dataBuffer, Buffer.from(FormData.LINE_BREAK)]);
 	      }
 	    }
 	  }
 
 	  // Add the footer and return the Buffer object.
-	  return Buffer.concat( [dataBuffer, Buffer.from(this._lastBoundary())] );
+	  return Buffer.concat([dataBuffer, Buffer.from(this._lastBoundary())]);
 	};
 
-	FormData.prototype._generateBoundary = function() {
+	FormData.prototype._generateBoundary = function () {
 	  // This generates a 50 character boundary similar to those used by Firefox.
-	  // They are optimized for boyer-moore parsing.
-	  var boundary = '--------------------------';
-	  for (var i = 0; i < 24; i++) {
-	    boundary += Math.floor(Math.random() * 10).toString(16);
-	  }
 
-	  this._boundary = boundary;
+	  // They are optimized for boyer-moore parsing.
+	  this._boundary = '--------------------------' + crypto.randomBytes(12).toString('hex');
 	};
 
 	// Note: getLengthSync DOESN'T calculate streams length
-	// As workaround one can calculate file size manually
-	// and add it as knownLength option
-	FormData.prototype.getLengthSync = function() {
+	// As workaround one can calculate file size manually and add it as knownLength option
+	FormData.prototype.getLengthSync = function () {
 	  var knownLength = this._overheadLength + this._valueLength;
 
-	  // Don't get confused, there are 3 "internal" streams for each keyval pair
-	  // so it basically checks if there is any value added to the form
+	  // Don't get confused, there are 3 "internal" streams for each keyval pair so it basically checks if there is any value added to the form
 	  if (this._streams.length) {
 	    knownLength += this._lastBoundary().length;
 	  }
 
 	  // https://github.com/form-data/form-data/issues/40
 	  if (!this.hasKnownLength()) {
-	    // Some async length retrievers are present
-	    // therefore synchronous length calculation is false.
-	    // Please use getLength(callback) to get proper length
+	    /*
+	     * Some async length retrievers are present
+	     * therefore synchronous length calculation is false.
+	     * Please use getLength(callback) to get proper length
+	     */
 	    this._error(new Error('Cannot calculate proper length in synchronous way.'));
 	  }
 
@@ -40482,7 +40473,7 @@ function requireForm_data () {
 	// Public API to check if length of added values is known
 	// https://github.com/form-data/form-data/issues/196
 	// https://github.com/form-data/form-data/issues/262
-	FormData.prototype.hasKnownLength = function() {
+	FormData.prototype.hasKnownLength = function () {
 	  var hasKnownLength = true;
 
 	  if (this._valuesToMeasure.length) {
@@ -40492,7 +40483,7 @@ function requireForm_data () {
 	  return hasKnownLength;
 	};
 
-	FormData.prototype.getLength = function(cb) {
+	FormData.prototype.getLength = function (cb) {
 	  var knownLength = this._overheadLength + this._valueLength;
 
 	  if (this._streams.length) {
@@ -40504,13 +40495,13 @@ function requireForm_data () {
 	    return;
 	  }
 
-	  asynckit.parallel(this._valuesToMeasure, this._lengthRetriever, function(err, values) {
+	  asynckit.parallel(this._valuesToMeasure, this._lengthRetriever, function (err, values) {
 	    if (err) {
 	      cb(err);
 	      return;
 	    }
 
-	    values.forEach(function(length) {
+	    values.forEach(function (length) {
 	      knownLength += length;
 	    });
 
@@ -40518,31 +40509,26 @@ function requireForm_data () {
 	  });
 	};
 
-	FormData.prototype.submit = function(params, cb) {
-	  var request
-	    , options
-	    , defaults = {method: 'post'}
-	    ;
+	FormData.prototype.submit = function (params, cb) {
+	  var request;
+	  var options;
+	  var defaults = { method: 'post' };
 
-	  // parse provided url if it's string
-	  // or treat it as options object
-	  if (typeof params == 'string') {
-
-	    params = parseUrl(params);
+	  // parse provided url if it's string or treat it as options object
+	  if (typeof params === 'string') {
+	    params = parseUrl(params); // eslint-disable-line no-param-reassign
+	    /* eslint sort-keys: 0 */
 	    options = populate({
 	      port: params.port,
 	      path: params.pathname,
 	      host: params.hostname,
 	      protocol: params.protocol
 	    }, defaults);
-
-	  // use custom params
-	  } else {
-
+	  } else { // use custom params
 	    options = populate(params, defaults);
 	    // if no port provided use default one
 	    if (!options.port) {
-	      options.port = options.protocol == 'https:' ? 443 : 80;
+	      options.port = options.protocol === 'https:' ? 443 : 80;
 	    }
 	  }
 
@@ -40550,14 +40536,14 @@ function requireForm_data () {
 	  options.headers = this.getHeaders(params.headers);
 
 	  // https if specified, fallback to http in any other case
-	  if (options.protocol == 'https:') {
+	  if (options.protocol === 'https:') {
 	    request = https.request(options);
 	  } else {
 	    request = http.request(options);
 	  }
 
 	  // get content length and fire away
-	  this.getLength(function(err, length) {
+	  this.getLength(function (err, length) {
 	    if (err && err !== 'Unknown stream') {
 	      this._error(err);
 	      return;
@@ -40576,7 +40562,7 @@ function requireForm_data () {
 	        request.removeListener('error', callback);
 	        request.removeListener('response', onResponse);
 
-	        return cb.call(this, error, responce);
+	        return cb.call(this, error, responce); // eslint-disable-line no-invalid-this
 	      };
 
 	      onResponse = callback.bind(this, null);
@@ -40589,7 +40575,7 @@ function requireForm_data () {
 	  return request;
 	};
 
-	FormData.prototype._error = function(err) {
+	FormData.prototype._error = function (err) {
 	  if (!this.error) {
 	    this.error = err;
 	    this.pause();
@@ -40601,6 +40587,9 @@ function requireForm_data () {
 	  return '[object FormData]';
 	};
 	setToStringTag(FormData, 'FormData');
+
+	// Public API
+	form_data = FormData;
 	return form_data;
 }
 
@@ -42650,7 +42639,7 @@ function requireFollowRedirects () {
 	return followRedirects.exports;
 }
 
-/*! Axios v1.8.3 Copyright (c) 2025 Matt Zabriskie and contributors */
+/*! Axios v1.11.0 Copyright (c) 2025 Matt Zabriskie and contributors */
 
 var axios_1;
 var hasRequiredAxios;
@@ -42694,6 +42683,7 @@ function requireAxios () {
 
 	const {toString} = Object.prototype;
 	const {getPrototypeOf} = Object;
+	const {iterator, toStringTag} = Symbol;
 
 	const kindOf = (cache => thing => {
 	    const str = toString.call(thing);
@@ -42820,7 +42810,28 @@ function requireAxios () {
 	  }
 
 	  const prototype = getPrototypeOf(val);
-	  return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in val) && !(Symbol.iterator in val);
+	  return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(toStringTag in val) && !(iterator in val);
+	};
+
+	/**
+	 * Determine if a value is an empty object (safely handles Buffers)
+	 *
+	 * @param {*} val The value to test
+	 *
+	 * @returns {boolean} True if value is an empty object, otherwise false
+	 */
+	const isEmptyObject = (val) => {
+	  // Early return for non-objects or Buffers to prevent RangeError
+	  if (!isObject(val) || isBuffer(val)) {
+	    return false;
+	  }
+	  
+	  try {
+	    return Object.keys(val).length === 0 && Object.getPrototypeOf(val) === Object.prototype;
+	  } catch (e) {
+	    // Fallback for any other objects that might cause RangeError with Object.keys()
+	    return false;
+	  }
 	};
 
 	/**
@@ -42945,6 +42956,11 @@ function requireAxios () {
 	      fn.call(null, obj[i], i, obj);
 	    }
 	  } else {
+	    // Buffer check
+	    if (isBuffer(obj)) {
+	      return;
+	    }
+
 	    // Iterate over object keys
 	    const keys = allOwnKeys ? Object.getOwnPropertyNames(obj) : Object.keys(obj);
 	    const len = keys.length;
@@ -42958,6 +42974,10 @@ function requireAxios () {
 	}
 
 	function findKey(obj, key) {
+	  if (isBuffer(obj)){
+	    return null;
+	  }
+
 	  key = key.toLowerCase();
 	  const keys = Object.keys(obj);
 	  let i = keys.length;
@@ -43171,13 +43191,13 @@ function requireAxios () {
 	 * @returns {void}
 	 */
 	const forEachEntry = (obj, fn) => {
-	  const generator = obj && obj[Symbol.iterator];
+	  const generator = obj && obj[iterator];
 
-	  const iterator = generator.call(obj);
+	  const _iterator = generator.call(obj);
 
 	  let result;
 
-	  while ((result = iterator.next()) && !result.done) {
+	  while ((result = _iterator.next()) && !result.done) {
 	    const pair = result.value;
 	    fn.call(obj, pair[0], pair[1]);
 	  }
@@ -43298,7 +43318,7 @@ function requireAxios () {
 	 * @returns {boolean}
 	 */
 	function isSpecCompliantForm(thing) {
-	  return !!(thing && isFunction(thing.append) && thing[Symbol.toStringTag] === 'FormData' && thing[Symbol.iterator]);
+	  return !!(thing && isFunction(thing.append) && thing[toStringTag] === 'FormData' && thing[iterator]);
 	}
 
 	const toJSONObject = (obj) => {
@@ -43309,6 +43329,11 @@ function requireAxios () {
 	    if (isObject(source)) {
 	      if (stack.indexOf(source) >= 0) {
 	        return;
+	      }
+
+	      //Buffer check
+	      if (isBuffer(source)) {
+	        return source;
 	      }
 
 	      if(!('toJSON' in source)) {
@@ -43367,6 +43392,10 @@ function requireAxios () {
 
 	// *********************
 
+
+	const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
+
+
 	const utils$1 = {
 	  isArray,
 	  isArrayBuffer,
@@ -43378,6 +43407,7 @@ function requireAxios () {
 	  isBoolean,
 	  isObject,
 	  isPlainObject,
+	  isEmptyObject,
 	  isReadableStream,
 	  isRequest,
 	  isResponse,
@@ -43422,7 +43452,8 @@ function requireAxios () {
 	  isAsyncFn,
 	  isThenable,
 	  setImmediate: _setImmediate,
-	  asap
+	  asap,
+	  isIterable
 	};
 
 	/**
@@ -43636,6 +43667,10 @@ function requireAxios () {
 
 	    if (utils$1.isDate(value)) {
 	      return value.toISOString();
+	    }
+
+	    if (utils$1.isBoolean(value)) {
+	      return value.toString();
 	    }
 
 	    if (!useBlob && utils$1.isBlob(value)) {
@@ -44022,7 +44057,7 @@ function requireAxios () {
 	};
 
 	function toURLEncodedForm(data, options) {
-	  return toFormData(data, new platform.classes.URLSearchParams(), Object.assign({
+	  return toFormData(data, new platform.classes.URLSearchParams(), {
 	    visitor: function(value, key, path, helpers) {
 	      if (platform.isNode && utils$1.isBuffer(value)) {
 	        this.append(key, value.toString('base64'));
@@ -44030,8 +44065,9 @@ function requireAxios () {
 	      }
 
 	      return helpers.defaultVisitor.apply(this, arguments);
-	    }
-	  }, options));
+	    },
+	    ...options
+	  });
 	}
 
 	/**
@@ -44425,10 +44461,18 @@ function requireAxios () {
 	      setHeaders(header, valueOrRewrite);
 	    } else if(utils$1.isString(header) && (header = header.trim()) && !isValidHeaderName(header)) {
 	      setHeaders(parseHeaders(header), valueOrRewrite);
-	    } else if (utils$1.isHeaders(header)) {
-	      for (const [key, value] of header.entries()) {
-	        setHeader(value, key, rewrite);
+	    } else if (utils$1.isObject(header) && utils$1.isIterable(header)) {
+	      let obj = {}, dest, key;
+	      for (const entry of header) {
+	        if (!utils$1.isArray(entry)) {
+	          throw TypeError('Object iterator must return a key-value pair');
+	        }
+
+	        obj[key = entry[0]] = (dest = obj[key]) ?
+	          (utils$1.isArray(dest) ? [...dest, entry[1]] : [dest, entry[1]]) : entry[1];
 	      }
+
+	      setHeaders(obj, valueOrRewrite);
 	    } else {
 	      header != null && setHeader(valueOrRewrite, header, rewrite);
 	    }
@@ -44568,6 +44612,10 @@ function requireAxios () {
 
 	  toString() {
 	    return Object.entries(this.toJSON()).map(([header, value]) => header + ': ' + value).join('\n');
+	  }
+
+	  getSetCookie() {
+	    return this.get("set-cookie") || [];
 	  }
 
 	  get [Symbol.toStringTag]() {
@@ -44736,13 +44784,13 @@ function requireAxios () {
 	 */
 	function buildFullPath(baseURL, requestedURL, allowAbsoluteUrls) {
 	  let isRelativeUrl = !isAbsoluteURL(requestedURL);
-	  if (baseURL && isRelativeUrl || allowAbsoluteUrls == false) {
+	  if (baseURL && (isRelativeUrl || allowAbsoluteUrls == false)) {
 	    return combineURLs(baseURL, requestedURL);
 	  }
 	  return requestedURL;
 	}
 
-	const VERSION = "1.8.3";
+	const VERSION = "1.11.0";
 
 	function parseProtocol(url) {
 	  const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
@@ -45024,7 +45072,7 @@ function requireAxios () {
 	  }
 
 	  const boundaryBytes = textEncoder.encode('--' + boundary + CRLF);
-	  const footerBytes = textEncoder.encode('--' + boundary + '--' + CRLF + CRLF);
+	  const footerBytes = textEncoder.encode('--' + boundary + '--' + CRLF);
 	  let contentLength = footerBytes.byteLength;
 
 	  const parts = Array.from(form.entries()).map(([name, value]) => {
@@ -45170,7 +45218,7 @@ function requireAxios () {
 	      clearTimeout(timer);
 	      timer = null;
 	    }
-	    fn.apply(null, args);
+	    fn(...args);
 	  };
 
 	  const throttled = (...args) => {
@@ -46044,7 +46092,7 @@ function requireAxios () {
 	    headers: (a, b , prop) => mergeDeepProperties(headersToObject(a), headersToObject(b),prop, true)
 	  };
 
-	  utils$1.forEach(Object.keys(Object.assign({}, config1, config2)), function computeConfigValue(prop) {
+	  utils$1.forEach(Object.keys({...config1, ...config2}), function computeConfigValue(prop) {
 	    const merge = mergeMap[prop] || mergeDeepProperties;
 	    const configValue = merge(config1[prop], config2[prop], prop);
 	    (utils$1.isUndefined(configValue) && merge !== mergeDirectKeys) || (config[prop] = configValue);
@@ -46579,7 +46627,7 @@ function requireAxios () {
 	      credentials: isCredentialsSupported ? withCredentials : undefined
 	    });
 
-	    let response = await fetch(request);
+	    let response = await fetch(request, fetchOptions);
 
 	    const isStreamResponse = supportsResponseStream && (responseType === 'stream' || responseType === 'response');
 
@@ -46625,7 +46673,7 @@ function requireAxios () {
 	  } catch (err) {
 	    unsubscribe && unsubscribe();
 
-	    if (err && err.name === 'TypeError' && /fetch/i.test(err.message)) {
+	    if (err && err.name === 'TypeError' && /Load failed|fetch/i.test(err.message)) {
 	      throw Object.assign(
 	        new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, request),
 	        {
@@ -46891,7 +46939,7 @@ function requireAxios () {
 	 */
 	class Axios {
 	  constructor(instanceConfig) {
-	    this.defaults = instanceConfig;
+	    this.defaults = instanceConfig || {};
 	    this.interceptors = {
 	      request: new InterceptorManager$1(),
 	      response: new InterceptorManager$1()
@@ -47022,8 +47070,8 @@ function requireAxios () {
 
 	    if (!synchronousRequestInterceptors) {
 	      const chain = [dispatchRequest.bind(this), undefined];
-	      chain.unshift.apply(chain, requestInterceptorChain);
-	      chain.push.apply(chain, responseInterceptorChain);
+	      chain.unshift(...requestInterceptorChain);
+	      chain.push(...responseInterceptorChain);
 	      len = chain.length;
 
 	      promise = Promise.resolve(config);
@@ -47431,6 +47479,7 @@ function requireApi_gen () {
 	hasRequiredApi_gen = 1;
 	/* eslint-disable */
 	/* tslint:disable */
+	// @ts-nocheck
 	/*
 	 * ---------------------------------------------------------------
 	 * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
@@ -47516,7 +47565,7 @@ function requireApi_gen () {
 	    return (mod && mod.__esModule) ? mod : { "default": mod };
 	};
 	Object.defineProperty(api_gen, "__esModule", { value: true });
-	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.SupportTicketSeverity = api_gen.IdentityAuthProviderProjectTransferStatus = api_gen.IdentityAuthProviderProjectOwnedBy = api_gen.IdentitySupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
+	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.SupportTicketSeverity = api_gen.NeonAuthOauthProviderType = api_gen.NeonAuthOauthProviderId = api_gen.NeonAuthProviderProjectTransferStatus = api_gen.NeonAuthProviderProjectOwnedBy = api_gen.NeonAuthSupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
 	/** The action performed by the operation */
 	var OperationAction;
 	(function (OperationAction) {
@@ -47544,6 +47593,7 @@ function requireApi_gen () {
 	    OperationAction["StartReservedCompute"] = "start_reserved_compute";
 	    OperationAction["SyncDbsAndRolesFromCompute"] = "sync_dbs_and_roles_from_compute";
 	    OperationAction["ApplySchemaFromBranch"] = "apply_schema_from_branch";
+	    OperationAction["TimelineMarkInvisible"] = "timeline_mark_invisible";
 	})(OperationAction || (api_gen.OperationAction = OperationAction = {}));
 	/** The status of the operation */
 	var OperationStatus;
@@ -47565,7 +47615,9 @@ function requireApi_gen () {
 	})(ConsumptionHistoryGranularity || (api_gen.ConsumptionHistoryGranularity = ConsumptionHistoryGranularity = {}));
 	var ProjectAuditLogLevel;
 	(function (ProjectAuditLogLevel) {
-	    ProjectAuditLogLevel["Hipaa"] = "hipaa";
+	    ProjectAuditLogLevel["Base"] = "base";
+	    ProjectAuditLogLevel["Extended"] = "extended";
+	    ProjectAuditLogLevel["Full"] = "full";
 	})(ProjectAuditLogLevel || (api_gen.ProjectAuditLogLevel = ProjectAuditLogLevel = {}));
 	/** The state of the compute endpoint */
 	var EndpointState;
@@ -47604,9 +47656,12 @@ function requireApi_gen () {
 	    BillingSubscriptionType["DirectSales"] = "direct_sales";
 	    BillingSubscriptionType["AwsMarketplace"] = "aws_marketplace";
 	    BillingSubscriptionType["FreeV2"] = "free_v2";
+	    BillingSubscriptionType["FreeV3"] = "free_v3";
+	    BillingSubscriptionType["ServerlessV3"] = "serverless_v3";
 	    BillingSubscriptionType["Launch"] = "launch";
 	    BillingSubscriptionType["Scale"] = "scale";
 	    BillingSubscriptionType["Business"] = "business";
+	    BillingSubscriptionType["BusinessV3"] = "business_v3";
 	    BillingSubscriptionType["VercelPgLegacy"] = "vercel_pg_legacy";
 	})(BillingSubscriptionType || (api_gen.BillingSubscriptionType = BillingSubscriptionType = {}));
 	/** Indicates whether and how an account makes payments. */
@@ -47639,7 +47694,6 @@ function requireApi_gen () {
 	    IdentityProviderId["Microsoftv2"] = "microsoftv2";
 	    IdentityProviderId["Vercelmp"] = "vercelmp";
 	    IdentityProviderId["Keycloak"] = "keycloak";
-	    IdentityProviderId["Test"] = "test";
 	})(IdentityProviderId || (api_gen.IdentityProviderId = IdentityProviderId = {}));
 	var UserDeletionConditionName;
 	(function (UserDeletionConditionName) {
@@ -47651,21 +47705,32 @@ function requireApi_gen () {
 	(function (OrgDeletionConditionName) {
 	    OrgDeletionConditionName["ProjectCount"] = "project_count";
 	})(OrgDeletionConditionName || (api_gen.OrgDeletionConditionName = OrgDeletionConditionName = {}));
-	var IdentitySupportedAuthProvider;
-	(function (IdentitySupportedAuthProvider) {
-	    IdentitySupportedAuthProvider["Mock"] = "mock";
-	    IdentitySupportedAuthProvider["Stack"] = "stack";
-	})(IdentitySupportedAuthProvider || (api_gen.IdentitySupportedAuthProvider = IdentitySupportedAuthProvider = {}));
-	var IdentityAuthProviderProjectOwnedBy;
-	(function (IdentityAuthProviderProjectOwnedBy) {
-	    IdentityAuthProviderProjectOwnedBy["User"] = "user";
-	    IdentityAuthProviderProjectOwnedBy["Neon"] = "neon";
-	})(IdentityAuthProviderProjectOwnedBy || (api_gen.IdentityAuthProviderProjectOwnedBy = IdentityAuthProviderProjectOwnedBy = {}));
-	var IdentityAuthProviderProjectTransferStatus;
-	(function (IdentityAuthProviderProjectTransferStatus) {
-	    IdentityAuthProviderProjectTransferStatus["Initiated"] = "initiated";
-	    IdentityAuthProviderProjectTransferStatus["Finished"] = "finished";
-	})(IdentityAuthProviderProjectTransferStatus || (api_gen.IdentityAuthProviderProjectTransferStatus = IdentityAuthProviderProjectTransferStatus = {}));
+	var NeonAuthSupportedAuthProvider;
+	(function (NeonAuthSupportedAuthProvider) {
+	    NeonAuthSupportedAuthProvider["Mock"] = "mock";
+	    NeonAuthSupportedAuthProvider["Stack"] = "stack";
+	})(NeonAuthSupportedAuthProvider || (api_gen.NeonAuthSupportedAuthProvider = NeonAuthSupportedAuthProvider = {}));
+	var NeonAuthProviderProjectOwnedBy;
+	(function (NeonAuthProviderProjectOwnedBy) {
+	    NeonAuthProviderProjectOwnedBy["User"] = "user";
+	    NeonAuthProviderProjectOwnedBy["Neon"] = "neon";
+	})(NeonAuthProviderProjectOwnedBy || (api_gen.NeonAuthProviderProjectOwnedBy = NeonAuthProviderProjectOwnedBy = {}));
+	var NeonAuthProviderProjectTransferStatus;
+	(function (NeonAuthProviderProjectTransferStatus) {
+	    NeonAuthProviderProjectTransferStatus["Initiated"] = "initiated";
+	    NeonAuthProviderProjectTransferStatus["Finished"] = "finished";
+	})(NeonAuthProviderProjectTransferStatus || (api_gen.NeonAuthProviderProjectTransferStatus = NeonAuthProviderProjectTransferStatus = {}));
+	var NeonAuthOauthProviderId;
+	(function (NeonAuthOauthProviderId) {
+	    NeonAuthOauthProviderId["Google"] = "google";
+	    NeonAuthOauthProviderId["Github"] = "github";
+	    NeonAuthOauthProviderId["Microsoft"] = "microsoft";
+	})(NeonAuthOauthProviderId || (api_gen.NeonAuthOauthProviderId = NeonAuthOauthProviderId = {}));
+	var NeonAuthOauthProviderType;
+	(function (NeonAuthOauthProviderType) {
+	    NeonAuthOauthProviderType["Standard"] = "standard";
+	    NeonAuthOauthProviderType["Shared"] = "shared";
+	})(NeonAuthOauthProviderType || (api_gen.NeonAuthOauthProviderType = NeonAuthOauthProviderType = {}));
 	var SupportTicketSeverity;
 	(function (SupportTicketSeverity) {
 	    SupportTicketSeverity["Low"] = "low";
@@ -47824,7 +47889,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/operations/").concat(encodeURIComponent(operationId)), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Retrieves a list of projects for the Neon account. A project is the top-level object in the Neon object hierarchy. For more information, see [Manage projects](https://neon.tech/docs/manage/projects/).
+	         * @description Retrieves a list of projects for an organization. You may need to specify an org_id parameter depending on your API key type. For more information, see [Manage projects](https://neon.tech/docs/manage/projects/).
 	         *
 	         * @tags Project
 	         * @name ListProjects
@@ -47837,7 +47902,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects", method: 'GET', query: query, secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Creates a Neon project. A project is the top-level object in the Neon object hierarchy. Plan limits define how many projects you can create. For more information, see [Manage projects](https://neon.tech/docs/manage/projects/). You can specify a region and Postgres version in the request body. Neon currently supports PostgreSQL 14, 15, 16, and 17. For supported regions and `region_id` values, see [Regions](https://neon.tech/docs/introduction/regions/).
+	         * @description Creates a Neon project within an organization. You may need to specify an org_id parameter depending on your API key type. Plan limits define how many projects you can create. For more information, see [Manage projects](https://neon.tech/docs/manage/projects/). You can specify a region and Postgres version in the request body. Neon currently supports PostgreSQL 14, 15, 16, and 17. For supported regions and `region_id` values, see [Regions](https://neon.tech/docs/introduction/regions/).
 	         *
 	         * @tags Project
 	         * @name CreateProject
@@ -47850,7 +47915,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects", method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
-	         * @description Retrieves a list of shared projects for the Neon account. A project is the top-level object in the Neon object hierarchy. For more information, see [Manage projects](https://neon.tech/docs/manage/projects/).
+	         * @description Retrieves a list of projects shared with your Neon account. For more information, see [Manage projects](https://neon.tech/docs/manage/projects/).
 	         *
 	         * @tags Project
 	         * @name ListSharedProjects
@@ -47863,7 +47928,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/shared", method: 'GET', query: query, secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Retrieves information about the specified project. A project is the top-level object in the Neon object hierarchy. You can obtain a `project_id` by listing the projects for your Neon account.
+	         * @description Retrieves information about the specified project. You can obtain a `project_id` by listing the projects for an organization.
 	         *
 	         * @tags Project
 	         * @name GetProject
@@ -47902,7 +47967,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Retrieves a list of operations for the specified Neon project. You can obtain a `project_id` by listing the projects for your Neon account. The number of operations returned can be large. To paginate the response, issue an initial request with a `limit` value. Then, add the `cursor` value that was returned in the response to the next request.
+	         * @description Retrieves a list of operations for the specified Neon project. You can obtain a `project_id` by listing the projects for your Neon account. The number of operations returned can be large. To paginate the response, issue an initial request with a `limit` value. Then, add the `cursor` value that was returned in the response to the next request. Operations older than 6 months may be deleted from our systems. If you need more history than that, you should store your own history.
 	         *
 	         * @tags Operation
 	         * @name ListProjectOperations
@@ -47955,6 +48020,45 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/permissions/").concat(encodeURIComponent(permissionId)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Return available shared preload libraries
+	         *
+	         * @tags Project
+	         * @name GetAvailablePreloadLibraries
+	         * @summary Return available shared preload libraries
+	         * @request GET:/projects/{project_id}/available_preload_libraries
+	         * @secure
+	         */
+	        _this.getAvailablePreloadLibraries = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/available_preload_libraries"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Creates a transfer request for the specified project. A transfer request allows the project to be transferred to another account or organization. The request has an expiration time after which it can no longer be used. To accept/claim the transfer request, the recipient user/organization must call the `/projects/{project_id}/transfer_requests/{request_id}` API endpoint, or visit `https://console.neon.tech/app/claim?p={project_id}&tr={request_id}&ru={redirect_url}` in the Neon Console. The `ru` parameter is optional and can be used to redirect the user after accepting the transfer request. This feature is currently in private preview. Get in touch with us to get access.
+	         *
+	         * @tags Project
+	         * @name CreateProjectTransferRequest
+	         * @summary Create a project transfer request
+	         * @request POST:/projects/{project_id}/transfer_requests
+	         * @secure
+	         */
+	        _this.createProjectTransferRequest = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/transfer_requests"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Accepts a transfer request for the specified project, transferring it to the specified organization or user. If org_id is not passed, the project will be transferred to the current user or organization account.
+	         *
+	         * @tags Project
+	         * @name AcceptProjectTransferRequest
+	         * @summary Accept a project transfer request
+	         * @request PUT:/projects/{project_id}/transfer_requests/{request_id}
+	         * @secure
+	         */
+	        _this.acceptProjectTransferRequest = function (projectId, requestId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/transfer_requests/").concat(encodeURIComponent(requestId)), method: 'PUT', body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
 	         * @description Returns the JWKS URLs available for verifying JWTs used as the authentication mechanism for the specified project.
 	         *
 	         * @tags Project
@@ -47994,41 +48098,145 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/jwks/").concat(encodeURIComponent(jwksId)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Creates a new instance of Neon Data API in the specified branch. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
+	         *
+	         * @tags DataAPI
+	         * @name CreateProjectBranchDataApi
+	         * @summary Create Neon Data API
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @secure
+	         */
+	        _this.createProjectBranchDataApi = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Deletes the Neon Data API for the specified branch. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
+	         *
+	         * @tags DataAPI
+	         * @name DeleteProjectBranchDataApi
+	         * @summary Delete Neon Data API
+	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @secure
+	         */
+	        _this.deleteProjectBranchDataApi = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'DELETE', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Retrieves the Neon Data API for the specified branch.
+	         *
+	         * @tags DataAPI
+	         * @name GetProjectBranchDataApi
+	         * @summary Get Neon Data API
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @secure
+	         */
+	        _this.getProjectBranchDataApi = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
 	         * @description Creates a project on a third-party authentication provider's platform for use with Neon Auth. Use this endpoint if the frontend integration flow can't be used.
 	         *
 	         * @tags Auth
-	         * @name CreateProjectIdentityIntegration
+	         * @name CreateNeonAuthIntegration
 	         * @summary Create Neon Auth integration
 	         * @request POST:/projects/auth/create
 	         * @secure
 	         */
-	        _this.createProjectIdentityIntegration = function (data, params) {
+	        _this.createNeonAuthIntegration = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/create", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Lists the domains in the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name ListNeonAuthRedirectUriWhitelistDomains
+	         * @summary List domains in redirect_uri whitelist
+	         * @request GET:/projects/{project_id}/auth/domains
+	         * @secure
+	         */
+	        _this.listNeonAuthRedirectUriWhitelistDomains = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Adds a domain to the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name AddNeonAuthDomainToRedirectUriWhitelist
+	         * @summary Add domain to redirect_uri whitelist
+	         * @request POST:/projects/{project_id}/auth/domains
+	         * @secure
+	         */
+	        _this.addNeonAuthDomainToRedirectUriWhitelist = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
+	         * @description Deletes a domain from the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name DeleteNeonAuthDomainFromRedirectUriWhitelist
+	         * @summary Delete domain from redirect_uri whitelist
+	         * @request DELETE:/projects/{project_id}/auth/domains
+	         * @secure
+	         */
+	        _this.deleteNeonAuthDomainFromRedirectUriWhitelist = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'DELETE', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
 	         * @description Generates SDK or API Keys for the auth provider. These might be called different things depending on the auth provider you're using, but are generally used for setting up the frontend and backend SDKs.
 	         *
 	         * @tags Auth
-	         * @name CreateProjectIdentityAuthProviderSdkKeys
+	         * @name CreateNeonAuthProviderSdkKeys
 	         * @summary Create Auth Provider SDK keys
 	         * @request POST:/projects/auth/keys
 	         * @secure
 	         */
-	        _this.createProjectIdentityAuthProviderSdkKeys = function (data, params) {
+	        _this.createNeonAuthProviderSdkKeys = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/keys", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Creates a new user in Neon Auth. The user will be created in your neon_auth.users_sync table and automatically propagated to your auth project, whether Neon-managed or provider-owned.
+	         *
+	         * @tags Auth
+	         * @name CreateNeonAuthNewUser
+	         * @summary Create new auth user
+	         * @request POST:/projects/auth/user
+	         * @secure
+	         */
+	        _this.createNeonAuthNewUser = function (data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/auth/user", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Deletes the auth user for the specified project.
+	         *
+	         * @tags Auth
+	         * @name DeleteNeonAuthUser
+	         * @summary Delete auth user
+	         * @request DELETE:/projects/{project_id}/auth/users/{auth_user_id}
+	         * @secure
+	         */
+	        _this.deleteNeonAuthUser = function (projectId, authUserId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/users/").concat(encodeURIComponent(authUserId)), method: 'DELETE', secure: true }, params));
 	        };
 	        /**
 	         * @description Transfer ownership of your Neon-managed auth project to your own auth provider account.
 	         *
 	         * @tags Auth
-	         * @name TransferProjectIdentityAuthProviderProject
+	         * @name TransferNeonAuthProviderProject
 	         * @summary Transfer Neon-managed auth project to your own account
 	         * @request POST:/projects/auth/transfer_ownership
 	         * @secure
 	         */
-	        _this.transferProjectIdentityAuthProviderProject = function (data, params) {
+	        _this.transferNeonAuthProviderProject = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/auth/transfer_ownership", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
@@ -48036,25 +48244,103 @@ function requireApi_gen () {
 	         * No description
 	         *
 	         * @tags Auth
-	         * @name ListProjectIdentityIntegrations
+	         * @name ListNeonAuthIntegrations
 	         * @summary Lists active integrations with auth providers
 	         * @request GET:/projects/{project_id}/auth/integrations
 	         * @secure
 	         */
-	        _this.listProjectIdentityIntegrations = function (projectId, params) {
+	        _this.listNeonAuthIntegrations = function (projectId, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integrations"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Lists the OAuth providers for the specified project.
+	         *
+	         * @tags Auth
+	         * @name ListNeonAuthOauthProviders
+	         * @summary List OAuth providers
+	         * @request GET:/projects/{project_id}/auth/oauth_providers
+	         * @secure
+	         */
+	        _this.listNeonAuthOauthProviders = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Adds a OAuth provider to the specified project.
+	         *
+	         * @tags Auth
+	         * @name AddNeonAuthOauthProvider
+	         * @summary Add a OAuth provider
+	         * @request POST:/projects/{project_id}/auth/oauth_providers
+	         * @secure
+	         */
+	        _this.addNeonAuthOauthProvider = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Updates a OAuth provider for the specified project.
+	         *
+	         * @tags Auth
+	         * @name UpdateNeonAuthOauthProvider
+	         * @summary Update OAuth provider
+	         * @request PATCH:/projects/{project_id}/auth/oauth_providers/{oauth_provider_id}
+	         * @secure
+	         */
+	        _this.updateNeonAuthOauthProvider = function (projectId, oauthProviderId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers/").concat(encodeURIComponent(oauthProviderId)), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Deletes a OAuth provider from the specified project.
+	         *
+	         * @tags Auth
+	         * @name DeleteNeonAuthOauthProvider
+	         * @summary Delete OAuth provider
+	         * @request DELETE:/projects/{project_id}/auth/oauth_providers/{oauth_provider_id}
+	         * @secure
+	         */
+	        _this.deleteNeonAuthOauthProvider = function (projectId, oauthProviderId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers/").concat(encodeURIComponent(oauthProviderId)), method: 'DELETE', secure: true }, params));
+	        };
+	        /**
+	         * @description Gets the email server configuration for the specified project.
+	         *
+	         * @tags Auth
+	         * @name GetNeonAuthEmailServer
+	         * @summary Get email server configuration
+	         * @request GET:/projects/{project_id}/auth/email_server
+	         * @secure
+	         */
+	        _this.getNeonAuthEmailServer = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/email_server"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Updates the email server configuration for the specified project.
+	         *
+	         * @tags Auth
+	         * @name UpdateNeonAuthEmailServer
+	         * @summary Update email server configuration
+	         * @request PATCH:/projects/{project_id}/auth/email_server
+	         * @secure
+	         */
+	        _this.updateNeonAuthEmailServer = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/email_server"), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
 	         * No description
 	         *
 	         * @tags Auth
-	         * @name DeleteProjectIdentityIntegration
+	         * @name DeleteNeonAuthIntegration
 	         * @summary Delete integration with auth provider
 	         * @request DELETE:/projects/{project_id}/auth/integration/{auth_provider}
 	         * @secure
 	         */
-	        _this.deleteProjectIdentityIntegration = function (projectId, authProvider, params) {
+	        _this.deleteNeonAuthIntegration = function (projectId, authProvider, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integration/").concat(encodeURIComponent(authProvider)), method: 'DELETE', secure: true }, params));
 	        };
@@ -48073,7 +48359,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/connection_uri"), method: 'GET', query: query, secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Creates a branch in the specified project. You can obtain a `project_id` by listing the projects for your Neon account. This method does not require a request body, but you can specify one to create a compute endpoint for the branch or to select a non-default parent branch. The default behavior is to create a branch from the project's default branch with no compute endpoint, and the branch name is auto-generated. There is a maximum of one read-write endpoint per branch. A branch can have multiple read-only endpoints. For related information, see [Manage branches](https://neon.tech/docs/manage/branches/).
+	         * @description Creates a branch in the specified project. You can obtain a `project_id` by listing the projects for your Neon account. This method does not require a request body, but you can specify one to create a compute endpoint for the branch or to select a non-default parent branch. By default, the branch is created from the project's default branch with no compute endpoint, and the branch name is auto-generated. To access the branch, you must add an endpoint object. A `read_write` endpoint allows you to perform read and write operations on the branch. Each branch supports one read-write endpoint and multiple read-only endpoints. For related information, see [Manage branches](https://neon.tech/docs/manage/branches/).
 	         *
 	         * @tags Branch
 	         * @name CreateProjectBranch
@@ -48675,6 +48961,19 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/organizations/".concat(encodeURIComponent(sourceOrgId), "/projects/transfer"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Retrieves the list of VPC endpoints for the specified Neon organization across all regions.
+	         *
+	         * @tags Organizations
+	         * @name ListOrganizationVpcEndpointsAllRegions
+	         * @summary List VPC endpoints across all regions
+	         * @request GET:/organizations/{org_id}/vpc/vpc_endpoints
+	         * @secure
+	         */
+	        _this.listOrganizationVpcEndpointsAllRegions = function (orgId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/organizations/".concat(encodeURIComponent(orgId), "/vpc/vpc_endpoints"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
 	         * @description Retrieves the list of VPC endpoints for the specified Neon organization.
 	         *
 	         * @tags Organizations
@@ -48714,7 +49013,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/organizations/".concat(encodeURIComponent(orgId), "/vpc/region/").concat(encodeURIComponent(regionId), "/vpc_endpoints/").concat(encodeURIComponent(vpcEndpointId)), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
-	         * @description Deletes the VPC endpoint from the specified Neon organization.
+	         * @description Deletes the VPC endpoint from the specified Neon organization. If you delete a VPC endpoint from a Neon organization, that VPC endpoint cannot be added back to the Neon organization.
 	         *
 	         * @tags Organizations
 	         * @name DeleteOrganizationVpcEndpoint
@@ -48777,6 +49076,19 @@ function requireApi_gen () {
 	        _this.transferProjectsFromUserToOrg = function (data, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/users/me/projects/transfer", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Returns auth information about the passed credentials. It can refer to an API key, Bearer token or OAuth session.
+	         *
+	         * @tags Users
+	         * @name GetAuthDetails
+	         * @summary Get request authentication details
+	         * @request GET:/auth
+	         * @secure
+	         */
+	        _this.getAuthDetails = function (params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/auth", method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        return _this;
 	    }
@@ -52860,10 +53172,10 @@ function buildAnnotations() {
     return annotations;
 }
 
-const version = '6.0.1';
+const version = '6.0.2';
 // This file is auto-generated. Use 'bun run prebuild' when you need to update the version!
 
-async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch) {
+async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch, expiresAt) {
     const client = distExports.createApiClient({
         apiKey,
         baseURL: apiHost,
@@ -52880,7 +53192,8 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
             projectId,
             schemaOnly,
             parentBranch,
-            suspendTimeout
+            suspendTimeout,
+            expiresAt
         });
     }
     catch (error) {
@@ -52907,7 +53220,8 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
         databaseHostPooled: connectionInfo.databaseHostPooled,
         password: connectionInfo.password,
         branchId: branch.id,
-        createdBranch: branch.created
+        createdBranch: branch.created,
+        expiresAt: branch.expires_at
     };
 }
 async function getBranch(client, projectId, branchIdentifier) {
@@ -52942,7 +53256,7 @@ async function getOrCreateBranch(client, params) {
 }
 async function createBranch(client, params) {
     const annotations = buildAnnotations();
-    const { branchName, projectId, schemaOnly, parentBranch, suspendTimeout } = params;
+    const { branchName, projectId, schemaOnly, parentBranch, suspendTimeout, expiresAt } = params;
     let parentId;
     if (parentBranch) {
         const parentBranchData = await getBranch(client, projectId, parentBranch);
@@ -52961,7 +53275,8 @@ async function createBranch(client, params) {
         branch: {
             name: branchName,
             parent_id: parentId,
-            init_source: schemaOnly ? 'schema-only' : undefined
+            init_source: schemaOnly ? 'schema-only' : undefined,
+            expires_at: expiresAt
         },
         annotation_value: annotations
     });
@@ -53089,6 +53404,12 @@ async function run() {
         if (branchName === '') {
             branchName = undefined;
         }
+        let expiresAt = coreExports.getInput('expires_at', {
+            trimWhitespace: true
+        });
+        if (expiresAt === '') {
+            expiresAt = undefined;
+        }
         if (!urlRegex.test(apiHost)) {
             throw new Error('API host must be a valid URL');
         }
@@ -53102,7 +53423,7 @@ async function run() {
         if (isNaN(suspendTimeout)) {
             throw new Error('Suspend timeout must be a number');
         }
-        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch);
+        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt);
         if (result.createdBranch) {
             coreExports.info(`Branch ${branchName} created successfully`);
             coreExports.setOutput('created', true);

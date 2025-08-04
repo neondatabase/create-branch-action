@@ -16,6 +16,7 @@ interface CreateResponse {
   password: string
   branchId: string
   createdBranch: boolean
+  expiresAt?: string
 }
 
 export async function create(
@@ -29,7 +30,8 @@ export async function create(
   sslMode: string,
   suspendTimeout: number,
   branchName?: string,
-  parentBranch?: string
+  parentBranch?: string,
+  expiresAt?: string
 ): Promise<CreateResponse> {
   const client = createApiClient({
     apiKey,
@@ -48,7 +50,8 @@ export async function create(
       projectId,
       schemaOnly,
       parentBranch,
-      suspendTimeout
+      suspendTimeout,
+      expiresAt
     })
   } catch (error) {
     throw new Error(`Failed to create branch. ${String(error)}`)
@@ -75,7 +78,8 @@ export async function create(
     databaseHostPooled: connectionInfo.databaseHostPooled,
     password: connectionInfo.password,
     branchId: branch.id,
-    createdBranch: branch.created
+    createdBranch: branch.created,
+    expiresAt: branch.expires_at
   }
 }
 
@@ -112,6 +116,7 @@ interface GetOrCreateBranchParams {
   schemaOnly: boolean
   parentBranch?: string
   suspendTimeout: number
+  expiresAt?: string
 }
 
 type GetOrCreateBranchResponse = Branch & { created: boolean }
@@ -140,8 +145,14 @@ export async function createBranch(
 ): Promise<Branch> {
   const annotations = buildAnnotations()
 
-  const { branchName, projectId, schemaOnly, parentBranch, suspendTimeout } =
-    params
+  const {
+    branchName,
+    projectId,
+    schemaOnly,
+    parentBranch,
+    suspendTimeout,
+    expiresAt
+  } = params
 
   let parentId: string | undefined
   if (parentBranch) {
@@ -163,7 +174,8 @@ export async function createBranch(
     branch: {
       name: branchName,
       parent_id: parentId,
-      init_source: schemaOnly ? 'schema-only' : undefined
+      init_source: schemaOnly ? 'schema-only' : undefined,
+      expires_at: expiresAt
     },
     annotation_value: annotations
   })
