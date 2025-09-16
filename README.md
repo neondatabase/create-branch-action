@@ -141,12 +141,20 @@ jobs:
   create-neon-branch:
     runs-on: ubuntu-24.04
     steps:
-      - uses: neondatabase/create-branch-action@v6
+      - name: Get branch expiration date as an env variable (2 weeks from now)
+        id: get-expiration-date
+        run:
+          echo "EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')"
+          >> "$GITHUB_ENV"
+      - name: Create Neon Branch
+        uses: neondatabase/create-branch-action@v6
         id: create-branch
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: actions_reusable
+          branch_name:
+            pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
+          expires_at: ${{ env.EXPIRES_AT }}
       - run: echo db_url ${{ steps.create-branch.outputs.db_url }} # the password is masked when printed
       - run: echo host ${{ steps.create-branch.outputs.host }}
       - run: echo branch_id ${{ steps.create-branch.outputs.branch_id }}
