@@ -67,16 +67,6 @@ steps:
       branch_name: actions_reusable
       role: neondb_owner
       api_key: ${{ secrets.NEON_API_KEY }}
-
-# v5
-steps:
-  - uses: neondatabase/create-branch-action@v6
-    id: create-branch
-    with:
-      project_id: your_neon_project_id
-      branch_name: actions_reusable
-      role: neondb_owner
-      api_key: ${{ secrets.NEON_API_KEY }}
 ```
 
 Alternatively, you can use `${{ vars.NEON_PROJECT_ID }}` to get your
