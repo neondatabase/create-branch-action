@@ -42,7 +42,7 @@
     "@actions/github": "^6.0.1",
     "@neondatabase/api-client": "^2.2.0",
     "axios": "^1.12.2",
-    "diff": "^7.0.0"
+    "diff": "^8.0.2"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.9",
@@ -53,7 +53,7 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.2",
-    "@types/diff": "^7.0.2",
+    "@types/diff": "^8.0.0",
     "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
