@@ -49,7 +49,10 @@ export default [
       ecmaVersion: 2023,
       sourceType: 'module',
 
-      parserOptions: { project: ['tsconfig.eslint.json'], tsconfigRootDir: '.' }
+      parserOptions: {
+        project: ['tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname
+      }
     },
 
     settings: {
