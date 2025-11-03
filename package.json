@@ -41,7 +41,7 @@
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.1",
     "@neondatabase/api-client": "^2.2.0",
-    "axios": "^1.12.2",
+    "axios": "^1.13.1",
     "diff": "^8.0.2"
   },
   "devDependencies": {
