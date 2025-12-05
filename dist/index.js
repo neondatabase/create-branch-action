@@ -76194,7 +76194,9 @@ async function run() {
             try {
                 maskingRules = JSON.parse(maskingRulesInput);
             }
-            catch {
+            catch (ex) {
+                console.error('Error parsing masking rules JSON:', ex);
+                console.log(maskingRulesInput);
                 throw new Error('Masking rules must be a valid JSON array');
             }
         }
