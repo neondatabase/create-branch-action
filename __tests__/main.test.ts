@@ -125,6 +125,7 @@ describe('action', () => {
       0,
       'branchName',
       undefined,
+      undefined,
       undefined
     )
 
@@ -189,6 +190,7 @@ describe('action', () => {
       0,
       'branchName',
       undefined,
+      undefined,
       undefined
     )
 
@@ -252,7 +254,8 @@ describe('action', () => {
       0,
       'branchName',
       undefined,
-      '2025-12-31T00:00:00Z'
+      '2025-12-31T00:00:00Z',
+      undefined
     )
 
     expect(core.setFailed).not.toHaveBeenCalled()
