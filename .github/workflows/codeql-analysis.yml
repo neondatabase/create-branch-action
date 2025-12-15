@@ -21,7 +21,7 @@ jobs:
     name: Analyze
     runs-on:
       group: neondatabase-protected-runner-group
-        labels: linux-ubuntu-latest
+      labels: linux-ubuntu-latest
 
     strategy:
       fail-fast: false
