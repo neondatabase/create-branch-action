@@ -2,7 +2,8 @@ import {
   Branch,
   createApiClient,
   Endpoint,
-  EndpointType
+  EndpointType,
+  MaskingRule
 } from '@neondatabase/api-client'
 
 import { buildAnnotations } from './annotations.js'
@@ -31,7 +32,8 @@ export async function create(
   suspendTimeout: number,
   branchName?: string,
   parentBranch?: string,
-  expiresAt?: string
+  expiresAt?: string,
+  maskingRules?: MaskingRule[]
 ): Promise<CreateResponse> {
   const client = createApiClient({
     apiKey,
@@ -51,7 +53,8 @@ export async function create(
       schemaOnly,
       parentBranch,
       suspendTimeout,
-      expiresAt
+      expiresAt,
+      maskingRules
     })
   } catch (error) {
     throw new Error(`Failed to create branch. ${String(error)}`)
@@ -117,6 +120,7 @@ interface GetOrCreateBranchParams {
   parentBranch?: string
   suspendTimeout: number
   expiresAt?: string
+  maskingRules?: MaskingRule[]
 }
 
 type GetOrCreateBranchResponse = Branch & { created: boolean }
@@ -129,6 +133,11 @@ export async function getOrCreateBranch(
     const { projectId, branchName } = params
     const existingBranch = await getBranch(client, projectId, branchName)
     if (existingBranch) {
+      if (params.maskingRules && params.maskingRules.length > 0) {
+        throw new Error(
+          'Cannot apply masking rules to an existing branch. Please create a new anonymized branch to apply masking rules.'
+        )
+      }
       return { ...existingBranch, created: false }
     }
   }
@@ -151,7 +160,8 @@ export async function createBranch(
     schemaOnly,
     parentBranch,
     suspendTimeout,
-    expiresAt
+    expiresAt,
+    maskingRules
   } = params
 
   let parentId: string | undefined
@@ -164,21 +174,43 @@ export async function createBranch(
     parentId = parentBranchData.id
   }
 
-  const branchResponse = await client.createProjectBranch(projectId, {
-    endpoints: [
-      {
-        type: EndpointType.ReadWrite,
-        suspend_timeout_seconds: suspendTimeout
-      }
-    ],
-    branch: {
-      name: branchName,
-      parent_id: parentId,
-      init_source: schemaOnly ? 'schema-only' : undefined,
-      expires_at: expiresAt
-    },
-    annotation_value: annotations
-  })
+  const branchResponse =
+    params.maskingRules && params.maskingRules.length > 0
+      ? await client.createProjectBranchAnonymized(projectId, {
+          branch_create: {
+            branch: {
+              name: branchName,
+              parent_id: parentId,
+              init_source: schemaOnly ? 'schema-only' : undefined,
+              expires_at: expiresAt
+            },
+
+            endpoints: [
+              {
+                type: EndpointType.ReadWrite,
+                suspend_timeout_seconds: suspendTimeout
+              }
+            ]
+          },
+          masking_rules: maskingRules,
+          start_anonymization: true,
+          annotation_value: annotations
+        })
+      : await client.createProjectBranch(projectId, {
+          endpoints: [
+            {
+              type: EndpointType.ReadWrite,
+              suspend_timeout_seconds: suspendTimeout
+            }
+          ],
+          branch: {
+            name: branchName,
+            parent_id: parentId,
+            init_source: schemaOnly ? 'schema-only' : undefined,
+            expires_at: expiresAt
+          },
+          annotation_value: annotations
+        })
 
   return branchResponse.data.branch
 }

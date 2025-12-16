@@ -44,6 +44,10 @@ inputs:
   expires_at:
     description: Date and time when the branch should be deleted.
     default: ''
+  masking_rules:
+    description:
+      'A JSON string representing an array of data masking rules to be applied
+      to the branch. https://api-docs.neon.tech/reference/updatemaskingrules'
 outputs:
   db_url:
     description: The database connection string

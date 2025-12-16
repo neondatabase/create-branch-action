@@ -42643,7 +42643,7 @@ function requireFollowRedirects () {
 	return followRedirects.exports;
 }
 
-/*! Axios v1.11.0 Copyright (c) 2025 Matt Zabriskie and contributors */
+/*! Axios v1.12.2 Copyright (c) 2025 Matt Zabriskie and contributors */
 
 var axios_1;
 var hasRequiredAxios;
@@ -42728,7 +42728,7 @@ function requireAxios () {
 	 */
 	function isBuffer(val) {
 	  return val !== null && !isUndefined(val) && val.constructor !== null && !isUndefined(val.constructor)
-	    && isFunction(val.constructor.isBuffer) && val.constructor.isBuffer(val);
+	    && isFunction$1(val.constructor.isBuffer) && val.constructor.isBuffer(val);
 	}
 
 	/**
@@ -42773,7 +42773,7 @@ function requireAxios () {
 	 * @param {*} val The value to test
 	 * @returns {boolean} True if value is a Function, otherwise false
 	 */
-	const isFunction = typeOfTest('function');
+	const isFunction$1 = typeOfTest('function');
 
 	/**
 	 * Determine if a value is a Number
@@ -42829,7 +42829,7 @@ function requireAxios () {
 	  if (!isObject(val) || isBuffer(val)) {
 	    return false;
 	  }
-	  
+
 	  try {
 	    return Object.keys(val).length === 0 && Object.getPrototypeOf(val) === Object.prototype;
 	  } catch (e) {
@@ -42881,7 +42881,7 @@ function requireAxios () {
 	 *
 	 * @returns {boolean} True if value is a Stream, otherwise false
 	 */
-	const isStream = (val) => isObject(val) && isFunction(val.pipe);
+	const isStream = (val) => isObject(val) && isFunction$1(val.pipe);
 
 	/**
 	 * Determine if a value is a FormData
@@ -42894,10 +42894,10 @@ function requireAxios () {
 	  let kind;
 	  return thing && (
 	    (typeof FormData === 'function' && thing instanceof FormData) || (
-	      isFunction(thing.append) && (
+	      isFunction$1(thing.append) && (
 	        (kind = kindOf(thing)) === 'formdata' ||
 	        // detect form-data instance
-	        (kind === 'object' && isFunction(thing.toString) && thing.toString() === '[object FormData]')
+	        (kind === 'object' && isFunction$1(thing.toString) && thing.toString() === '[object FormData]')
 	      )
 	    )
 	  )
@@ -43022,7 +43022,7 @@ function requireAxios () {
 	 * @returns {Object} Result of all merge properties
 	 */
 	function merge(/* obj1, obj2, obj3, ... */) {
-	  const {caseless} = isContextDefined(this) && this || {};
+	  const {caseless, skipUndefined} = isContextDefined(this) && this || {};
 	  const result = {};
 	  const assignValue = (val, key) => {
 	    const targetKey = caseless && findKey(result, key) || key;
@@ -43032,7 +43032,7 @@ function requireAxios () {
 	      result[targetKey] = merge({}, val);
 	    } else if (isArray(val)) {
 	      result[targetKey] = val.slice();
-	    } else {
+	    } else if (!skipUndefined || !isUndefined(val)) {
 	      result[targetKey] = val;
 	    }
 	  };
@@ -43055,7 +43055,7 @@ function requireAxios () {
 	 */
 	const extend = (a, b, thisArg, {allOwnKeys}= {}) => {
 	  forEach(b, (val, key) => {
-	    if (thisArg && isFunction(val)) {
+	    if (thisArg && isFunction$1(val)) {
 	      a[key] = bind(val, thisArg);
 	    } else {
 	      a[key] = val;
@@ -43271,13 +43271,13 @@ function requireAxios () {
 	const freezeMethods = (obj) => {
 	  reduceDescriptors(obj, (descriptor, name) => {
 	    // skip restricted props in strict mode
-	    if (isFunction(obj) && ['arguments', 'caller', 'callee'].indexOf(name) !== -1) {
+	    if (isFunction$1(obj) && ['arguments', 'caller', 'callee'].indexOf(name) !== -1) {
 	      return false;
 	    }
 
 	    const value = obj[name];
 
-	    if (!isFunction(value)) return;
+	    if (!isFunction$1(value)) return;
 
 	    descriptor.enumerable = false;
 
@@ -43314,6 +43314,8 @@ function requireAxios () {
 	  return value != null && Number.isFinite(value = +value) ? value : defaultValue;
 	};
 
+
+
 	/**
 	 * If the thing is a FormData object, return true, otherwise return false.
 	 *
@@ -43322,7 +43324,7 @@ function requireAxios () {
 	 * @returns {boolean}
 	 */
 	function isSpecCompliantForm(thing) {
-	  return !!(thing && isFunction(thing.append) && thing[toStringTag] === 'FormData' && thing[iterator]);
+	  return !!(thing && isFunction$1(thing.append) && thing[toStringTag] === 'FormData' && thing[iterator]);
 	}
 
 	const toJSONObject = (obj) => {
@@ -43364,7 +43366,7 @@ function requireAxios () {
 	const isAsyncFn = kindOfTest('AsyncFunction');
 
 	const isThenable = (thing) =>
-	  thing && (isObject(thing) || isFunction(thing)) && isFunction(thing.then) && isFunction(thing.catch);
+	  thing && (isObject(thing) || isFunction$1(thing)) && isFunction$1(thing.then) && isFunction$1(thing.catch);
 
 	// original code
 	// https://github.com/DigitalBrainJS/AxiosPromise/blob/16deab13710ec09779922131f3fa5954320f83ab/lib/utils.js#L11-L34
@@ -43388,7 +43390,7 @@ function requireAxios () {
 	  })(`axios@${Math.random()}`, []) : (cb) => setTimeout(cb);
 	})(
 	  typeof setImmediate === 'function',
-	  isFunction(_global.postMessage)
+	  isFunction$1(_global.postMessage)
 	);
 
 	const asap = typeof queueMicrotask !== 'undefined' ?
@@ -43397,7 +43399,7 @@ function requireAxios () {
 	// *********************
 
 
-	const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
+	const isIterable = (thing) => thing != null && isFunction$1(thing[iterator]);
 
 
 	const utils$1 = {
@@ -43421,7 +43423,7 @@ function requireAxios () {
 	  isFile,
 	  isBlob,
 	  isRegExp,
-	  isFunction,
+	  isFunction: isFunction$1,
 	  isStream,
 	  isURLSearchParams,
 	  isTypedArray,
@@ -43547,11 +43549,18 @@ function requireAxios () {
 	    return prop !== 'isAxiosError';
 	  });
 
-	  AxiosError.call(axiosError, error.message, code, config, request, response);
+	  const msg = error && error.message ? error.message : 'Error';
 
-	  axiosError.cause = error;
+	  // Prefer explicit code; otherwise copy the low-level error's code (e.g. ECONNREFUSED)
+	  const errCode = code == null && error ? error.code : code;
+	  AxiosError.call(axiosError, msg, errCode, config, request, response);
 
-	  axiosError.name = error.name;
+	  // Chain the original error on the standard field; non-enumerable to avoid JSON noise
+	  if (error && axiosError.cause == null) {
+	    Object.defineProperty(axiosError, 'cause', { value: error, configurable: true });
+	  }
+
+	  axiosError.name = (error && error.name) || 'Error';
 
 	  customProps && Object.assign(axiosError, customProps);
 
@@ -43839,9 +43848,7 @@ function requireAxios () {
 	    replace(/%3A/gi, ':').
 	    replace(/%24/g, '$').
 	    replace(/%2C/gi, ',').
-	    replace(/%20/g, '+').
-	    replace(/%5B/gi, '[').
-	    replace(/%5D/gi, ']');
+	    replace(/%20/g, '+');
 	}
 
 	/**
@@ -44267,7 +44274,7 @@ function requireAxios () {
 	      const strictJSONParsing = !silentJSONParsing && JSONRequested;
 
 	      try {
-	        return JSON.parse(data);
+	        return JSON.parse(data, this.parseReviver);
 	      } catch (e) {
 	        if (strictJSONParsing) {
 	          if (e.name === 'SyntaxError') {
@@ -44794,7 +44801,7 @@ function requireAxios () {
 	  return requestedURL;
 	}
 
-	const VERSION = "1.11.0";
+	const VERSION = "1.12.2";
 
 	function parseProtocol(url) {
 	  const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
@@ -45287,6 +45294,80 @@ function requireAxios () {
 
 	const asyncDecorator = (fn) => (...args) => utils$1.asap(() => fn(...args));
 
+	/**
+	 * Estimate decoded byte length of a data:// URL *without* allocating large buffers.
+	 * - For base64: compute exact decoded size using length and padding;
+	 *               handle %XX at the character-count level (no string allocation).
+	 * - For non-base64: use UTF-8 byteLength of the encoded body as a safe upper bound.
+	 *
+	 * @param {string} url
+	 * @returns {number}
+	 */
+	function estimateDataURLDecodedBytes(url) {
+	  if (!url || typeof url !== 'string') return 0;
+	  if (!url.startsWith('data:')) return 0;
+
+	  const comma = url.indexOf(',');
+	  if (comma < 0) return 0;
+
+	  const meta = url.slice(5, comma);
+	  const body = url.slice(comma + 1);
+	  const isBase64 = /;base64/i.test(meta);
+
+	  if (isBase64) {
+	    let effectiveLen = body.length;
+	    const len = body.length; // cache length
+
+	    for (let i = 0; i < len; i++) {
+	      if (body.charCodeAt(i) === 37 /* '%' */ && i + 2 < len) {
+	        const a = body.charCodeAt(i + 1);
+	        const b = body.charCodeAt(i + 2);
+	        const isHex =
+	          ((a >= 48 && a <= 57) || (a >= 65 && a <= 70) || (a >= 97 && a <= 102)) &&
+	          ((b >= 48 && b <= 57) || (b >= 65 && b <= 70) || (b >= 97 && b <= 102));
+
+	        if (isHex) {
+	          effectiveLen -= 2;
+	          i += 2;
+	        }
+	      }
+	    }
+
+	    let pad = 0;
+	    let idx = len - 1;
+
+	    const tailIsPct3D = (j) =>
+	      j >= 2 &&
+	      body.charCodeAt(j - 2) === 37 && // '%'
+	      body.charCodeAt(j - 1) === 51 && // '3'
+	      (body.charCodeAt(j) === 68 || body.charCodeAt(j) === 100); // 'D' or 'd'
+
+	    if (idx >= 0) {
+	      if (body.charCodeAt(idx) === 61 /* '=' */) {
+	        pad++;
+	        idx--;
+	      } else if (tailIsPct3D(idx)) {
+	        pad++;
+	        idx -= 3;
+	      }
+	    }
+
+	    if (pad === 1 && idx >= 0) {
+	      if (body.charCodeAt(idx) === 61 /* '=' */) {
+	        pad++;
+	      } else if (tailIsPct3D(idx)) {
+	        pad++;
+	      }
+	    }
+
+	    const groups = Math.floor(effectiveLen / 4);
+	    const bytes = groups * 3 - (pad || 0);
+	    return bytes > 0 ? bytes : 0;
+	  }
+
+	  return Buffer.byteLength(body, 'utf8');
+	}
+
 	const zlibOptions = {
 	  flush: zlib__default["default"].constants.Z_SYNC_FLUSH,
 	  finishFlush: zlib__default["default"].constants.Z_SYNC_FLUSH
@@ -45307,6 +45388,7 @@ function requireAxios () {
 	  return protocol + ':';
 	});
 
+
 	const flushOnFinish = (stream, [throttled, flush]) => {
 	  stream
 	    .on('end', flush)
@@ -45314,6 +45396,7 @@ function requireAxios () {
 
 	  return throttled;
 	};
+
 
 	/**
 	 * If the proxy or config beforeRedirects functions are defined, call them with the options
@@ -45494,6 +45577,21 @@ function requireAxios () {
 	    const protocol = parsed.protocol || supportedProtocols[0];
 
 	    if (protocol === 'data:') {
+	      // Apply the same semantics as HTTP: only enforce if a finite, non-negative cap is set.
+	      if (config.maxContentLength > -1) {
+	        // Use the exact string passed to fromDataURI (config.url); fall back to fullPath if needed.
+	        const dataUrl = String(config.url || fullPath || '');
+	        const estimated = estimateDataURLDecodedBytes(dataUrl);
+
+	        if (estimated > config.maxContentLength) {
+	          return reject(new AxiosError(
+	            'maxContentLength size of ' + config.maxContentLength + ' exceeded',
+	            AxiosError.ERR_BAD_RESPONSE,
+	            config
+	          ));
+	        }
+	      }
+
 	      let convertedData;
 
 	      if (method !== 'GET') {
@@ -46108,7 +46206,7 @@ function requireAxios () {
 	const resolveConfig = (config) => {
 	  const newConfig = mergeConfig({}, config);
 
-	  let {data, withXSRFToken, xsrfHeaderName, xsrfCookieName, headers, auth} = newConfig;
+	  let { data, withXSRFToken, xsrfHeaderName, xsrfCookieName, headers, auth } = newConfig;
 
 	  newConfig.headers = headers = AxiosHeaders$1.from(headers);
 
@@ -46121,17 +46219,21 @@ function requireAxios () {
 	    );
 	  }
 
-	  let contentType;
-
 	  if (utils$1.isFormData(data)) {
 	    if (platform.hasStandardBrowserEnv || platform.hasStandardBrowserWebWorkerEnv) {
-	      headers.setContentType(undefined); // Let the browser set it
-	    } else if ((contentType = headers.getContentType()) !== false) {
-	      // fix semicolon duplication issue for ReactNative FormData implementation
-	      const [type, ...tokens] = contentType ? contentType.split(';').map(token => token.trim()).filter(Boolean) : [];
-	      headers.setContentType([type || 'multipart/form-data', ...tokens].join('; '));
+	      headers.setContentType(undefined); // browser handles it
+	    } else if (utils$1.isFunction(data.getHeaders)) {
+	      // Node.js FormData (like form-data package)
+	      const formHeaders = data.getHeaders();
+	      // Only set safe headers to avoid overwriting security headers
+	      const allowedHeaders = ['content-type', 'content-length'];
+	      Object.entries(formHeaders).forEach(([key, val]) => {
+	        if (allowedHeaders.includes(key.toLowerCase())) {
+	          headers.set(key, val);
+	        }
+	      });
 	    }
-	  }
+	  }  
 
 	  // Add xsrf header
 	  // This is only done if running in a standard browser environment.
@@ -46248,15 +46350,18 @@ function requireAxios () {
 	    };
 
 	    // Handle low level network errors
-	    request.onerror = function handleError() {
-	      // Real errors are hidden from us by the browser
-	      // onerror should only fire if it's a network error
-	      reject(new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, request));
-
-	      // Clean up request
-	      request = null;
+	  request.onerror = function handleError(event) {
+	       // Browsers deliver a ProgressEvent in XHR onerror
+	       // (message may be empty; when present, surface it)
+	       // See https://developer.mozilla.org/docs/Web/API/XMLHttpRequest/error_event
+	       const msg = event && event.message ? event.message : 'Network Error';
+	       const err = new AxiosError(msg, AxiosError.ERR_NETWORK, config, request);
+	       // attach the underlying event for consumers who want details
+	       err.event = event || null;
+	       reject(err);
+	       request = null;
 	    };
-
+	    
 	    // Handle timeout
 	    request.ontimeout = function handleTimeout() {
 	      let timeoutErrorMessage = _config.timeout ? 'timeout of ' + _config.timeout + 'ms exceeded' : 'timeout exceeded';
@@ -46472,14 +46577,18 @@ function requireAxios () {
 	  })
 	};
 
-	const isFetchSupported = typeof fetch === 'function' && typeof Request === 'function' && typeof Response === 'function';
-	const isReadableStreamSupported = isFetchSupported && typeof ReadableStream === 'function';
+	const DEFAULT_CHUNK_SIZE = 64 * 1024;
 
-	// used only inside the fetch adapter
-	const encodeText = isFetchSupported && (typeof TextEncoder === 'function' ?
-	    ((encoder) => (str) => encoder.encode(str))(new TextEncoder()) :
-	    async (str) => new Uint8Array(await new Response(str).arrayBuffer())
-	);
+	const {isFunction} = utils$1;
+
+	const globalFetchAPI = (({Request, Response}) => ({
+	  Request, Response
+	}))(utils$1.global);
+
+	const {
+	  ReadableStream: ReadableStream$1, TextEncoder: TextEncoder$1
+	} = utils$1.global;
+
 
 	const test = (fn, ...args) => {
 	  try {
@@ -46489,211 +46598,268 @@ function requireAxios () {
 	  }
 	};
 
-	const supportsRequestStream = isReadableStreamSupported && test(() => {
-	  let duplexAccessed = false;
+	const factory = (env) => {
+	  env = utils$1.merge.call({
+	    skipUndefined: true
+	  }, globalFetchAPI, env);
 
-	  const hasContentType = new Request(platform.origin, {
-	    body: new ReadableStream(),
-	    method: 'POST',
-	    get duplex() {
-	      duplexAccessed = true;
-	      return 'half';
-	    },
-	  }).headers.has('Content-Type');
+	  const {fetch: envFetch, Request, Response} = env;
+	  const isFetchSupported = envFetch ? isFunction(envFetch) : typeof fetch === 'function';
+	  const isRequestSupported = isFunction(Request);
+	  const isResponseSupported = isFunction(Response);
 
-	  return duplexAccessed && !hasContentType;
-	});
+	  if (!isFetchSupported) {
+	    return false;
+	  }
 
-	const DEFAULT_CHUNK_SIZE = 64 * 1024;
+	  const isReadableStreamSupported = isFetchSupported && isFunction(ReadableStream$1);
 
-	const supportsResponseStream = isReadableStreamSupported &&
-	  test(() => utils$1.isReadableStream(new Response('').body));
+	  const encodeText = isFetchSupported && (typeof TextEncoder$1 === 'function' ?
+	      ((encoder) => (str) => encoder.encode(str))(new TextEncoder$1()) :
+	      async (str) => new Uint8Array(await new Request(str).arrayBuffer())
+	  );
 
+	  const supportsRequestStream = isRequestSupported && isReadableStreamSupported && test(() => {
+	    let duplexAccessed = false;
 
-	const resolvers = {
-	  stream: supportsResponseStream && ((res) => res.body)
-	};
+	    const hasContentType = new Request(platform.origin, {
+	      body: new ReadableStream$1(),
+	      method: 'POST',
+	      get duplex() {
+	        duplexAccessed = true;
+	        return 'half';
+	      },
+	    }).headers.has('Content-Type');
 
-	isFetchSupported && (((res) => {
-	  ['text', 'arrayBuffer', 'blob', 'formData', 'stream'].forEach(type => {
-	    !resolvers[type] && (resolvers[type] = utils$1.isFunction(res[type]) ? (res) => res[type]() :
-	      (_, config) => {
+	    return duplexAccessed && !hasContentType;
+	  });
+
+	  const supportsResponseStream = isResponseSupported && isReadableStreamSupported &&
+	    test(() => utils$1.isReadableStream(new Response('').body));
+
+	  const resolvers = {
+	    stream: supportsResponseStream && ((res) => res.body)
+	  };
+
+	  isFetchSupported && ((() => {
+	    ['text', 'arrayBuffer', 'blob', 'formData', 'stream'].forEach(type => {
+	      !resolvers[type] && (resolvers[type] = (res, config) => {
+	        let method = res && res[type];
+
+	        if (method) {
+	          return method.call(res);
+	        }
+
 	        throw new AxiosError(`Response type '${type}' is not supported`, AxiosError.ERR_NOT_SUPPORT, config);
 	      });
-	  });
-	})(new Response));
-
-	const getBodyLength = async (body) => {
-	  if (body == null) {
-	    return 0;
-	  }
-
-	  if(utils$1.isBlob(body)) {
-	    return body.size;
-	  }
-
-	  if(utils$1.isSpecCompliantForm(body)) {
-	    const _request = new Request(platform.origin, {
-	      method: 'POST',
-	      body,
 	    });
-	    return (await _request.arrayBuffer()).byteLength;
-	  }
+	  })());
 
-	  if(utils$1.isArrayBufferView(body) || utils$1.isArrayBuffer(body)) {
-	    return body.byteLength;
-	  }
+	  const getBodyLength = async (body) => {
+	    if (body == null) {
+	      return 0;
+	    }
 
-	  if(utils$1.isURLSearchParams(body)) {
-	    body = body + '';
-	  }
+	    if (utils$1.isBlob(body)) {
+	      return body.size;
+	    }
 
-	  if(utils$1.isString(body)) {
-	    return (await encodeText(body)).byteLength;
-	  }
-	};
-
-	const resolveBodyLength = async (headers, body) => {
-	  const length = utils$1.toFiniteNumber(headers.getContentLength());
-
-	  return length == null ? getBodyLength(body) : length;
-	};
-
-	const fetchAdapter = isFetchSupported && (async (config) => {
-	  let {
-	    url,
-	    method,
-	    data,
-	    signal,
-	    cancelToken,
-	    timeout,
-	    onDownloadProgress,
-	    onUploadProgress,
-	    responseType,
-	    headers,
-	    withCredentials = 'same-origin',
-	    fetchOptions
-	  } = resolveConfig(config);
-
-	  responseType = responseType ? (responseType + '').toLowerCase() : 'text';
-
-	  let composedSignal = composeSignals$1([signal, cancelToken && cancelToken.toAbortSignal()], timeout);
-
-	  let request;
-
-	  const unsubscribe = composedSignal && composedSignal.unsubscribe && (() => {
-	      composedSignal.unsubscribe();
-	  });
-
-	  let requestContentLength;
-
-	  try {
-	    if (
-	      onUploadProgress && supportsRequestStream && method !== 'get' && method !== 'head' &&
-	      (requestContentLength = await resolveBodyLength(headers, data)) !== 0
-	    ) {
-	      let _request = new Request(url, {
+	    if (utils$1.isSpecCompliantForm(body)) {
+	      const _request = new Request(platform.origin, {
 	        method: 'POST',
-	        body: data,
-	        duplex: "half"
+	        body,
 	      });
-
-	      let contentTypeHeader;
-
-	      if (utils$1.isFormData(data) && (contentTypeHeader = _request.headers.get('content-type'))) {
-	        headers.setContentType(contentTypeHeader);
-	      }
-
-	      if (_request.body) {
-	        const [onProgress, flush] = progressEventDecorator(
-	          requestContentLength,
-	          progressEventReducer(asyncDecorator(onUploadProgress))
-	        );
-
-	        data = trackStream(_request.body, DEFAULT_CHUNK_SIZE, onProgress, flush);
-	      }
+	      return (await _request.arrayBuffer()).byteLength;
 	    }
 
-	    if (!utils$1.isString(withCredentials)) {
-	      withCredentials = withCredentials ? 'include' : 'omit';
+	    if (utils$1.isArrayBufferView(body) || utils$1.isArrayBuffer(body)) {
+	      return body.byteLength;
 	    }
 
-	    // Cloudflare Workers throws when credentials are defined
-	    // see https://github.com/cloudflare/workerd/issues/902
-	    const isCredentialsSupported = "credentials" in Request.prototype;
-	    request = new Request(url, {
-	      ...fetchOptions,
-	      signal: composedSignal,
-	      method: method.toUpperCase(),
-	      headers: headers.normalize().toJSON(),
-	      body: data,
-	      duplex: "half",
-	      credentials: isCredentialsSupported ? withCredentials : undefined
+	    if (utils$1.isURLSearchParams(body)) {
+	      body = body + '';
+	    }
+
+	    if (utils$1.isString(body)) {
+	      return (await encodeText(body)).byteLength;
+	    }
+	  };
+
+	  const resolveBodyLength = async (headers, body) => {
+	    const length = utils$1.toFiniteNumber(headers.getContentLength());
+
+	    return length == null ? getBodyLength(body) : length;
+	  };
+
+	  return async (config) => {
+	    let {
+	      url,
+	      method,
+	      data,
+	      signal,
+	      cancelToken,
+	      timeout,
+	      onDownloadProgress,
+	      onUploadProgress,
+	      responseType,
+	      headers,
+	      withCredentials = 'same-origin',
+	      fetchOptions
+	    } = resolveConfig(config);
+
+	    let _fetch = envFetch || fetch;
+
+	    responseType = responseType ? (responseType + '').toLowerCase() : 'text';
+
+	    let composedSignal = composeSignals$1([signal, cancelToken && cancelToken.toAbortSignal()], timeout);
+
+	    let request = null;
+
+	    const unsubscribe = composedSignal && composedSignal.unsubscribe && (() => {
+	      composedSignal.unsubscribe();
 	    });
 
-	    let response = await fetch(request, fetchOptions);
+	    let requestContentLength;
 
-	    const isStreamResponse = supportsResponseStream && (responseType === 'stream' || responseType === 'response');
+	    try {
+	      if (
+	        onUploadProgress && supportsRequestStream && method !== 'get' && method !== 'head' &&
+	        (requestContentLength = await resolveBodyLength(headers, data)) !== 0
+	      ) {
+	        let _request = new Request(url, {
+	          method: 'POST',
+	          body: data,
+	          duplex: "half"
+	        });
 
-	    if (supportsResponseStream && (onDownloadProgress || (isStreamResponse && unsubscribe))) {
-	      const options = {};
+	        let contentTypeHeader;
 
-	      ['status', 'statusText', 'headers'].forEach(prop => {
-	        options[prop] = response[prop];
-	      });
-
-	      const responseContentLength = utils$1.toFiniteNumber(response.headers.get('content-length'));
-
-	      const [onProgress, flush] = onDownloadProgress && progressEventDecorator(
-	        responseContentLength,
-	        progressEventReducer(asyncDecorator(onDownloadProgress), true)
-	      ) || [];
-
-	      response = new Response(
-	        trackStream(response.body, DEFAULT_CHUNK_SIZE, onProgress, () => {
-	          flush && flush();
-	          unsubscribe && unsubscribe();
-	        }),
-	        options
-	      );
-	    }
-
-	    responseType = responseType || 'text';
-
-	    let responseData = await resolvers[utils$1.findKey(resolvers, responseType) || 'text'](response, config);
-
-	    !isStreamResponse && unsubscribe && unsubscribe();
-
-	    return await new Promise((resolve, reject) => {
-	      settle(resolve, reject, {
-	        data: responseData,
-	        headers: AxiosHeaders$1.from(response.headers),
-	        status: response.status,
-	        statusText: response.statusText,
-	        config,
-	        request
-	      });
-	    })
-	  } catch (err) {
-	    unsubscribe && unsubscribe();
-
-	    if (err && err.name === 'TypeError' && /Load failed|fetch/i.test(err.message)) {
-	      throw Object.assign(
-	        new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, request),
-	        {
-	          cause: err.cause || err
+	        if (utils$1.isFormData(data) && (contentTypeHeader = _request.headers.get('content-type'))) {
+	          headers.setContentType(contentTypeHeader);
 	        }
-	      )
-	    }
 
-	    throw AxiosError.from(err, err && err.code, config, request);
+	        if (_request.body) {
+	          const [onProgress, flush] = progressEventDecorator(
+	            requestContentLength,
+	            progressEventReducer(asyncDecorator(onUploadProgress))
+	          );
+
+	          data = trackStream(_request.body, DEFAULT_CHUNK_SIZE, onProgress, flush);
+	        }
+	      }
+
+	      if (!utils$1.isString(withCredentials)) {
+	        withCredentials = withCredentials ? 'include' : 'omit';
+	      }
+
+	      // Cloudflare Workers throws when credentials are defined
+	      // see https://github.com/cloudflare/workerd/issues/902
+	      const isCredentialsSupported = isRequestSupported && "credentials" in Request.prototype;
+
+	      const resolvedOptions = {
+	        ...fetchOptions,
+	        signal: composedSignal,
+	        method: method.toUpperCase(),
+	        headers: headers.normalize().toJSON(),
+	        body: data,
+	        duplex: "half",
+	        credentials: isCredentialsSupported ? withCredentials : undefined
+	      };
+
+	      request = isRequestSupported && new Request(url, resolvedOptions);
+
+	      let response = await (isRequestSupported ? _fetch(request, fetchOptions) : _fetch(url, resolvedOptions));
+
+	      const isStreamResponse = supportsResponseStream && (responseType === 'stream' || responseType === 'response');
+
+	      if (supportsResponseStream && (onDownloadProgress || (isStreamResponse && unsubscribe))) {
+	        const options = {};
+
+	        ['status', 'statusText', 'headers'].forEach(prop => {
+	          options[prop] = response[prop];
+	        });
+
+	        const responseContentLength = utils$1.toFiniteNumber(response.headers.get('content-length'));
+
+	        const [onProgress, flush] = onDownloadProgress && progressEventDecorator(
+	          responseContentLength,
+	          progressEventReducer(asyncDecorator(onDownloadProgress), true)
+	        ) || [];
+
+	        response = new Response(
+	          trackStream(response.body, DEFAULT_CHUNK_SIZE, onProgress, () => {
+	            flush && flush();
+	            unsubscribe && unsubscribe();
+	          }),
+	          options
+	        );
+	      }
+
+	      responseType = responseType || 'text';
+
+	      let responseData = await resolvers[utils$1.findKey(resolvers, responseType) || 'text'](response, config);
+
+	      !isStreamResponse && unsubscribe && unsubscribe();
+
+	      return await new Promise((resolve, reject) => {
+	        settle(resolve, reject, {
+	          data: responseData,
+	          headers: AxiosHeaders$1.from(response.headers),
+	          status: response.status,
+	          statusText: response.statusText,
+	          config,
+	          request
+	        });
+	      })
+	    } catch (err) {
+	      unsubscribe && unsubscribe();
+
+	      if (err && err.name === 'TypeError' && /Load failed|fetch/i.test(err.message)) {
+	        throw Object.assign(
+	          new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, request),
+	          {
+	            cause: err.cause || err
+	          }
+	        )
+	      }
+
+	      throw AxiosError.from(err, err && err.code, config, request);
+	    }
 	  }
-	});
+	};
+
+	const seedCache = new Map();
+
+	const getFetch = (config) => {
+	  let env = config ? config.env : {};
+	  const {fetch, Request, Response} = env;
+	  const seeds = [
+	    Request, Response, fetch
+	  ];
+
+	  let len = seeds.length, i = len,
+	    seed, target, map = seedCache;
+
+	  while (i--) {
+	    seed = seeds[i];
+	    target = map.get(seed);
+
+	    target === undefined && map.set(seed, target = (i ? new Map() : factory(env)));
+
+	    map = target;
+	  }
+
+	  return target;
+	};
+
+	getFetch();
 
 	const knownAdapters = {
 	  http: httpAdapter,
 	  xhr: xhrAdapter,
-	  fetch: fetchAdapter
+	  fetch: {
+	    get: getFetch,
+	  }
 	};
 
 	utils$1.forEach(knownAdapters, (fn, value) => {
@@ -46712,7 +46878,7 @@ function requireAxios () {
 	const isResolvedHandle = (adapter) => utils$1.isFunction(adapter) || adapter === null || adapter === false;
 
 	const adapters = {
-	  getAdapter: (adapters) => {
+	  getAdapter: (adapters, config) => {
 	    adapters = utils$1.isArray(adapters) ? adapters : [adapters];
 
 	    const {length} = adapters;
@@ -46735,7 +46901,7 @@ function requireAxios () {
 	        }
 	      }
 
-	      if (adapter) {
+	      if (adapter && (utils$1.isFunction(adapter) || (adapter = adapter.get(config)))) {
 	        break;
 	      }
 
@@ -46803,7 +46969,7 @@ function requireAxios () {
 	    config.headers.setContentType('application/x-www-form-urlencoded', false);
 	  }
 
-	  const adapter = adapters.getAdapter(config.adapter || defaults$1.adapter);
+	  const adapter = adapters.getAdapter(config.adapter || defaults$1.adapter, config);
 
 	  return adapter(config).then(function onAdapterResolution(response) {
 	    throwIfCancellationRequested(config);
@@ -47090,8 +47256,6 @@ function requireAxios () {
 	    len = requestInterceptorChain.length;
 
 	    let newConfig = config;
-
-	    i = 0;
 
 	    while (i < len) {
 	      const onFulfilled = requestInterceptorChain[i++];
@@ -47569,7 +47733,7 @@ function requireApi_gen () {
 	    return (mod && mod.__esModule) ? mod : { "default": mod };
 	};
 	Object.defineProperty(api_gen, "__esModule", { value: true });
-	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.SupportTicketSeverity = api_gen.NeonAuthOauthProviderType = api_gen.NeonAuthOauthProviderId = api_gen.NeonAuthProviderProjectTransferStatus = api_gen.NeonAuthProviderProjectOwnedBy = api_gen.NeonAuthSupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
+	api_gen.Api = api_gen.HttpClient = api_gen.ContentType = api_gen.ApplicationType = api_gen.SupportTicketSeverity = api_gen.NeonAuthEmailVerificationMethod = api_gen.NeonAuthOauthProviderType = api_gen.NeonAuthOauthProviderId = api_gen.NeonAuthProviderProjectTransferStatus = api_gen.NeonAuthProviderProjectOwnedBy = api_gen.NeonAuthSupportedAuthProvider = api_gen.OrgDeletionConditionName = api_gen.UserDeletionConditionName = api_gen.IdentityProviderId = api_gen.MemberRole = api_gen.BillingPaymentMethod = api_gen.BillingSubscriptionType = api_gen.BillingAccountState = api_gen.EndpointPoolerMode = api_gen.EndpointType = api_gen.EndpointState = api_gen.ProjectAuditLogLevel = api_gen.ConsumptionHistoryGranularity = api_gen.OperationStatus = api_gen.OperationAction = void 0;
 	/** The action performed by the operation */
 	var OperationAction;
 	(function (OperationAction) {
@@ -47598,6 +47762,9 @@ function requireApi_gen () {
 	    OperationAction["SyncDbsAndRolesFromCompute"] = "sync_dbs_and_roles_from_compute";
 	    OperationAction["ApplySchemaFromBranch"] = "apply_schema_from_branch";
 	    OperationAction["TimelineMarkInvisible"] = "timeline_mark_invisible";
+	    OperationAction["PrewarmReplica"] = "prewarm_replica";
+	    OperationAction["PromoteReplica"] = "promote_replica";
+	    OperationAction["SetStorageNonDirty"] = "set_storage_non_dirty";
 	})(OperationAction || (api_gen.OperationAction = OperationAction = {}));
 	/** The status of the operation */
 	var OperationStatus;
@@ -47658,14 +47825,15 @@ function requireApi_gen () {
 	(function (BillingSubscriptionType) {
 	    BillingSubscriptionType["UNKNOWN"] = "UNKNOWN";
 	    BillingSubscriptionType["DirectSales"] = "direct_sales";
+	    BillingSubscriptionType["DirectSalesV3"] = "direct_sales_v3";
 	    BillingSubscriptionType["AwsMarketplace"] = "aws_marketplace";
 	    BillingSubscriptionType["FreeV2"] = "free_v2";
 	    BillingSubscriptionType["FreeV3"] = "free_v3";
-	    BillingSubscriptionType["ServerlessV3"] = "serverless_v3";
 	    BillingSubscriptionType["Launch"] = "launch";
+	    BillingSubscriptionType["LaunchV3"] = "launch_v3";
 	    BillingSubscriptionType["Scale"] = "scale";
+	    BillingSubscriptionType["ScaleV3"] = "scale_v3";
 	    BillingSubscriptionType["Business"] = "business";
-	    BillingSubscriptionType["BusinessV3"] = "business_v3";
 	    BillingSubscriptionType["VercelPgLegacy"] = "vercel_pg_legacy";
 	})(BillingSubscriptionType || (api_gen.BillingSubscriptionType = BillingSubscriptionType = {}));
 	/** Indicates whether and how an account makes payments. */
@@ -47713,6 +47881,8 @@ function requireApi_gen () {
 	(function (NeonAuthSupportedAuthProvider) {
 	    NeonAuthSupportedAuthProvider["Mock"] = "mock";
 	    NeonAuthSupportedAuthProvider["Stack"] = "stack";
+	    NeonAuthSupportedAuthProvider["StackV2"] = "stack_v2";
+	    NeonAuthSupportedAuthProvider["BetterAuth"] = "better_auth";
 	})(NeonAuthSupportedAuthProvider || (api_gen.NeonAuthSupportedAuthProvider = NeonAuthSupportedAuthProvider = {}));
 	var NeonAuthProviderProjectOwnedBy;
 	(function (NeonAuthProviderProjectOwnedBy) {
@@ -47735,13 +47905,32 @@ function requireApi_gen () {
 	    NeonAuthOauthProviderType["Standard"] = "standard";
 	    NeonAuthOauthProviderType["Shared"] = "shared";
 	})(NeonAuthOauthProviderType || (api_gen.NeonAuthOauthProviderType = NeonAuthOauthProviderType = {}));
+	/**
+	 * The email verification method to use.
+	 * - `link`: Sends a verification link via email
+	 * - `otp`: Sends a one-time password (OTP) via email
+	 */
+	var NeonAuthEmailVerificationMethod;
+	(function (NeonAuthEmailVerificationMethod) {
+	    NeonAuthEmailVerificationMethod["Link"] = "link";
+	    NeonAuthEmailVerificationMethod["Otp"] = "otp";
+	})(NeonAuthEmailVerificationMethod || (api_gen.NeonAuthEmailVerificationMethod = NeonAuthEmailVerificationMethod = {}));
 	var SupportTicketSeverity;
 	(function (SupportTicketSeverity) {
 	    SupportTicketSeverity["Low"] = "low";
 	    SupportTicketSeverity["Normal"] = "normal";
 	    SupportTicketSeverity["High"] = "high";
 	    SupportTicketSeverity["Critical"] = "critical";
+	    SupportTicketSeverity["Urgent"] = "urgent";
 	})(SupportTicketSeverity || (api_gen.SupportTicketSeverity = SupportTicketSeverity = {}));
+	/** Type of application integration */
+	var ApplicationType;
+	(function (ApplicationType) {
+	    ApplicationType["Vercel"] = "vercel";
+	    ApplicationType["Github"] = "github";
+	    ApplicationType["Datadog"] = "datadog";
+	    ApplicationType["Opentelemetry"] = "opentelemetry";
+	})(ApplicationType || (api_gen.ApplicationType = ApplicationType = {}));
 	var axios_1 = __importDefault(/*@__PURE__*/ requireAxios());
 	var ContentType;
 	(function (ContentType) {
@@ -47828,7 +48017,7 @@ function requireApi_gen () {
 	 * @version v2
 	 * @license Proprietary
 	 * @baseUrl https://console.neon.tech/api/v2
-	 * @contact <support@neon.tech>
+	 * @contact <help@databricks.com>
 	 *
 	 * The Neon API allows you to access and manage Neon programmatically. You can use the Neon API to manage API keys, projects, branches, compute endpoints, databases, roles, and operations. For information about these features, refer to the [Neon documentation](https://neon.tech/docs/manage/overview/).
 	 *
@@ -47971,6 +48160,19 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Restores a deleted project during the deletion grace period. You can obtain a `project_id` by listing the projects for your Neon account. **Note**: This endpoint is currently in Private Preview.
+	         *
+	         * @tags Project
+	         * @name RestoreProject
+	         * @summary Restore a deleted project
+	         * @request POST:/projects/{project_id}/restore
+	         * @secure
+	         */
+	        _this.restoreProject = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/restore"), method: 'POST', secure: true, format: 'json' }, params));
+	        };
+	        /**
 	         * @description Retrieves a list of operations for the specified Neon project. You can obtain a `project_id` by listing the projects for your Neon account. The number of operations returned can be large. To paginate the response, issue an initial request with a `limit` value. Then, add the `cursor` value that was returned in the response to the next request. Operations older than 6 months may be deleted from our systems. If you need more history than that, you should store your own history.
 	         *
 	         * @tags Operation
@@ -48037,7 +48239,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/available_preload_libraries"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Creates a transfer request for the specified project. A transfer request allows the project to be transferred to another account or organization. The request has an expiration time after which it can no longer be used. To accept/claim the transfer request, the recipient user/organization must call the `/projects/{project_id}/transfer_requests/{request_id}` API endpoint, or visit `https://console.neon.tech/app/claim?p={project_id}&tr={request_id}&ru={redirect_url}` in the Neon Console. The `ru` parameter is optional and can be used to redirect the user after accepting the transfer request. This feature is currently in private preview. Get in touch with us to get access.
+	         * @description Creates a transfer request for the specified project. A transfer request allows the project to be transferred to another account or organization. The request has an expiration time after which it can no longer be used. To accept/claim the transfer request, the recipient user/organization must call the `/projects/{project_id}/transfer_requests/{request_id}` API endpoint, or visit `https://console.neon.tech/app/claim?p={project_id}&tr={request_id}&ru={redirect_url}` in the Neon Console. The `ru` parameter is optional and can be used to redirect the user after accepting the transfer request.
 	         *
 	         * @tags Project
 	         * @name CreateProjectTransferRequest
@@ -48076,7 +48278,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/jwks"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Add a new JWKS URL to a project, such that it can be used for verifying JWTs used as the authentication mechanism for the specified project. The URL must be a valid HTTPS URL that returns a JSON Web Key Set. The `provider_name` field allows you to specify which authentication provider you're using (e.g., Clerk, Auth0, AWS Cognito, etc.). The `branch_id` can be used to specify on which branches the JWKS URL will be accepted. If not specified, then it will work on any branch. The `role_names` can be used to specify for which roles the JWKS URL will be accepted. The `jwt_audience` can be used to specify which "aud" values should be accepted by Neon in the JWTs that are used for authentication.
+	         * @description Add a new JWKS URL to a project, such that it can be used for verifying JWTs used as the authentication mechanism for the specified project. The URL must be a valid HTTPS URL that returns a JSON Web Key Set. The `provider_name` field allows you to specify which authentication provider you're using (e.g., Clerk, Auth0, AWS Cognito, etc.). The `branch_id` can be used to specify on which branches the JWKS URL will be accepted. If not specified, then it will work on any branch. The `role_names` can be used to specify for which roles the JWKS URL will be accepted. If not specified, then default roles will be used (authenticator, authenticated and anonymous). The `jwt_audience` can be used to specify which "aud" values should be accepted by Neon in the JWTs that are used for authentication.
 	         *
 	         * @tags Project
 	         * @name AddProjectJwks
@@ -48107,12 +48309,25 @@ function requireApi_gen () {
 	         * @tags DataAPI
 	         * @name CreateProjectBranchDataApi
 	         * @summary Create Neon Data API
-	         * @request POST:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/data-api/{database_name}
 	         * @secure
 	         */
-	        _this.createProjectBranchDataApi = function (projectId, branchId, data, params) {
+	        _this.createProjectBranchDataApi = function (projectId, branchId, databaseName, data, params) {
 	            if (params === void 0) { params = {}; }
-	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api/").concat(encodeURIComponent(databaseName)), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Updates the Neon Data API configuration for the specified branch. You can optionally provide settings to update the Data API configuration. The schema cache is always refreshed as part of this operation. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
+	         *
+	         * @tags DataAPI
+	         * @name UpdateProjectBranchDataApi
+	         * @summary Update Neon Data API
+	         * @request PATCH:/projects/{project_id}/branches/{branch_id}/data-api/{database_name}
+	         * @secure
+	         */
+	        _this.updateProjectBranchDataApi = function (projectId, branchId, databaseName, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api/").concat(encodeURIComponent(databaseName)), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
 	         * @description Deletes the Neon Data API for the specified branch. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
@@ -48120,12 +48335,12 @@ function requireApi_gen () {
 	         * @tags DataAPI
 	         * @name DeleteProjectBranchDataApi
 	         * @summary Delete Neon Data API
-	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/data-api/{database_name}
 	         * @secure
 	         */
-	        _this.deleteProjectBranchDataApi = function (projectId, branchId, params) {
+	        _this.deleteProjectBranchDataApi = function (projectId, branchId, databaseName, params) {
 	            if (params === void 0) { params = {}; }
-	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'DELETE', secure: true, format: 'json' }, params));
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api/").concat(encodeURIComponent(databaseName)), method: 'DELETE', secure: true, format: 'json' }, params));
 	        };
 	        /**
 	         * @description Retrieves the Neon Data API for the specified branch.
@@ -48133,20 +48348,21 @@ function requireApi_gen () {
 	         * @tags DataAPI
 	         * @name GetProjectBranchDataApi
 	         * @summary Get Neon Data API
-	         * @request GET:/projects/{project_id}/branches/{branch_id}/data-api
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/data-api/{database_name}
 	         * @secure
 	         */
-	        _this.getProjectBranchDataApi = function (projectId, branchId, params) {
+	        _this.getProjectBranchDataApi = function (projectId, branchId, databaseName, params) {
 	            if (params === void 0) { params = {}; }
-	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api"), method: 'GET', secure: true, format: 'json' }, params));
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/data-api/").concat(encodeURIComponent(databaseName)), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Creates a project on a third-party authentication provider's platform for use with Neon Auth. Use this endpoint if the frontend integration flow can't be used.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth` instead. Creates a project on a third-party authentication provider's platform for use with Neon Auth. Use this endpoint if the frontend integration flow can't be used.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name CreateNeonAuthIntegration
 	         * @summary Create Neon Auth integration
 	         * @request POST:/projects/auth/create
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.createNeonAuthIntegration = function (data, params) {
@@ -48154,12 +48370,52 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/auth/create", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Lists the domains in the redirect_uri whitelist for the specified project.
+	         * @description / Fetches the details of the Neon Auth for the specified branch. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
 	         *
 	         * @tags Auth
+	         * @name GetNeonAuth
+	         * @summary Get details of Neon Auth for the branch
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/auth
+	         * @secure
+	         */
+	        _this.getNeonAuth = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Enables Neon Auth integrationfor the branch. You can obtain the `project_id` and `branch_id` by listing the projects and branches for your Neon account.
+	         *
+	         * @tags Auth
+	         * @name CreateNeonAuth
+	         * @summary Enable Neon Auth for the branch
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/auth
+	         * @secure
+	         */
+	        _this.createNeonAuth = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * No description
+	         *
+	         * @tags Auth
+	         * @name DisableNeonAuth
+	         * @summary Disables Neon Auth for the branch
+	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/auth
+	         * @secure
+	         */
+	        _this.disableNeonAuth = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth"), method: 'DELETE', body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/domains` instead. Lists the domains in the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth (legacy)
 	         * @name ListNeonAuthRedirectUriWhitelistDomains
 	         * @summary List domains in redirect_uri whitelist
 	         * @request GET:/projects/{project_id}/auth/domains
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.listNeonAuthRedirectUriWhitelistDomains = function (projectId, params) {
@@ -48167,12 +48423,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Adds a domain to the redirect_uri whitelist for the specified project.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/domains` instead. Adds a domain to the redirect_uri whitelist for the specified project.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name AddNeonAuthDomainToRedirectUriWhitelist
 	         * @summary Add domain to redirect_uri whitelist
 	         * @request POST:/projects/{project_id}/auth/domains
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.addNeonAuthDomainToRedirectUriWhitelist = function (projectId, data, params) {
@@ -48180,12 +48437,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
-	         * @description Deletes a domain from the redirect_uri whitelist for the specified project.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/domains` instead. Deletes a domain from the redirect_uri whitelist for the specified project.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name DeleteNeonAuthDomainFromRedirectUriWhitelist
 	         * @summary Delete domain from redirect_uri whitelist
 	         * @request DELETE:/projects/{project_id}/auth/domains
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.deleteNeonAuthDomainFromRedirectUriWhitelist = function (projectId, data, params) {
@@ -48193,9 +48451,48 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/domains"), method: 'DELETE', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
-	         * @description Generates SDK or API Keys for the auth provider. These might be called different things depending on the auth provider you're using, but are generally used for setting up the frontend and backend SDKs.
+	         * @description Lists the domains in the redirect_uri whitelist for the specified project.
 	         *
 	         * @tags Auth
+	         * @name ListBranchNeonAuthTrustedDomains
+	         * @summary List domains in redirect_uri whitelist
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/auth/domains
+	         * @secure
+	         */
+	        _this.listBranchNeonAuthTrustedDomains = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/domains"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Adds a domain to the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name AddBranchNeonAuthTrustedDomain
+	         * @summary Add domain to redirect_uri whitelist
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/auth/domains
+	         * @secure
+	         */
+	        _this.addBranchNeonAuthTrustedDomain = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/domains"), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
+	         * @description Deletes a domain from the redirect_uri whitelist for the specified project.
+	         *
+	         * @tags Auth
+	         * @name DeleteBranchNeonAuthTrustedDomain
+	         * @summary Delete domain from redirect_uri whitelist
+	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/auth/domains
+	         * @secure
+	         */
+	        _this.deleteBranchNeonAuthTrustedDomain = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/domains"), method: 'DELETE', body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
+	         * @description Generates SDK or API Keys for the auth provider. These might be called different things depending on the auth provider you're using, but are generally used for setting up the frontend and backend SDKs.
+	         *
+	         * @tags Auth (legacy)
 	         * @name CreateNeonAuthProviderSdkKeys
 	         * @summary Create Auth Provider SDK keys
 	         * @request POST:/projects/auth/keys
@@ -48206,12 +48503,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/auth/keys", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Creates a new user in Neon Auth. The user will be created in your neon_auth.users_sync table and automatically propagated to your auth project, whether Neon-managed or provider-owned.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/users` instead. Creates a new user in Neon Auth. The user will be created in your neon_auth.users_sync table and automatically propagated to your auth project, whether Neon-managed or provider-owned.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name CreateNeonAuthNewUser
 	         * @summary Create new auth user
 	         * @request POST:/projects/auth/user
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.createNeonAuthNewUser = function (data, params) {
@@ -48219,12 +48517,52 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/auth/user", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Creates a new user in Neon Auth.
+	         *
+	         * @tags Auth
+	         * @name CreateBranchNeonAuthNewUser
+	         * @summary Create new auth user
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/auth/users
+	         * @secure
+	         */
+	        _this.createBranchNeonAuthNewUser = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/users"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
 	         * @description Deletes the auth user for the specified project.
 	         *
 	         * @tags Auth
+	         * @name DeleteBranchNeonAuthUser
+	         * @summary Delete auth user
+	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/auth/users/{auth_user_id}
+	         * @secure
+	         */
+	        _this.deleteBranchNeonAuthUser = function (projectId, branchId, authUserId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/users/").concat(encodeURIComponent(authUserId)), method: 'DELETE', secure: true }, params));
+	        };
+	        /**
+	         * @description Updates the role of an auth user for the specified project.
+	         *
+	         * @tags Auth
+	         * @name UpdateNeonAuthUserRole
+	         * @summary Update auth user role
+	         * @request PUT:/projects/{project_id}/branches/{branch_id}/auth/users/{auth_user_id}/role
+	         * @secure
+	         */
+	        _this.updateNeonAuthUserRole = function (projectId, branchId, authUserId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/users/").concat(encodeURIComponent(authUserId), "/role"), method: 'PUT', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/users/{auth_user_id}` instead. Deletes the auth user for the specified project.
+	         *
+	         * @tags Auth (legacy)
 	         * @name DeleteNeonAuthUser
 	         * @summary Delete auth user
 	         * @request DELETE:/projects/{project_id}/auth/users/{auth_user_id}
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.deleteNeonAuthUser = function (projectId, authUserId, params) {
@@ -48234,7 +48572,7 @@ function requireApi_gen () {
 	        /**
 	         * @description Transfer ownership of your Neon-managed auth project to your own auth provider account.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name TransferNeonAuthProviderProject
 	         * @summary Transfer Neon-managed auth project to your own account
 	         * @request POST:/projects/auth/transfer_ownership
@@ -48245,12 +48583,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/auth/transfer_ownership", method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
-	         * No description
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth` instead.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name ListNeonAuthIntegrations
 	         * @summary Lists active integrations with auth providers
 	         * @request GET:/projects/{project_id}/auth/integrations
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.listNeonAuthIntegrations = function (projectId, params) {
@@ -48258,12 +48597,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integrations"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Lists the OAuth providers for the specified project.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/oauth_providers` instead. Lists the OAuth providers for the specified project.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name ListNeonAuthOauthProviders
 	         * @summary List OAuth providers
 	         * @request GET:/projects/{project_id}/auth/oauth_providers
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.listNeonAuthOauthProviders = function (projectId, params) {
@@ -48271,12 +48611,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Adds a OAuth provider to the specified project.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/oauth_providers` instead. Adds a OAuth provider to the specified project.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name AddNeonAuthOauthProvider
 	         * @summary Add a OAuth provider
 	         * @request POST:/projects/{project_id}/auth/oauth_providers
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.addNeonAuthOauthProvider = function (projectId, data, params) {
@@ -48284,12 +48625,39 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Updates a OAuth provider for the specified project.
+	         * @description Lists the OAuth providers for the specified project and branch.
 	         *
 	         * @tags Auth
+	         * @name ListBranchNeonAuthOauthProviders
+	         * @summary List OAuth providers for neon auth for a branch
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/auth/oauth_providers
+	         * @secure
+	         */
+	        _this.listBranchNeonAuthOauthProviders = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/oauth_providers"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Adds a OAuth provider to the specified project.
+	         *
+	         * @tags Auth
+	         * @name AddBranchNeonAuthOauthProvider
+	         * @summary Add a OAuth provider
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/auth/oauth_providers
+	         * @secure
+	         */
+	        _this.addBranchNeonAuthOauthProvider = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/oauth_providers"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/oauth_providers/{oauth_provider_id}` instead. Updates a OAuth provider for the specified project.
+	         *
+	         * @tags Auth (legacy)
 	         * @name UpdateNeonAuthOauthProvider
 	         * @summary Update OAuth provider
 	         * @request PATCH:/projects/{project_id}/auth/oauth_providers/{oauth_provider_id}
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.updateNeonAuthOauthProvider = function (projectId, oauthProviderId, data, params) {
@@ -48297,12 +48665,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers/").concat(encodeURIComponent(oauthProviderId)), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Deletes a OAuth provider from the specified project.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/oauth_providers/{oauth_provider_id}` instead. Deletes a OAuth provider from the specified project.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name DeleteNeonAuthOauthProvider
 	         * @summary Delete OAuth provider
 	         * @request DELETE:/projects/{project_id}/auth/oauth_providers/{oauth_provider_id}
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.deleteNeonAuthOauthProvider = function (projectId, oauthProviderId, params) {
@@ -48310,12 +48679,39 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/oauth_providers/").concat(encodeURIComponent(oauthProviderId)), method: 'DELETE', secure: true }, params));
 	        };
 	        /**
-	         * @description Gets the email server configuration for the specified project.
+	         * @description Updates a OAuth provider for the specified project.
 	         *
 	         * @tags Auth
+	         * @name UpdateBranchNeonAuthOauthProvider
+	         * @summary Update OAuth provider
+	         * @request PATCH:/projects/{project_id}/branches/{branch_id}/auth/oauth_providers/{oauth_provider_id}
+	         * @secure
+	         */
+	        _this.updateBranchNeonAuthOauthProvider = function (projectId, branchId, oauthProviderId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/oauth_providers/").concat(encodeURIComponent(oauthProviderId)), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Deletes a OAuth provider from the specified project.
+	         *
+	         * @tags Auth
+	         * @name DeleteBranchNeonAuthOauthProvider
+	         * @summary Delete OAuth provider
+	         * @request DELETE:/projects/{project_id}/branches/{branch_id}/auth/oauth_providers/{oauth_provider_id}
+	         * @secure
+	         */
+	        _this.deleteBranchNeonAuthOauthProvider = function (projectId, branchId, oauthProviderId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/oauth_providers/").concat(encodeURIComponent(oauthProviderId)), method: 'DELETE', secure: true }, params));
+	        };
+	        /**
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/email_provider` instead. Gets the email server configuration for the specified project.
+	         *
+	         * @tags Auth (legacy)
 	         * @name GetNeonAuthEmailServer
 	         * @summary Get email server configuration
 	         * @request GET:/projects/{project_id}/auth/email_server
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.getNeonAuthEmailServer = function (projectId, params) {
@@ -48323,12 +48719,13 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/email_server"), method: 'GET', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Updates the email server configuration for the specified project.
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth/email_provider` instead. Updates the email server configuration for the specified project.
 	         *
-	         * @tags Auth
+	         * @tags Auth (legacy)
 	         * @name UpdateNeonAuthEmailServer
 	         * @summary Update email server configuration
 	         * @request PATCH:/projects/{project_id}/auth/email_server
+	         * @deprecated
 	         * @secure
 	         */
 	        _this.updateNeonAuthEmailServer = function (projectId, data, params) {
@@ -48336,17 +48733,83 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/email_server"), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
-	         * No description
+	         * @description Sends a test email to the specified email address.
 	         *
 	         * @tags Auth
+	         * @name SendNeonAuthTestEmail
+	         * @summary Send test email
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/auth/send_test_email
+	         * @secure
+	         */
+	        _this.sendNeonAuthTestEmail = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/send_test_email"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Gets the email and password authentication configuration for Neon Auth
+	         *
+	         * @tags Auth
+	         * @name GetNeonAuthEmailAndPasswordConfig
+	         * @summary Get email and password configuration
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/auth/email_and_password
+	         * @secure
+	         */
+	        _this.getNeonAuthEmailAndPasswordConfig = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/email_and_password"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Updates the email and password authentication configuration for Neon Auth
+	         *
+	         * @tags Auth
+	         * @name UpdateNeonAuthEmailAndPasswordConfig
+	         * @summary Update email and password configuration
+	         * @request PATCH:/projects/{project_id}/branches/{branch_id}/auth/email_and_password
+	         * @secure
+	         */
+	        _this.updateNeonAuthEmailAndPasswordConfig = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/email_and_password"), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Gets the email provider configuration for the specified branch.
+	         *
+	         * @tags Auth
+	         * @name GetNeonAuthEmailProvider
+	         * @summary Get email provider configuration
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/auth/email_provider
+	         * @secure
+	         */
+	        _this.getNeonAuthEmailProvider = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/email_provider"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Updates the email provider configuration for the specified branch.
+	         *
+	         * @tags Auth
+	         * @name UpdateNeonAuthEmailProvider
+	         * @summary Update email provider configuration
+	         * @request PATCH:/projects/{project_id}/branches/{branch_id}/auth/email_provider
+	         * @secure
+	         */
+	        _this.updateNeonAuthEmailProvider = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/email_provider"), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description DEPRECATED, use `/projects/{project_id}/branches/{branch_id}/auth` instead.
+	         *
+	         * @tags Auth (legacy)
 	         * @name DeleteNeonAuthIntegration
 	         * @summary Delete integration with auth provider
 	         * @request DELETE:/projects/{project_id}/auth/integration/{auth_provider}
+	         * @deprecated
 	         * @secure
 	         */
-	        _this.deleteNeonAuthIntegration = function (projectId, authProvider, params) {
+	        _this.deleteNeonAuthIntegration = function (projectId, authProvider, data, params) {
 	            if (params === void 0) { params = {}; }
-	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integration/").concat(encodeURIComponent(authProvider)), method: 'DELETE', secure: true }, params));
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/auth/integration/").concat(encodeURIComponent(authProvider)), method: 'DELETE', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
 	         * @description Retrieves a connection URI for the specified database. You can obtain a `project_id` by listing the projects for your Neon account. You can obtain the `database_name` by listing the databases for a branch. You can obtain a `role_name` by listing the roles for a branch.
@@ -48361,6 +48824,32 @@ function requireApi_gen () {
 	            var projectId = _a.projectId, query = __rest(_a, ["projectId"]);
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/connection_uri"), method: 'GET', query: query, secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Get the allow localhost configuration for the specified branch.
+	         *
+	         * @tags Auth
+	         * @name GetNeonAuthAllowLocalhost
+	         * @summary Get allow localhost
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/auth/allow_localhost
+	         * @secure
+	         */
+	        _this.getNeonAuthAllowLocalhost = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/allow_localhost"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Updates the allow localhost configuration for the specified branch.
+	         *
+	         * @tags Auth
+	         * @name UpdateNeonAuthAllowLocalhost
+	         * @summary Update allow localhost
+	         * @request PATCH:/projects/{project_id}/branches/{branch_id}/auth/allow_localhost
+	         * @secure
+	         */
+	        _this.updateNeonAuthAllowLocalhost = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/auth/allow_localhost"), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
 	         * @description Creates a branch in the specified project. You can obtain a `project_id` by listing the projects for your Neon account. This method does not require a request body, but you can specify one to create a compute endpoint for the branch or to select a non-default parent branch. By default, the branch is created from the project's default branch with no compute endpoint, and the branch name is auto-generated. To access the branch, you must add an endpoint object. A `read_write` endpoint allows you to perform read and write operations on the branch. Each branch supports one read-write endpoint and multiple read-only endpoints. For related information, see [Manage branches](https://neon.tech/docs/manage/branches/).
@@ -48388,6 +48877,19 @@ function requireApi_gen () {
 	            var projectId = _a.projectId, query = __rest(_a, ["projectId"]);
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches"), method: 'GET', query: query, secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Creates a new branch with anonymized data using PostgreSQL Anonymizer for static masking. This allows developers to work with masked production data. Optionally, provide `masking_rules` to set initial masking rules for the branch and `start_anonymization` to automatically start anonymization after creation. This combines functionality of updating masking rules and starting anonymization into the branch creation request. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Branch
+	         * @name CreateProjectBranchAnonymized
+	         * @summary Create anonymized branch
+	         * @request POST:/projects/{project_id}/branch_anonymized
+	         * @secure
+	         */
+	        _this.createProjectBranchAnonymized = function (projectId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branch_anonymized"), method: 'POST', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        /**
 	         * @description Retrieves the total number of branches in the specified project. You can obtain a `project_id` by listing the projects for your Neon account.
@@ -48484,6 +48986,58 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/compare_schema"), method: 'GET', query: query, secure: true, format: 'json' }, params));
 	        };
 	        /**
+	         * @description Retrieves the masking rules for the specified anonymized branch. Masking rules define how sensitive data should be anonymized using PostgreSQL Anonymizer. You can obtain a `project_id` by listing the projects for your Neon account. You can obtain the `branch_id` by listing the project's branches. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Branch
+	         * @name GetMaskingRules
+	         * @summary Get masking rules
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/masking_rules
+	         * @secure
+	         */
+	        _this.getMaskingRules = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/masking_rules"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Updates the masking rules for the specified anonymized branch. Masking rules define how sensitive data should be anonymized using PostgreSQL Anonymizer. You can obtain a `project_id` by listing the projects for your Neon account. You can obtain the `branch_id` by listing the project's branches. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Branch
+	         * @name UpdateMaskingRules
+	         * @summary Update masking rules
+	         * @request PATCH:/projects/{project_id}/branches/{branch_id}/masking_rules
+	         * @secure
+	         */
+	        _this.updateMaskingRules = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/masking_rules"), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Retrieves the current status of an anonymized branch, including its state and progress information. This endpoint allows you to monitor the anonymization process from initialization through completion. You can obtain a `project_id` by listing the projects for your Neon account. You can obtain the `branch_id` by listing the project's branches. Only anonymized branches will have status information available. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Branch
+	         * @name GetAnonymizedBranchStatus
+	         * @summary Get anonymized branch status
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/anonymized_status
+	         * @secure
+	         */
+	        _this.getAnonymizedBranchStatus = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/anonymized_status"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Starts the anonymization process for an anonymized branch that is in the initialized, error, or anonymized state. This will apply all defined masking rules to anonymize sensitive data in the branch databases. You can obtain a `project_id` by listing the projects for your Neon account. You can obtain the `branch_id` by listing the project's branches. The branch must be an anonymized branch to start anonymization. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Branch
+	         * @name StartAnonymization
+	         * @summary Start anonymization
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/anonymize
+	         * @secure
+	         */
+	        _this.startAnonymization = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/anonymize"), method: 'POST', secure: true, format: 'json' }, params));
+	        };
+	        /**
 	         * @description Sets the specified branch as the project's default branch. The default designation is automatically removed from the previous default branch. You can obtain a `project_id` by listing the projects for your Neon account. You can obtain the `branch_id` by listing the project's branches. For more information, see [Manage branches](https://neon.tech/docs/manage/branches/).
 	         *
 	         * @tags Branch
@@ -48495,6 +49049,19 @@ function requireApi_gen () {
 	        _this.setDefaultProjectBranch = function (projectId, branchId, params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/set_as_default"), method: 'POST', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Finalize the restore operation for a branch created from a snapshot. This operation updates the branch so it functions as the original branch it replaced. This includes: - Reassigning any computes from the original branch to the restored branch (this will restart the computes) - Renaming the restored branch to the original branch's name - Renaming the original branch so it no longer uses the original name This operation only applies to branches created using the `restoreSnapshot` endpoint with `finalize_restore: false`. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Branch
+	         * @name FinalizeRestoreBranch
+	         * @summary Finalize restore
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/finalize_restore
+	         * @secure
+	         */
+	        _this.finalizeRestoreBranch = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/finalize_restore"), method: 'POST', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
 	        };
 	        /**
 	         * @description Retrieves a list of compute endpoints for the specified branch. Neon permits only one read-write compute endpoint per branch. A branch can have multiple read-only compute endpoints. You can obtain a `project_id` by listing the projects for your Neon account. You can obtain the `branch_id` by listing the project's branches.
@@ -48796,7 +49363,7 @@ function requireApi_gen () {
 	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/endpoints/").concat(encodeURIComponent(endpointId), "/restart"), method: 'POST', secure: true, format: 'json' }, params));
 	        };
 	        /**
-	         * @description Retrieves consumption metrics for Scale, Business, and Enterprise plan accounts. History begins at the time of upgrade.
+	         * @description Retrieves consumption metrics for Scale and Enterprise plan accounts, and for legacy Scale, Business, and Enterprise plan accounts. Consumption history begins at the time the account was upgraded to a supported plan.
 	         *
 	         * @tags Consumption
 	         * @name GetConsumptionHistoryPerAccount
@@ -49093,6 +49660,99 @@ function requireApi_gen () {
 	        _this.getAuthDetails = function (params) {
 	            if (params === void 0) { params = {}; }
 	            return _this.request(__assign({ path: "/auth", method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Create a snapshot from the specified branch using the provided parameters. This endpoint may initiate an asynchronous operation. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Snapshot
+	         * @name CreateSnapshot
+	         * @summary Create snapshot
+	         * @request POST:/projects/{project_id}/branches/{branch_id}/snapshot
+	         * @secure
+	         */
+	        _this.createSnapshot = function (_a, params) {
+	            var projectId = _a.projectId, branchId = _a.branchId, query = __rest(_a, ["projectId", "branchId"]);
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/snapshot"), method: 'POST', query: query, secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description List the snapshots for the specified project. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Snapshot
+	         * @name ListSnapshots
+	         * @summary List project snapshots
+	         * @request GET:/projects/{project_id}/snapshots
+	         * @secure
+	         */
+	        _this.listSnapshots = function (projectId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/snapshots"), method: 'GET', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Delete the specified snapshot. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Snapshot
+	         * @name DeleteSnapshot
+	         * @summary Delete snapshot
+	         * @request DELETE:/projects/{project_id}/snapshots/{snapshot_id}
+	         * @secure
+	         */
+	        _this.deleteSnapshot = function (projectId, snapshotId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/snapshots/").concat(encodeURIComponent(snapshotId)), method: 'DELETE', secure: true, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Update the specified snapshot. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Snapshot
+	         * @name UpdateSnapshot
+	         * @summary Update snapshot
+	         * @request PATCH:/projects/{project_id}/snapshots/{snapshot_id}
+	         * @secure
+	         */
+	        _this.updateSnapshot = function (projectId, snapshotId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/snapshots/").concat(encodeURIComponent(snapshotId)), method: 'PATCH', body: data, secure: true, type: ContentType.Json, format: 'json' }, params));
+	        };
+	        /**
+	         * @description Restore the specified snapshot to a new branch and optionally finalize the restore operation. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Snapshot
+	         * @name RestoreSnapshot
+	         * @summary Restore snapshot
+	         * @request POST:/projects/{project_id}/snapshots/{snapshot_id}/restore
+	         * @secure
+	         */
+	        _this.restoreSnapshot = function (_a, data, params) {
+	            var projectId = _a.projectId, snapshotId = _a.snapshotId, query = __rest(_a, ["projectId", "snapshotId"]);
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/snapshots/").concat(encodeURIComponent(snapshotId), "/restore"), method: 'POST', query: query, body: data, secure: true, type: ContentType.Json }, params));
+	        };
+	        /**
+	         * @description View the backup schedule for the specified branch. **Note**: This endpoint is currently in Beta.
+	         *
+	         * @tags Snapshot
+	         * @name GetSnapshotSchedule
+	         * @summary View backup schedule
+	         * @request GET:/projects/{project_id}/branches/{branch_id}/backup_schedule
+	         * @secure
+	         */
+	        _this.getSnapshotSchedule = function (projectId, branchId, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/backup_schedule"), method: 'GET', secure: true }, params));
+	        };
+	        /**
+	         * @description Update the backup schedule for the specified branch. **Note** : This endpoint is currently in Beta.
+	         *
+	         * @tags Snapshot
+	         * @name SetSnapshotSchedule
+	         * @summary Update backup schedule
+	         * @request PUT:/projects/{project_id}/branches/{branch_id}/backup_schedule
+	         * @secure
+	         */
+	        _this.setSnapshotSchedule = function (projectId, branchId, data, params) {
+	            if (params === void 0) { params = {}; }
+	            return _this.request(__assign({ path: "/projects/".concat(encodeURIComponent(projectId), "/branches/").concat(encodeURIComponent(branchId), "/backup_schedule"), method: 'PUT', body: data, secure: true, type: ContentType.Json }, params));
 	        };
 	        return _this;
 	    }
@@ -75254,7 +75914,7 @@ function buildAnnotations() {
 const version = '6.1.1';
 // This file is auto-generated. Use 'bun run prebuild' when you need to update the version!
 
-async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch, expiresAt) {
+async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules) {
     const client = distExports.createApiClient({
         apiKey,
         baseURL: apiHost,
@@ -75272,7 +75932,8 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
             schemaOnly,
             parentBranch,
             suspendTimeout,
-            expiresAt
+            expiresAt,
+            maskingRules
         });
     }
     catch (error) {
@@ -75324,6 +75985,9 @@ async function getOrCreateBranch(client, params) {
         const { projectId, branchName } = params;
         const existingBranch = await getBranch(client, projectId, branchName);
         if (existingBranch) {
+            if (params.maskingRules && params.maskingRules.length > 0) {
+                throw new Error('Cannot apply masking rules to an existing branch. Please create a new anonymized branch to apply masking rules.');
+            }
             return { ...existingBranch, created: false };
         }
     }
@@ -75335,7 +75999,7 @@ async function getOrCreateBranch(client, params) {
 }
 async function createBranch(client, params) {
     const annotations = buildAnnotations();
-    const { branchName, projectId, schemaOnly, parentBranch, suspendTimeout, expiresAt } = params;
+    const { branchName, projectId, schemaOnly, parentBranch, suspendTimeout, expiresAt, maskingRules } = params;
     let parentId;
     if (parentBranch) {
         const parentBranchData = await getBranch(client, projectId, parentBranch);
@@ -75344,21 +76008,41 @@ async function createBranch(client, params) {
         }
         parentId = parentBranchData.id;
     }
-    const branchResponse = await client.createProjectBranch(projectId, {
-        endpoints: [
-            {
-                type: distExports.EndpointType.ReadWrite,
-                suspend_timeout_seconds: suspendTimeout
-            }
-        ],
-        branch: {
-            name: branchName,
-            parent_id: parentId,
-            init_source: schemaOnly ? 'schema-only' : undefined,
-            expires_at: expiresAt
-        },
-        annotation_value: annotations
-    });
+    const branchResponse = params.maskingRules && params.maskingRules.length > 0
+        ? await client.createProjectBranchAnonymized(projectId, {
+            branch_create: {
+                branch: {
+                    name: branchName,
+                    parent_id: parentId,
+                    init_source: schemaOnly ? 'schema-only' : undefined,
+                    expires_at: expiresAt
+                },
+                endpoints: [
+                    {
+                        type: distExports.EndpointType.ReadWrite,
+                        suspend_timeout_seconds: suspendTimeout
+                    }
+                ]
+            },
+            masking_rules: maskingRules,
+            start_anonymization: true,
+            annotation_value: annotations
+        })
+        : await client.createProjectBranch(projectId, {
+            endpoints: [
+                {
+                    type: distExports.EndpointType.ReadWrite,
+                    suspend_timeout_seconds: suspendTimeout
+                }
+            ],
+            branch: {
+                name: branchName,
+                parent_id: parentId,
+                init_source: schemaOnly ? 'schema-only' : undefined,
+                expires_at: expiresAt
+            },
+            annotation_value: annotations
+        });
     return branchResponse.data.branch;
 }
 async function getConnectionInfo(client, params) {
@@ -75502,7 +76186,20 @@ async function run() {
         if (isNaN(suspendTimeout)) {
             throw new Error('Suspend timeout must be a number');
         }
-        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt);
+        const maskingRulesInput = coreExports.getInput('masking_rules', {
+            trimWhitespace: true
+        });
+        let maskingRules;
+        if (maskingRulesInput) {
+            try {
+                maskingRules = JSON.parse(maskingRulesInput);
+            }
+            catch (ex) {
+                console.error('Error parsing masking rules JSON:', ex);
+                throw new Error('Masking rules must be a valid JSON array');
+            }
+        }
+        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules);
         if (result.createdBranch) {
             coreExports.info(`Branch ${branchName} created successfully`);
             coreExports.setOutput('created', true);

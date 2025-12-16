@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import { MaskingRule } from '@neondatabase/api-client'
 
 import { create } from './branch.js'
 import { isBranchType, isSSLMode } from './utils.js'
@@ -80,6 +81,19 @@ export async function run(): Promise<void> {
       throw new Error('Suspend timeout must be a number')
     }
 
+    const maskingRulesInput = core.getInput('masking_rules', {
+      trimWhitespace: true
+    })
+    let maskingRules: MaskingRule[] | undefined
+    if (maskingRulesInput) {
+      try {
+        maskingRules = JSON.parse(maskingRulesInput) as MaskingRule[]
+      } catch (ex) {
+        console.error('Error parsing masking rules JSON:', ex)
+        throw new Error('Masking rules must be a valid JSON array')
+      }
+    }
+
     const result = await create(
       apiKey,
       apiHost,
@@ -92,7 +106,8 @@ export async function run(): Promise<void> {
       suspendTimeout,
       branchName,
       parentBranch,
-      expiresAt
+      expiresAt,
+      maskingRules
     )
 
     if (result.createdBranch) {
