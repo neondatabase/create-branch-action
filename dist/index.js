@@ -75986,7 +75986,7 @@ async function getOrCreateBranch(client, params) {
         const existingBranch = await getBranch(client, projectId, branchName);
         if (existingBranch) {
             if (params.maskingRules && params.maskingRules.length > 0) {
-                throw new Error('Cannot apply masking rules to an existing branch. Please create a new branch to apply masking rules.');
+                throw new Error('Cannot apply masking rules to an existing branch. Please create a new anonymized branch to apply masking rules.');
             }
             return { ...existingBranch, created: false };
         }
@@ -76196,7 +76196,6 @@ async function run() {
             }
             catch (ex) {
                 console.error('Error parsing masking rules JSON:', ex);
-                console.log(maskingRulesInput);
                 throw new Error('Masking rules must be a valid JSON array');
             }
         }
