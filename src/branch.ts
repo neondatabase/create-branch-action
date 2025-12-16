@@ -135,7 +135,7 @@ export async function getOrCreateBranch(
     if (existingBranch) {
       if (params.maskingRules && params.maskingRules.length > 0) {
         throw new Error(
-          'Cannot apply masking rules to an existing branch. Please create a new branch to apply masking rules.'
+          'Cannot apply masking rules to an existing branch. Please create a new anonymized branch to apply masking rules.'
         )
       }
       return { ...existingBranch, created: false }

@@ -90,7 +90,6 @@ export async function run(): Promise<void> {
         maskingRules = JSON.parse(maskingRulesInput) as MaskingRule[]
       } catch (ex) {
         console.error('Error parsing masking rules JSON:', ex)
-        console.log(maskingRulesInput)
         throw new Error('Masking rules must be a valid JSON array')
       }
     }
