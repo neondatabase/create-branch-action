@@ -50,7 +50,8 @@ inputs:
       to the branch. https://api-docs.neon.tech/reference/updatemaskingrules'
   get_auth_url:
     description:
-      'Whether to get the neon auth url for the branch. If neon auth is not enabled for this branch, return undefined.'
+      'Whether to get the neon auth url for the branch. If neon auth is not
+      enabled for this branch, return undefined.'
     default: 'false'
 outputs:
   db_url:

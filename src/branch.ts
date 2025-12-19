@@ -5,6 +5,7 @@ import {
   EndpointType,
   MaskingRule
 } from '@neondatabase/api-client'
+import { AxiosError } from 'axios'
 
 import { buildAnnotations } from './annotations.js'
 import { version } from './version.js'
@@ -78,8 +79,14 @@ export async function create(
 
   let authUrl: string | undefined
   if (getAuthUrl) {
-    const response = await client.getNeonAuth(projectId, branch.id)
-    authUrl = response.data ? response.data.base_url : undefined
+    try {
+      const response = await client.getNeonAuth(projectId, branch.id)
+      authUrl = response.data ? response.data.base_url : undefined
+    } catch (error) {
+      if (error instanceof AxiosError && error.status !== 404) {
+        throw new Error(`Failed to get neon auth url. ${String(error)}`)
+      }
+    }
   }
 
   return {
