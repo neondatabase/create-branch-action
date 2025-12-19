@@ -126,7 +126,8 @@ describe('action', () => {
       'branchName',
       undefined,
       undefined,
-      undefined
+      undefined,
+      false
     )
 
     expect(core.setFailed).not.toHaveBeenCalled()
@@ -191,12 +192,78 @@ describe('action', () => {
       'branchName',
       undefined,
       undefined,
-      undefined
+      undefined,
+      false
     )
 
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', false)
     expect(core.setOutput).toHaveBeenCalledTimes(7) // 7 outputs
+  })
+
+  it('get auth url for branch', async () => {
+    core.getInput.mockImplementation((name: string) => {
+      switch (name) {
+        case 'api_host':
+          return 'http://console.neon.tech/api/v2'
+        case 'api_key':
+          return 'apiKey'
+        case 'project_id':
+          return 'projectId'
+        case 'branch_name':
+          return 'branchName'
+        case 'database':
+          return 'postgres'
+        case 'role':
+          return 'postgres'
+        case 'branch_type':
+          return 'default'
+        case 'suspend_timeout':
+          return '0'
+        case 'ssl':
+          return 'require'
+        case 'get_auth_url':
+          return 'true'
+        default:
+          return ''
+      }
+    })
+
+    create.mockImplementation(() =>
+      Promise.resolve({
+        databaseURL: 'postgresql://postgres:password@e1.endpoint.com/postgres',
+        databaseURLPooled:
+          'postgresql://postgres:password@e1-pooler.endpoint.com/postgres',
+        databaseHost: 'e1.endpoint.com',
+        databaseHostPooled: 'e1-pooler.endpoint.com',
+        password: 'password',
+        branchId: '1',
+        createdBranch: false,
+        authUrl: 'https://endpoint-id.neonauth.aws.neon.tech/neondb/auth'
+      })
+    )
+
+    await run()
+    expect(create).toHaveBeenCalledWith(
+      'apiKey',
+      'http://console.neon.tech/api/v2',
+      'projectId',
+      false,
+      'postgres',
+      'postgres',
+      false,
+      'require',
+      0,
+      'branchName',
+      undefined,
+      undefined,
+      undefined,
+      true
+    )
+
+    expect(core.setFailed).not.toHaveBeenCalled()
+    expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', false)
+    expect(core.setOutput).toHaveBeenCalledTimes(8) // 7 outputs
   })
 
   it('create with expiration time', async () => {
@@ -255,7 +322,8 @@ describe('action', () => {
       'branchName',
       undefined,
       '2025-12-31T00:00:00Z',
-      undefined
+      undefined,
+      false
     )
 
     expect(core.setFailed).not.toHaveBeenCalled()

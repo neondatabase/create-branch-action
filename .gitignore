@@ -102,3 +102,4 @@ __tests__/runner/*
 *.code-workspace
 
 .vscode/
+.history

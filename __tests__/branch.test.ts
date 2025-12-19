@@ -6,7 +6,8 @@ import {
   buildBranch,
   buildEndpoint,
   buildDatabase,
-  buildRole
+  buildRole,
+  buildNeonAuth
 } from '../__fixtures__/mocks'
 import {
   getBranch,
@@ -40,8 +41,9 @@ describe('branch actions', () => {
     listProjectBranchEndpoints: vi.fn(),
     getProjectBranchDatabase: vi.fn(),
     getProjectBranchRole: vi.fn(),
-    getProjectBranchRolePassword: vi.fn()
-  }
+    getProjectBranchRolePassword: vi.fn(),
+    getNeonAuth: vi.fn()
+  } satisfies Partial<Api<unknown>>
 
   beforeEach(() => {
     vi.resetAllMocks()
@@ -577,6 +579,73 @@ describe('branch actions', () => {
       expect(response.password).toBe('password')
       expect(response.branchId).toBe('1')
       expect(response.expiresAt).toBeUndefined()
+    })
+
+    it('should get the auth url for the branch', async () => {
+      mockClient.listProjectBranches.mockResolvedValue(
+        apiResponse(200, {
+          branches: []
+        })
+      )
+
+      mockClient.createProjectBranch.mockResolvedValue(
+        apiResponse(200, {
+          branch: buildBranch('1', 'branchName')
+        })
+      )
+
+      mockClient.listProjectBranchEndpoints.mockResolvedValue(
+        apiResponse(200, {
+          endpoints: [buildEndpoint('e1')]
+        })
+      )
+
+      mockClient.getProjectBranchDatabase.mockResolvedValue(
+        apiResponse(200, {
+          database: buildDatabase(1, 'neondb')
+        })
+      )
+
+      mockClient.getProjectBranchRole.mockResolvedValue(
+        apiResponse(200, {
+          role: buildRole(1, 'neondb_owner')
+        })
+      )
+      mockClient.getProjectBranchRolePassword.mockResolvedValue(
+        apiResponse(200, {
+          password: 'password'
+        })
+      )
+
+      mockClient.getNeonAuth.mockResolvedValue(
+        apiResponse(404, buildNeonAuth())
+      )
+
+      const response = await create(
+        'apiKey',
+        'apiHost',
+        'projectId',
+        false,
+        'neondb',
+        'neondb_owner',
+        false,
+        'require',
+        0,
+        'branchName',
+        undefined,
+        undefined,
+        undefined,
+        true
+      )
+
+      expect(response).toBeDefined()
+      expect(response.branchId).toBe('1')
+      expect(response.authUrl).toBe(
+        'https://endpoint-id.neonauth.aws.neon.tech/neondb/auth'
+      )
+
+      expect(mockClient.createProjectBranch).toHaveBeenCalled()
+      expect(mockClient.getNeonAuth).toHaveBeenCalledWith('projectId', '1')
     })
   })
 

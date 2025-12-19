@@ -48,6 +48,10 @@ inputs:
     description:
       'A JSON string representing an array of data masking rules to be applied
       to the branch. https://api-docs.neon.tech/reference/updatemaskingrules'
+  get_auth_url:
+    description:
+      'Whether to get the neon auth url for the branch. If neon auth is not enabled for this branch, return undefined.'
+    default: 'false'
 outputs:
   db_url:
     description: The database connection string
@@ -63,7 +67,8 @@ outputs:
     description: The ID of the branch
   created:
     description: Whether the branch was created or reused
-
+  auth_url:
+    description: The neon auth url for the branch
 runs:
   using: node20
   main: dist/index.js
