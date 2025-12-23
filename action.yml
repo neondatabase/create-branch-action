@@ -69,7 +69,9 @@ outputs:
   created:
     description: Whether the branch was created or reused
   auth_url:
-    description: The neon auth url for the branch
+    description:
+      The Neon Auth URL for the branch. Undefined if neon auth is not enabled
+      for the branch.
 runs:
   using: node20
   main: dist/index.js

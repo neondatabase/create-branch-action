@@ -176,7 +176,7 @@ You can customize the action as follows, using the action's optional fields:
   `"omit"`.
 - **Branch type**: Use `schema-only` to create a new branch with the schema of
   the `parent_branch`.
-- **Auth URL**: Get `auth_url` for the branch if the neon auth is enabled
+- **Auth URL**: Use `get_auth_url` to retrieve the Neon Auth URL for the branch.
 
 If you don't provide values for the optional fields, the action uses the
 following defaults:

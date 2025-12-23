@@ -515,9 +515,7 @@ describe('branch actions', () => {
       vi.mocked(createApiClient).mockReturnValue(
         mockClient as unknown as ReturnType<typeof createApiClient>
       )
-    })
 
-    it('should create a branch', async () => {
       mockClient.listProjectBranches.mockResolvedValue(
         apiResponse(200, {
           branches: []
@@ -553,7 +551,9 @@ describe('branch actions', () => {
           password: 'password'
         })
       )
+    })
 
+    it('should create a branch', async () => {
       const response = await create(
         'apiKey',
         'apiHost',
@@ -581,44 +581,9 @@ describe('branch actions', () => {
       expect(response.expiresAt).toBeUndefined()
     })
 
-    it('should get the auth url for the branch', async () => {
-      mockClient.listProjectBranches.mockResolvedValue(
-        apiResponse(200, {
-          branches: []
-        })
-      )
-
-      mockClient.createProjectBranch.mockResolvedValue(
-        apiResponse(200, {
-          branch: buildBranch('1', 'branchName')
-        })
-      )
-
-      mockClient.listProjectBranchEndpoints.mockResolvedValue(
-        apiResponse(200, {
-          endpoints: [buildEndpoint('e1')]
-        })
-      )
-
-      mockClient.getProjectBranchDatabase.mockResolvedValue(
-        apiResponse(200, {
-          database: buildDatabase(1, 'neondb')
-        })
-      )
-
-      mockClient.getProjectBranchRole.mockResolvedValue(
-        apiResponse(200, {
-          role: buildRole(1, 'neondb_owner')
-        })
-      )
-      mockClient.getProjectBranchRolePassword.mockResolvedValue(
-        apiResponse(200, {
-          password: 'password'
-        })
-      )
-
+    it('should get the auth_url for the branch, if neon auth is enabled', async () => {
       mockClient.getNeonAuth.mockResolvedValue(
-        apiResponse(404, buildNeonAuth())
+        apiResponse(200, buildNeonAuth())
       )
 
       const response = await create(
@@ -643,6 +608,34 @@ describe('branch actions', () => {
       expect(response.authUrl).toBe(
         'https://endpoint-id.neonauth.aws.neon.tech/neondb/auth'
       )
+
+      expect(mockClient.createProjectBranch).toHaveBeenCalled()
+      expect(mockClient.getNeonAuth).toHaveBeenCalledWith('projectId', '1')
+    })
+
+    it('should not throw error, if neon auth is not enabled', async () => {
+      mockClient.getNeonAuth.mockResolvedValue(apiResponse(404, {}))
+
+      const response = await create(
+        'apiKey',
+        'apiHost',
+        'projectId',
+        false,
+        'neondb',
+        'neondb_owner',
+        false,
+        'require',
+        0,
+        'branchName',
+        undefined,
+        undefined,
+        undefined,
+        true
+      )
+
+      expect(response).toBeDefined()
+      expect(response.branchId).toBe('1')
+      expect(response.authUrl).toBeUndefined()
 
       expect(mockClient.createProjectBranch).toHaveBeenCalled()
       expect(mockClient.getNeonAuth).toHaveBeenCalledWith('projectId', '1')

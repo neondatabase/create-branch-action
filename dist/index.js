@@ -80925,7 +80925,7 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
             authUrl = response.data ? response.data.base_url : undefined;
         }
         catch (error) {
-            if (error instanceof AxiosError && error.status !== 404) {
+            if (error instanceof AxiosError && error.response?.status !== 404) {
                 throw new Error(`Failed to get neon auth url. ${String(error)}`);
             }
         }

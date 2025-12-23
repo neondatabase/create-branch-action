@@ -83,7 +83,7 @@ export async function create(
       const response = await client.getNeonAuth(projectId, branch.id)
       authUrl = response.data ? response.data.base_url : undefined
     } catch (error) {
-      if (error instanceof AxiosError && error.status !== 404) {
+      if (error instanceof AxiosError && error.response?.status !== 404) {
         throw new Error(`Failed to get neon auth url. ${String(error)}`)
       }
     }
@@ -137,7 +137,6 @@ interface GetOrCreateBranchParams {
   suspendTimeout: number
   expiresAt?: string
   maskingRules?: MaskingRule[]
-  getAuthUrl?: boolean
 }
 
 type GetOrCreateBranchResponse = Branch & { created: boolean }

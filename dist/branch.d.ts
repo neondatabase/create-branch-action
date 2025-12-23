@@ -20,7 +20,6 @@ interface GetOrCreateBranchParams {
     suspendTimeout: number;
     expiresAt?: string;
     maskingRules?: MaskingRule[];
-    getAuthUrl?: boolean;
 }
 type GetOrCreateBranchResponse = Branch & {
     created: boolean;
