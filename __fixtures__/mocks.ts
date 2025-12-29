@@ -5,7 +5,10 @@ import {
   EndpointState,
   EndpointPoolerMode,
   Database,
-  Role
+  Role,
+  NeonAuthIntegration,
+  NeonAuthSupportedAuthProvider,
+  NeonAuthProviderProjectOwnedBy
 } from '@neondatabase/api-client'
 
 export function buildBranch(
@@ -77,5 +80,21 @@ export function buildEndpoint(id: string): Endpoint {
     proxy_host: 'test-proxy-host',
     suspend_timeout_seconds: 0,
     provisioner: 'test-provisioner'
+  }
+}
+
+export function buildNeonAuth(
+  branch = buildBranch('branchId', 'branchName')
+): NeonAuthIntegration {
+  return {
+    auth_provider: NeonAuthSupportedAuthProvider.BetterAuth,
+    auth_provider_project_id: branch.project_id,
+    branch_id: branch.id,
+    db_name: 'neondb',
+    owned_by: NeonAuthProviderProjectOwnedBy.Neon,
+    created_at: '2021-01-01T00:00:00Z',
+    jwks_url:
+      'https://endpoint-id.neonauth.aws.neon.tech/neondb/auth/.well-known/jwks.json',
+    base_url: 'https://endpoint-id.neonauth.aws.neon.tech/neondb/auth'
   }
 }

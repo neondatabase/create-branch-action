@@ -93,6 +93,10 @@ export async function run(): Promise<void> {
         throw new Error('Masking rules must be a valid JSON array')
       }
     }
+    const getAuthUrl: boolean =
+      core.getInput('get_auth_url', {
+        trimWhitespace: true
+      }) === 'true' // defaults to false
 
     const result = await create(
       apiKey,
@@ -107,7 +111,8 @@ export async function run(): Promise<void> {
       branchName,
       parentBranch,
       expiresAt,
-      maskingRules
+      maskingRules,
+      getAuthUrl
     )
 
     if (result.createdBranch) {
@@ -124,6 +129,9 @@ export async function run(): Promise<void> {
     core.setOutput('db_host_pooled', result.databaseHostPooled)
     core.setOutput('password', result.password)
     core.setOutput('branch_id', result.branchId)
+    if (result.authUrl) {
+      core.setOutput('auth_url', result.authUrl)
+    }
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

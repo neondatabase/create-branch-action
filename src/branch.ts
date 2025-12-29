@@ -5,6 +5,7 @@ import {
   EndpointType,
   MaskingRule
 } from '@neondatabase/api-client'
+import { AxiosError } from 'axios'
 
 import { buildAnnotations } from './annotations.js'
 import { version } from './version.js'
@@ -18,6 +19,7 @@ interface CreateResponse {
   branchId: string
   createdBranch: boolean
   expiresAt?: string
+  authUrl?: string
 }
 
 export async function create(
@@ -33,7 +35,8 @@ export async function create(
   branchName?: string,
   parentBranch?: string,
   expiresAt?: string,
-  maskingRules?: MaskingRule[]
+  maskingRules?: MaskingRule[],
+  getAuthUrl?: boolean
 ): Promise<CreateResponse> {
   const client = createApiClient({
     apiKey,
@@ -74,6 +77,18 @@ export async function create(
     throw new Error(`Failed to get connection info. ${String(error)}`)
   }
 
+  let authUrl: string | undefined
+  if (getAuthUrl) {
+    try {
+      const response = await client.getNeonAuth(projectId, branch.id)
+      authUrl = response.data ? response.data.base_url : undefined
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status !== 404) {
+        throw new Error(`Failed to get neon auth url. ${String(error)}`)
+      }
+    }
+  }
+
   return {
     databaseURL: connectionInfo.databaseUrl,
     databaseURLPooled: connectionInfo.databaseUrlPooled,
@@ -82,7 +97,8 @@ export async function create(
     password: connectionInfo.password,
     branchId: branch.id,
     createdBranch: branch.created,
-    expiresAt: branch.expires_at
+    expiresAt: branch.expires_at,
+    authUrl
   }
 }
 

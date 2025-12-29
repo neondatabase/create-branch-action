@@ -176,6 +176,7 @@ You can customize the action as follows, using the action's optional fields:
   `"omit"`.
 - **Branch type**: Use `schema-only` to create a new branch with the schema of
   the `parent_branch`.
+- **Auth URL**: Use `get_auth_url` to retrieve the Neon Auth URL for the branch.
 
 If you don't provide values for the optional fields, the action uses the
 following defaults:
@@ -188,6 +189,7 @@ following defaults:
 - `suspend_timeout` - `0` (auto-suspend disabled)
 - `ssl` - `require`
 - `branch_type` - `default`
+- `get_auth_url` - `false`
 
 Supported parameters:
 
@@ -205,6 +207,8 @@ Supported parameters:
 | `ssl`             | optional          | `require`                          |
 | `branch_type`     | optional          | `default`                          |
 | `expires_at`      | optional          | `""`                               |
+| `masking_rules`   | optional          | `undefined`                        |
+| `get_auth_url`    | optional          | `"false"`                          |
 
 ---
 
