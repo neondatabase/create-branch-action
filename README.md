@@ -114,6 +114,9 @@ The action provides the following outputs:
   input role.
 - `created` - `true` if the branch was created, `false` is the branch already
   exists and is being reused.
+- `auth_url` - The Neon Auth URL for the branch (only when `get_auth_url: true`).
+- `data_api_url` - The Neon Data API URL for the branch (only when
+  `get_data_api_url: true`).
 
 ### Example Workflow
 
@@ -153,6 +156,30 @@ jobs:
           NOW();"
 ```
 
+### Using the Data API
+
+If you have the [Neon Data API](https://neon.tech/docs/guides/neon-data-api)
+enabled for your project, you can retrieve the Data API URL by setting
+`get_data_api_url: true`:
+
+```yml
+steps:
+  - name: Create Neon Branch with Data API
+    uses: neondatabase/create-branch-action@v6
+    id: create-branch
+    with:
+      project_id: ${{ vars.NEON_PROJECT_ID }}
+      branch_name: feature-branch
+      api_key: ${{ secrets.NEON_API_KEY }}
+      get_data_api_url: true
+  - name: Use Data API
+    run: |
+      curl -X POST "${{ steps.create-branch.outputs.data_api_url }}/sql" \
+        -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+        -H "Content-Type: application/json" \
+        -d '{"query": "SELECT NOW()"}'
+```
+
 ## Advanced usage
 
 You can customize the action as follows, using the action's optional fields:
@@ -177,6 +204,8 @@ You can customize the action as follows, using the action's optional fields:
 - **Branch type**: Use `schema-only` to create a new branch with the schema of
   the `parent_branch`.
 - **Auth URL**: Use `get_auth_url` to retrieve the Neon Auth URL for the branch.
+- **Data API URL**: Use `get_data_api_url` to retrieve the Neon Data API URL for
+  the branch.
 
 If you don't provide values for the optional fields, the action uses the
 following defaults:
@@ -190,6 +219,7 @@ following defaults:
 - `ssl` - `require`
 - `branch_type` - `default`
 - `get_auth_url` - `false`
+- `get_data_api_url` - `false`
 
 Supported parameters:
 
@@ -209,6 +239,7 @@ Supported parameters:
 | `expires_at`      | optional          | `""`                               |
 | `masking_rules`   | optional          | `undefined`                        |
 | `get_auth_url`    | optional          | `"false"`                          |
+| `get_data_api_url`| optional          | `"false"`                          |
 
 ---
 
