@@ -80879,7 +80879,7 @@ function buildAnnotations() {
 const version = '6.1.1';
 // This file is auto-generated. Use 'bun run prebuild' when you need to update the version!
 
-async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules, getAuthUrl) {
+async function create(apiKey, apiHost, projectId, usePrisma, database, role, schemaOnly, sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules, getAuthUrl, getDataApiUrl) {
     const client = distExports.createApiClient({
         apiKey,
         baseURL: apiHost,
@@ -80930,6 +80930,18 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
             }
         }
     }
+    let dataApiUrl;
+    if (getDataApiUrl) {
+        try {
+            const response = await client.getProjectBranchDataApi(projectId, branch.id, database);
+            dataApiUrl = response.data ? response.data.url : undefined;
+        }
+        catch (error) {
+            if (error instanceof AxiosError && error.response?.status !== 404) {
+                throw new Error(`Failed to get data api url. ${String(error)}`);
+            }
+        }
+    }
     return {
         databaseURL: connectionInfo.databaseUrl,
         databaseURLPooled: connectionInfo.databaseUrlPooled,
@@ -80939,7 +80951,8 @@ async function create(apiKey, apiHost, projectId, usePrisma, database, role, sch
         branchId: branch.id,
         createdBranch: branch.created,
         expiresAt: branch.expires_at,
-        authUrl
+        authUrl,
+        dataApiUrl
     };
 }
 async function getBranch(client, projectId, branchIdentifier) {
@@ -81180,7 +81193,10 @@ async function run() {
         const getAuthUrl = coreExports.getInput('get_auth_url', {
             trimWhitespace: true
         }) === 'true'; // defaults to false
-        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules, getAuthUrl);
+        const getDataApiUrl = coreExports.getInput('get_data_api_url', {
+            trimWhitespace: true
+        }) === 'true'; // defaults to false
+        const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules, getAuthUrl, getDataApiUrl);
         if (result.createdBranch) {
             coreExports.info(`Branch ${branchName} created successfully`);
             coreExports.setOutput('created', true);
@@ -81197,6 +81213,9 @@ async function run() {
         coreExports.setOutput('branch_id', result.branchId);
         if (result.authUrl) {
             coreExports.setOutput('auth_url', result.authUrl);
+        }
+        if (result.dataApiUrl) {
+            coreExports.setOutput('data_api_url', result.dataApiUrl);
         }
     }
     catch (error) {

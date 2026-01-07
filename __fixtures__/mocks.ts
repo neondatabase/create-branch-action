@@ -8,7 +8,8 @@ import {
   Role,
   NeonAuthIntegration,
   NeonAuthSupportedAuthProvider,
-  NeonAuthProviderProjectOwnedBy
+  NeonAuthProviderProjectOwnedBy,
+  DataAPIReponse
 } from '@neondatabase/api-client'
 
 export function buildBranch(
@@ -96,5 +97,12 @@ export function buildNeonAuth(
     jwks_url:
       'https://endpoint-id.neonauth.aws.neon.tech/neondb/auth/.well-known/jwks.json',
     base_url: 'https://endpoint-id.neonauth.aws.neon.tech/neondb/auth'
+  }
+}
+
+export function buildDataApi(database = 'neondb'): DataAPIReponse {
+  return {
+    url: `https://endpoint-id.data-api.aws.neon.tech/${database}`,
+    status: 'active'
   }
 }

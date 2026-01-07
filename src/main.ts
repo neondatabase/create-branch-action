@@ -98,6 +98,11 @@ export async function run(): Promise<void> {
         trimWhitespace: true
       }) === 'true' // defaults to false
 
+    const getDataApiUrl: boolean =
+      core.getInput('get_data_api_url', {
+        trimWhitespace: true
+      }) === 'true' // defaults to false
+
     const result = await create(
       apiKey,
       apiHost,
@@ -112,7 +117,8 @@ export async function run(): Promise<void> {
       parentBranch,
       expiresAt,
       maskingRules,
-      getAuthUrl
+      getAuthUrl,
+      getDataApiUrl
     )
 
     if (result.createdBranch) {
@@ -131,6 +137,9 @@ export async function run(): Promise<void> {
     core.setOutput('branch_id', result.branchId)
     if (result.authUrl) {
       core.setOutput('auth_url', result.authUrl)
+    }
+    if (result.dataApiUrl) {
+      core.setOutput('data_api_url', result.dataApiUrl)
     }
   } catch (error) {
     // Fail the workflow run if an error occurs

@@ -7,7 +7,8 @@ import {
   buildEndpoint,
   buildDatabase,
   buildRole,
-  buildNeonAuth
+  buildNeonAuth,
+  buildDataApi
 } from '../__fixtures__/mocks'
 import {
   getBranch,
@@ -42,7 +43,8 @@ describe('branch actions', () => {
     getProjectBranchDatabase: vi.fn(),
     getProjectBranchRole: vi.fn(),
     getProjectBranchRolePassword: vi.fn(),
-    getNeonAuth: vi.fn()
+    getNeonAuth: vi.fn(),
+    getProjectBranchDataApi: vi.fn()
   } satisfies Partial<Api<unknown>>
 
   beforeEach(() => {
@@ -639,6 +641,76 @@ describe('branch actions', () => {
 
       expect(mockClient.createProjectBranch).toHaveBeenCalled()
       expect(mockClient.getNeonAuth).toHaveBeenCalledWith('projectId', '1')
+    })
+
+    it('should get the data_api_url for the branch, if data api is enabled', async () => {
+      mockClient.getProjectBranchDataApi.mockResolvedValue(
+        apiResponse(200, buildDataApi())
+      )
+
+      const response = await create(
+        'apiKey',
+        'apiHost',
+        'projectId',
+        false,
+        'neondb',
+        'neondb_owner',
+        false,
+        'require',
+        0,
+        'branchName',
+        undefined,
+        undefined,
+        undefined,
+        false,
+        true
+      )
+
+      expect(response).toBeDefined()
+      expect(response.branchId).toBe('1')
+      expect(response.dataApiUrl).toBe(
+        'https://endpoint-id.data-api.aws.neon.tech/neondb'
+      )
+
+      expect(mockClient.createProjectBranch).toHaveBeenCalled()
+      expect(mockClient.getProjectBranchDataApi).toHaveBeenCalledWith(
+        'projectId',
+        '1',
+        'neondb'
+      )
+    })
+
+    it('should not throw error, if data api is not enabled', async () => {
+      mockClient.getProjectBranchDataApi.mockResolvedValue(apiResponse(404, {}))
+
+      const response = await create(
+        'apiKey',
+        'apiHost',
+        'projectId',
+        false,
+        'neondb',
+        'neondb_owner',
+        false,
+        'require',
+        0,
+        'branchName',
+        undefined,
+        undefined,
+        undefined,
+        false,
+        true
+      )
+
+      expect(response).toBeDefined()
+      expect(response.branchId).toBe('1')
+      expect(response.dataApiUrl).toBeUndefined()
+
+      expect(mockClient.createProjectBranch).toHaveBeenCalled()
+      expect(mockClient.getProjectBranchDataApi).toHaveBeenCalledWith(
+        'projectId',
+        '1',
+        'neondb'
+      )
     })
   })
 
