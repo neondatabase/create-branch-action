@@ -53,6 +53,11 @@ inputs:
       'Whether to get the neon auth url for the branch. If neon auth is not
       enabled for this branch, return undefined.'
     default: 'false'
+  get_data_api_url:
+    description:
+      'Whether to get the Neon Data API url for the branch. If Data API is not
+      enabled for this branch, return undefined.'
+    default: 'false'
 outputs:
   db_url:
     description: The database connection string
@@ -71,6 +76,10 @@ outputs:
   auth_url:
     description:
       The Neon Auth URL for the branch. Undefined if neon auth is not enabled
+      for the branch.
+  data_api_url:
+    description:
+      The Neon Data API URL for the branch. Undefined if Data API is not enabled
       for the branch.
 runs:
   using: node20

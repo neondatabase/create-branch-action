@@ -20,6 +20,7 @@ interface CreateResponse {
   createdBranch: boolean
   expiresAt?: string
   authUrl?: string
+  dataApiUrl?: string
 }
 
 export async function create(
@@ -36,7 +37,8 @@ export async function create(
   parentBranch?: string,
   expiresAt?: string,
   maskingRules?: MaskingRule[],
-  getAuthUrl?: boolean
+  getAuthUrl?: boolean,
+  getDataApiUrl?: boolean
 ): Promise<CreateResponse> {
   const client = createApiClient({
     apiKey,
@@ -89,6 +91,22 @@ export async function create(
     }
   }
 
+  let dataApiUrl: string | undefined
+  if (getDataApiUrl) {
+    try {
+      const response = await client.getProjectBranchDataApi(
+        projectId,
+        branch.id,
+        database
+      )
+      dataApiUrl = response.data ? response.data.url : undefined
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status !== 404) {
+        throw new Error(`Failed to get data api url. ${String(error)}`)
+      }
+    }
+  }
+
   return {
     databaseURL: connectionInfo.databaseUrl,
     databaseURLPooled: connectionInfo.databaseUrlPooled,
@@ -98,7 +116,8 @@ export async function create(
     branchId: branch.id,
     createdBranch: branch.created,
     expiresAt: branch.expires_at,
-    authUrl
+    authUrl,
+    dataApiUrl
   }
 }
 

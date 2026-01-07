@@ -127,6 +127,7 @@ describe('action', () => {
       undefined,
       undefined,
       undefined,
+      false,
       false
     )
 
@@ -193,6 +194,7 @@ describe('action', () => {
       undefined,
       undefined,
       undefined,
+      false,
       false
     )
 
@@ -258,12 +260,13 @@ describe('action', () => {
       undefined,
       undefined,
       undefined,
-      true
+      true,
+      false
     )
 
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', false)
-    expect(core.setOutput).toHaveBeenCalledTimes(8) // 7 outputs
+    expect(core.setOutput).toHaveBeenCalledTimes(8) // 8 outputs
   })
 
   it('create with expiration time', async () => {
@@ -323,6 +326,7 @@ describe('action', () => {
       undefined,
       '2025-12-31T00:00:00Z',
       undefined,
+      false,
       false
     )
 
@@ -333,5 +337,71 @@ describe('action', () => {
     )
     expect(core.setOutput).toHaveBeenCalledTimes(7) // 7 outputs
     expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', true)
+  })
+
+  it('get data api url for branch', async () => {
+    core.getInput.mockImplementation((name: string) => {
+      switch (name) {
+        case 'api_host':
+          return 'http://console.neon.tech/api/v2'
+        case 'api_key':
+          return 'apiKey'
+        case 'project_id':
+          return 'projectId'
+        case 'branch_name':
+          return 'branchName'
+        case 'database':
+          return 'postgres'
+        case 'role':
+          return 'postgres'
+        case 'branch_type':
+          return 'default'
+        case 'suspend_timeout':
+          return '0'
+        case 'ssl':
+          return 'require'
+        case 'get_data_api_url':
+          return 'true'
+        default:
+          return ''
+      }
+    })
+
+    create.mockImplementation(() =>
+      Promise.resolve({
+        databaseURL: 'postgresql://postgres:password@e1.endpoint.com/postgres',
+        databaseURLPooled:
+          'postgresql://postgres:password@e1-pooler.endpoint.com/postgres',
+        databaseHost: 'e1.endpoint.com',
+        databaseHostPooled: 'e1-pooler.endpoint.com',
+        password: 'password',
+        branchId: '1',
+        createdBranch: false,
+        dataApiUrl: 'https://endpoint-id.data-api.aws.neon.tech/postgres'
+      })
+    )
+
+    await run()
+    expect(create).toHaveBeenCalledWith(
+      'apiKey',
+      'http://console.neon.tech/api/v2',
+      'projectId',
+      false,
+      'postgres',
+      'postgres',
+      false,
+      'require',
+      0,
+      'branchName',
+      undefined,
+      undefined,
+      undefined,
+      false,
+      true
+    )
+
+    expect(core.setFailed).not.toHaveBeenCalled()
+    expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', false)
+    expect(core.setOutput).toHaveBeenCalledTimes(8) // 8 outputs
   })
 })
