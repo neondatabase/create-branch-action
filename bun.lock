@@ -1,12 +1,13 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "create-branch",
       "dependencies": {
         "@actions/core": "^1.11.1",
         "@actions/github": "^6.0.1",
-        "@neondatabase/api-client": "^2.5.0",
+        "@neondatabase/api-client": "^2.6.0",
         "axios": "^1.12.2",
         "diff": "^8.0.2",
       },
@@ -206,7 +207,7 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@0.2.12", "", { "dependencies": { "@emnapi/core": "^1.4.3", "@emnapi/runtime": "^1.4.3", "@tybys/wasm-util": "^0.10.0" } }, "sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ=="],
 
-    "@neondatabase/api-client": ["@neondatabase/api-client@2.5.0", "", { "dependencies": { "axios": "^1.9.0" } }, "sha512-Tg5/Aq8zg1kxT8OuaRULpl0NcxTLpOBpcbdeC8RO3U6Ubftu+YSjKUqB5NRZWITMwDy8GSJtPQYF/xHHlsqauQ=="],
+    "@neondatabase/api-client": ["@neondatabase/api-client@2.6.0", "", { "dependencies": { "axios": "^1.9.0" } }, "sha512-NxKE+EFcVwxXU3jj8I/WgueXSyzrXV85AV0nb2SeoKtOa3dlEcTylsdOsMsMeZZeFfQXLyiCOm2nAduGZn9olA=="],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 
