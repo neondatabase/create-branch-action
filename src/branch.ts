@@ -285,7 +285,15 @@ export async function getConnectionInfo(
       throw new Error('No endpoints found for branch')
     }
 
-    endpoint = endpoints.data.endpoints[0]
+    const readWriteEndpoint = endpoints.data.endpoints.find(
+      ({ type }) => type === EndpointType.ReadWrite
+    )
+
+    if (!readWriteEndpoint) {
+      throw new Error('No read_write endpoint found for branch')
+    }
+
+    endpoint = readWriteEndpoint
   } catch (error) {
     throw new Error(`Failed to get branch endpoints. ${String(error)}`)
   }

@@ -28,6 +28,7 @@ vi.mock('../src/annotations', () => ({
 
 const ERROR_MESSAGES = {
   NO_ENDPOINTS: 'No endpoints found for branch',
+  NO_READ_WRITE_ENDPOINT: 'No read_write endpoint found for branch',
   DATABASE_NOT_FOUND: (name: string) => `Failed to get branch database ${name}`,
   ROLE_NOT_FOUND: (name: string) => `Failed to get branch role ${name}`,
   PASSWORD_NOT_FOUND: (name: string) =>
@@ -326,6 +327,32 @@ describe('branch actions', () => {
       )
     })
 
+    it('should fail if the branch has no read_write endpoint', async () => {
+      mockClient.listProjectBranchEndpoints.mockResolvedValue(
+        apiResponse(200, {
+          endpoints: [
+            {
+              ...buildEndpoint('e1-read-only'),
+              type: 'read_only' as EndpointType
+            }
+          ]
+        })
+      )
+
+      await expect(
+        getConnectionInfo(mockClient as unknown as Api<unknown>, {
+          branchId: '1',
+          projectId: 'projectId',
+          usePrisma: false,
+          sslMode: 'require',
+          database: 'neondb',
+          role: 'neondb_owner'
+        })
+      ).rejects.toThrowError(
+        `Failed to get branch endpoints. Error: ${ERROR_MESSAGES.NO_READ_WRITE_ENDPOINT}`
+      )
+    })
+
     it('should fail if the database is not found', async () => {
       mockClient.listProjectBranchEndpoints.mockResolvedValue(
         apiResponse(200, {
@@ -460,6 +487,61 @@ describe('branch actions', () => {
       expect(connectionInfo.databaseHost).toBe('e1.endpoint.com')
       expect(connectionInfo.databaseHostPooled).toBe('e1-pooler.endpoint.com')
       expect(connectionInfo.password).toBe('password')
+    })
+
+    it('should prefer the read_write endpoint when multiple endpoints exist', async () => {
+      mockClient.listProjectBranchEndpoints.mockResolvedValue(
+        apiResponse(200, {
+          endpoints: [
+            {
+              ...buildEndpoint('e1-read-only'),
+              type: 'read_only' as EndpointType
+            },
+            buildEndpoint('e2-read-write')
+          ]
+        })
+      )
+
+      mockClient.getProjectBranchDatabase.mockResolvedValue(
+        apiResponse(200, {
+          database: buildDatabase(1, 'postgres')
+        })
+      )
+
+      mockClient.getProjectBranchRole.mockResolvedValue(
+        apiResponse(200, {
+          role: buildRole(1, 'postgres')
+        })
+      )
+
+      mockClient.getProjectBranchRolePassword.mockResolvedValue(
+        apiResponse(200, {
+          password: 'password'
+        })
+      )
+
+      const connectionInfo = await getConnectionInfo(
+        mockClient as unknown as Api<unknown>,
+        {
+          branchId: '1',
+          projectId: 'projectId',
+          usePrisma: false,
+          sslMode: 'require',
+          database: 'neondb',
+          role: 'neondb_owner'
+        }
+      )
+
+      expect(connectionInfo.databaseUrl).toBe(
+        'postgresql://neondb_owner:password@e2-read-write.endpoint.com/neondb?sslmode=require'
+      )
+      expect(connectionInfo.databaseUrlPooled).toBe(
+        'postgresql://neondb_owner:password@e2-read-write-pooler.endpoint.com/neondb?sslmode=require'
+      )
+      expect(connectionInfo.databaseHost).toBe('e2-read-write.endpoint.com')
+      expect(connectionInfo.databaseHostPooled).toBe(
+        'e2-read-write-pooler.endpoint.com'
+      )
     })
 
     it('should return the connection info with prisma', async () => {
