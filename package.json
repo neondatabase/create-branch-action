@@ -66,7 +66,7 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsonc": "^2.21.1",
     "eslint-plugin-prettier": "^5.5.5",
-    "globals": "^16.5.0",
+    "globals": "^17.4.0",
     "make-coverage-badge": "^1.2.0",
     "prettier": "^3.8.1",
     "prettier-eslint": "^16.4.2",
