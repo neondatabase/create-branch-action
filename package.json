@@ -39,7 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.1",
+    "@actions/github": "^9.0.0",
     "@neondatabase/api-client": "^2.7.1",
     "axios": "^1.13.6",
     "diff": "^8.0.3"
