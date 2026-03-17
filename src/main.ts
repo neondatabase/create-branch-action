@@ -130,10 +130,12 @@ export async function run(): Promise<void> {
     }
 
     core.setOutput('db_url', result.databaseURL)
+    core.setSecret(result.databaseURL)
     core.setOutput('db_url_pooled', result.databaseURLPooled)
     core.setOutput('db_host', result.databaseHost)
     core.setOutput('db_host_pooled', result.databaseHostPooled)
     core.setOutput('password', result.password)
+    core.setSecret(result.password)
     core.setOutput('branch_id', result.branchId)
     if (result.authUrl) {
       core.setOutput('auth_url', result.authUrl)
