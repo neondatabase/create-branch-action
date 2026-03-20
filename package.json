@@ -19,7 +19,7 @@
     ".": "./dist/index.js"
   },
   "engines": {
-    "node": ">=21"
+    "node": ">=24"
   },
   "scripts": {
     "bundle": "bun run prebuild && bun run format:write && bun run package",

@@ -11,7 +11,7 @@ need to perform some initial setup steps before you can develop your action.
 > [!NOTE]
 >
 > You'll need to have a reasonably modern version of
-> [Node.js](https://nodejs.org) handy (20.x or later should work!). If you are
+> [Node.js](https://nodejs.org) handy (24.x or later should work!). If you are
 > using a version manager like [`nodenv`](https://github.com/nodenv/nodenv) or
 > [`nvm`](https://github.com/nvm-sh/nvm), this template has a `.node-version`
 > file at the root of the repository that will be used to automatically switch

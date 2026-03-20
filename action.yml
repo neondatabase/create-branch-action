@@ -82,5 +82,5 @@ outputs:
       The Neon Data API URL for the branch. Undefined if Data API is not enabled
       for the branch.
 runs:
-  using: node20
+  using: node24
   main: dist/index.js
