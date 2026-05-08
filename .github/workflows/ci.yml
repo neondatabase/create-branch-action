@@ -37,7 +37,7 @@ jobs:
 
       - name: Install Dependencies
         id: install
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Check Format
         id: format-check
