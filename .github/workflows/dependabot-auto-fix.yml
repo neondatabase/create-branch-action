@@ -9,11 +9,7 @@ on:
       - '**/bun.lock'
   workflow_dispatch:
 
-permissions:
-  # Needed for checkout and push
-  contents: write
-  # Needed for PR comments
-  pull-requests: write
+permissions: {}
 
 jobs:
   auto-package:
@@ -24,6 +20,11 @@ jobs:
       github.repository == github.event.pull_request.head.repo.full_name &&
       (github.event.pull_request.user.login == 'dependabot[bot]' ||
       github.event_name == 'workflow_dispatch')
+    permissions:
+      # Needed for checkout and push
+      contents: write
+      # Needed for PR comments
+      pull-requests: write
 
     steps:
       - name: Harden Runner

@@ -17,13 +17,14 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   check-dist:
     name: Check dist/
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Harden Runner
@@ -45,7 +46,7 @@ jobs:
 
       - name: Install Dependencies
         id: install
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Build dist/ Directory
         id: build

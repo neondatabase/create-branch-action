@@ -10,11 +10,7 @@ on:
   schedule:
     - cron: '31 7 * * 3'
 
-permissions:
-  actions: read
-  checks: write
-  contents: read
-  security-events: write
+permissions: {}
 
 jobs:
   analyze:
@@ -22,6 +18,10 @@ jobs:
     runs-on:
       group: neondatabase-protected-runner-group
       labels: linux-ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
 
     strategy:
       fail-fast: false
