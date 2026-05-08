@@ -46,7 +46,7 @@ jobs:
 
       - name: Install Dependencies
         id: install
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Build dist/ Directory
         id: build
