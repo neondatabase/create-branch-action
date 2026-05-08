@@ -5,38 +5,28 @@ updates:
     directory: /
     schedule:
       interval: weekly
+      day: monday
     groups:
-      actions-minor:
+      actions-minor-patch:
         update-types:
           - minor
           - patch
-
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-    groups:
-      npm-development:
-        dependency-type: development
-        update-types:
-          - minor
-          - patch
-      npm-production:
-        dependency-type: production
-        update-types:
-          - patch
+    open-pull-requests-limit: 5
 
   - package-ecosystem: bun
     directory: /
     schedule:
       interval: weekly
+      day: monday
     groups:
-      npm-development:
+      dev-dependencies:
         dependency-type: development
-        update-types:
-          - minor
-          - patch
-      npm-production:
+        # No update-types filter — every dev-dep bump (minor, patch, and
+        # major) goes into a single weekly PR per LKB-11061 item 6.
+      prod-dependencies-patch:
         dependency-type: production
         update-types:
           - patch
+        # Production minor and major bumps stay as individual PRs so each
+        # one gets focused review.
+    open-pull-requests-limit: 5
