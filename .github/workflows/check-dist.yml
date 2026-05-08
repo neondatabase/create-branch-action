@@ -17,13 +17,14 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   check-dist:
     name: Check dist/
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Harden Runner
