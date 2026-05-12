@@ -14,7 +14,9 @@ permissions: {}
 jobs:
   auto-package:
     name: Auto Package Dependabot PR
-    runs-on: ubuntu-latest
+    runs-on:
+      group: neondatabase-protected-runner-group
+      labels: linux-ubuntu-latest
     # Run on Dependabot PRs or manual triggers
     if:
       github.repository == github.event.pull_request.head.repo.full_name &&
@@ -30,7 +32,14 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
-          egress-policy: audit
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+            objects.githubusercontent.com:443
+            codeload.github.com:443
+            registry.npmjs.org:443
+            bun.sh:443
 
       - name: Checkout
         id: checkout
@@ -49,7 +58,11 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install
+        # --frozen-lockfile: install exactly what the proposed bun.lock says
+        # --ignore-scripts: block lifecycle scripts (postinstall etc.) from
+        # any dependency so a malicious Dependabot bump cannot execute code
+        # at install time under this job's contents:write token.
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Run Packaging
         run: bun run all
