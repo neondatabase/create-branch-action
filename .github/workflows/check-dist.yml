@@ -22,7 +22,9 @@ permissions: {}
 jobs:
   check-dist:
     name: Check dist/
-    runs-on: ubuntu-latest
+    runs-on:
+      group: neondatabase-protected-runner-group
+      labels: linux-ubuntu-latest
     permissions:
       contents: read
 
