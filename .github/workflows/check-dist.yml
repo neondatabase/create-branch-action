@@ -23,8 +23,8 @@ jobs:
   check-dist:
     name: Check dist/
     runs-on:
-      group: neondatabase-protected-runner-group
-      labels: linux-ubuntu-latest
+      group: databricks-ghec-untrusted-runner-group
+      labels: linux-ubuntu-latest-untrusted-2core-8gb
     permissions:
       contents: read
 

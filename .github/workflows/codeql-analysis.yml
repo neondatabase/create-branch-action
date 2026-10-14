@@ -16,8 +16,8 @@ jobs:
   analyze:
     name: Analyze
     runs-on:
-      group: neondatabase-protected-runner-group
-      labels: linux-ubuntu-latest
+      group: databricks-ghec-untrusted-runner-group
+      labels: linux-ubuntu-latest-untrusted-2core-8gb
     permissions:
       actions: read
       contents: read
