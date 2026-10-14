@@ -16,8 +16,8 @@ jobs:
   analyze:
     name: Analyze
     runs-on:
-      group: databricks-ghec-public-repos-runner-group-small
-      labels: linux-ubuntu-latest-public-2core-8gb
+      group: databricks-ghec-untrusted-runner-group
+      labels: linux-ubuntu-latest-untrusted-2core-8gb
     permissions:
       actions: read
       contents: read
