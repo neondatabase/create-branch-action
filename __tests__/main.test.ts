@@ -140,6 +140,55 @@ describe('action', () => {
     expect(core.setOutput).toHaveBeenNthCalledWith(1, 'created', true)
   })
 
+  it('masks the credentials before setting the outputs', async () => {
+    core.getInput.mockImplementation((name: string) => {
+      switch (name) {
+        case 'api_host':
+          return 'http://console.neon.tech/api/v2'
+        case 'branch_type':
+          return 'default'
+        case 'suspend_timeout':
+          return '0'
+        case 'ssl':
+          return 'require'
+        default:
+          return ''
+      }
+    })
+
+    const password = 'p@ss/w+rd'
+    const databaseURL = new URL('postgresql://e1.endpoint.com/postgres')
+    databaseURL.username = 'postgres'
+    databaseURL.password = password
+    const databaseURLPooled = new URL(databaseURL)
+    databaseURLPooled.host = 'e1-pooler.endpoint.com'
+
+    create.mockImplementation(() =>
+      Promise.resolve({
+        databaseURL: databaseURL.toString(),
+        databaseURLPooled: databaseURLPooled.toString(),
+        databaseHost: 'e1.endpoint.com',
+        databaseHostPooled: 'e1-pooler.endpoint.com',
+        password,
+        branchId: '1',
+        createdBranch: true
+      })
+    )
+
+    await run()
+
+    expect(core.setFailed).not.toHaveBeenCalled()
+    expect(core.setSecret).toHaveBeenCalledWith(password)
+    expect(core.setSecret).toHaveBeenCalledWith('p%40ss%2Fw+rd') // as in the URLs
+    expect(core.setSecret).toHaveBeenCalledWith(databaseURL.toString())
+    expect(core.setSecret).toHaveBeenCalledWith(databaseURLPooled.toString())
+    // GitHub redacts a value only once it is registered as a secret
+    expect(core.setOutput).toHaveBeenCalled()
+    const lastSecret = Math.max(...core.setSecret.mock.invocationCallOrder)
+    const firstOutput = Math.min(...core.setOutput.mock.invocationCallOrder)
+    expect(lastSecret).toBeLessThan(firstOutput)
+  })
+
   it('create existing branch', async () => {
     core.getInput.mockImplementation((name: string) => {
       switch (name) {

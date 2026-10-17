@@ -119,6 +119,11 @@ The action provides the following outputs:
 - `data_api_url` - The Neon Data API URL for the branch (only when
   `get_data_api_url: true`).
 
+`password`, `db_url` and `db_url_pooled` are registered as secrets, so they are
+masked in the logs. GitHub does not pass secret values between jobs: use them in
+the same job, or run the action again with the same `branch_name` in the job
+that needs them (it returns the existing branch).
+
 ### Example Workflow
 
 Here's an example of complete GitHub Actions workflow that creates a Neon branch
