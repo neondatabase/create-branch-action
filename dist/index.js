@@ -82614,6 +82614,12 @@ async function run() {
             trimWhitespace: true
         }) === 'true'; // defaults to false
         const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules, getAuthUrl, getDataApiUrl);
+        // GitHub only redacts registered secrets, and a new branch shares its
+        // parent's role passwords: mask the credentials before exposing them
+        maskCredentials(result.password, [
+            result.databaseURL,
+            result.databaseURLPooled
+        ]);
         if (result.createdBranch) {
             coreExports.info(`Branch ${branchName} created successfully`);
             coreExports.setOutput('created', true);
@@ -82641,6 +82647,17 @@ async function run() {
             coreExports.setFailed(error.message);
         else
             coreExports.setFailed(`Unknown error: ${error}`);
+    }
+}
+function maskCredentials(password, connectionStrings) {
+    const secrets = new Set([password, ...connectionStrings]);
+    for (const connectionString of connectionStrings) {
+        // The password appears URL-encoded inside the connection strings
+        secrets.add(new URL(connectionString).password);
+    }
+    for (const secret of secrets) {
+        if (secret)
+            coreExports.setSecret(secret);
     }
 }
 

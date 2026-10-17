@@ -121,6 +121,13 @@ export async function run(): Promise<void> {
       getDataApiUrl
     )
 
+    // GitHub only redacts registered secrets, and a new branch shares its
+    // parent's role passwords: mask the credentials before exposing them
+    maskCredentials(result.password, [
+      result.databaseURL,
+      result.databaseURLPooled
+    ])
+
     if (result.createdBranch) {
       core.info(`Branch ${branchName} created successfully`)
       core.setOutput('created', true)
@@ -145,5 +152,16 @@ export async function run(): Promise<void> {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
     else core.setFailed(`Unknown error: ${error}`)
+  }
+}
+
+function maskCredentials(password: string, connectionStrings: string[]): void {
+  const secrets = new Set([password, ...connectionStrings])
+  for (const connectionString of connectionStrings) {
+    // The password appears URL-encoded inside the connection strings
+    secrets.add(new URL(connectionString).password)
+  }
+  for (const secret of secrets) {
+    if (secret) core.setSecret(secret)
   }
 }
