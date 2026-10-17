@@ -121,8 +121,8 @@ export async function run(): Promise<void> {
       getDataApiUrl
     )
 
-    // GitHub only redacts registered secrets, and a new branch shares its
-    // parent's role passwords: mask the credentials before exposing them
+    // GitHub only redacts registered secrets: mask the credentials before
+    // exposing them as outputs
     maskCredentials(result.password, [
       result.databaseURL,
       result.databaseURLPooled

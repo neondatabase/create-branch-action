@@ -82614,8 +82614,8 @@ async function run() {
             trimWhitespace: true
         }) === 'true'; // defaults to false
         const result = await create(apiKey, apiHost, projectId, usePrisma, database, role, branchType === 'schema-only', sslMode, suspendTimeout, branchName, parentBranch, expiresAt, maskingRules, getAuthUrl, getDataApiUrl);
-        // GitHub only redacts registered secrets, and a new branch shares its
-        // parent's role passwords: mask the credentials before exposing them
+        // GitHub only redacts registered secrets: mask the credentials before
+        // exposing them as outputs
         maskCredentials(result.password, [
             result.databaseURL,
             result.databaseURLPooled

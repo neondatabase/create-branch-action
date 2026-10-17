@@ -179,10 +179,11 @@ describe('action', () => {
 
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(core.setSecret).toHaveBeenCalledWith(password)
-    expect(core.setSecret).toHaveBeenCalledWith(databaseURL.password)
+    expect(core.setSecret).toHaveBeenCalledWith('p%40ss%2Fw+rd') // as in the URLs
     expect(core.setSecret).toHaveBeenCalledWith(databaseURL.toString())
     expect(core.setSecret).toHaveBeenCalledWith(databaseURLPooled.toString())
     // GitHub redacts a value only once it is registered as a secret
+    expect(core.setOutput).toHaveBeenCalled()
     const lastSecret = Math.max(...core.setSecret.mock.invocationCallOrder)
     const firstOutput = Math.min(...core.setOutput.mock.invocationCallOrder)
     expect(lastSecret).toBeLessThan(firstOutput)
